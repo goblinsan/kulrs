@@ -81,9 +81,7 @@ export function validateEnv(): void {
     'appId',
   ] as const;
 
-  const missingVars = requiredFirebaseVars.filter(
-    key => !config.firebase[key]
-  );
+  const missingVars = requiredFirebaseVars.filter(key => !config.firebase[key]);
 
   if (missingVars.length > 0) {
     throw new Error(
