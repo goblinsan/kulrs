@@ -43,6 +43,12 @@ All environment variables follow these naming conventions:
 | `VITE_API_URL` | Backend API base URL | `https://api.kulrs.com` | Yes |
 | `VITE_APP_ENV` | Application environment | `development`, `staging`, `production` | Yes |
 | `VITE_ENABLE_DEBUG` | Enable debug features | `true`, `false` | No |
+| `VITE_FIREBASE_API_KEY` | Firebase Web API Key | `AIzaSy...` | Yes |
+| `VITE_FIREBASE_AUTH_DOMAIN` | Firebase Auth domain | `kulrs-xxxxx.firebaseapp.com` | Yes |
+| `VITE_FIREBASE_PROJECT_ID` | Firebase Project ID | `kulrs-xxxxx` | Yes |
+| `VITE_FIREBASE_STORAGE_BUCKET` | Firebase Storage bucket | `kulrs-xxxxx.appspot.com` | Yes |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Firebase Cloud Messaging sender ID | `123456789` | Yes |
+| `VITE_FIREBASE_APP_ID` | Firebase Web App ID | `1:123456789:web:abc...` | Yes |
 
 #### Secret Variables (Server-Side Only)
 
@@ -76,6 +82,8 @@ Not applicable for Vite - secrets should never be in the web app.
 | `APP_ENV` | Application environment | `development`, `staging`, `production` | Yes |
 | `ENABLE_ANALYTICS` | Enable analytics tracking | `true`, `false` | No |
 
+**Note**: Firebase configuration for Flutter is handled via config files (`GoogleService-Info.plist` for iOS and `google-services.json` for Android) rather than environment variables. See [Firebase Setup Guide](FIREBASE_SETUP.md) for details.
+
 #### Secret Variables
 
 Secrets should not be embedded in the mobile app. Use backend APIs for sensitive operations.
@@ -91,6 +99,14 @@ Secrets should not be embedded in the mobile app. Use backend APIs for sensitive
    VITE_API_URL=http://localhost:8080
    VITE_APP_ENV=development
    VITE_ENABLE_DEBUG=true
+   
+   # Firebase Configuration (get these from Firebase Console)
+   VITE_FIREBASE_API_KEY=AIzaSy...
+   VITE_FIREBASE_AUTH_DOMAIN=kulrs-xxxxx.firebaseapp.com
+   VITE_FIREBASE_PROJECT_ID=kulrs-xxxxx
+   VITE_FIREBASE_STORAGE_BUCKET=kulrs-xxxxx.appspot.com
+   VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
+   VITE_FIREBASE_APP_ID=1:123456789:web:abc...
    ```
 
 2. **Never commit**: `.env.local` is gitignored by default

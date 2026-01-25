@@ -3,10 +3,20 @@
 
 type AppEnvironment = 'development' | 'staging' | 'production';
 
+interface FirebaseConfig {
+  apiKey: string;
+  authDomain: string;
+  projectId: string;
+  storageBucket: string;
+  messagingSenderId: string;
+  appId: string;
+}
+
 interface EnvConfig {
   apiUrl: string;
   appEnv: AppEnvironment;
   enableDebug: boolean;
+  firebase: FirebaseConfig;
 }
 
 // Valid application environments
@@ -30,6 +40,17 @@ export function getEnvConfig(): EnvConfig {
 
     // Debug mode - optional, defaults to false
     enableDebug: import.meta.env.VITE_ENABLE_DEBUG === 'true',
+
+    // Firebase configuration - required for authentication
+    firebase: {
+      apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
+      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
+      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
+      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
+      messagingSenderId:
+        import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
+      appId: import.meta.env.VITE_FIREBASE_APP_ID || '',
+    },
   };
 }
 
@@ -49,7 +70,27 @@ export function validateEnv(): void {
       `Invalid VITE_APP_ENV: ${config.appEnv}. Should be one of: ${VALID_ENVIRONMENTS.join(', ')}`
     );
   }
+
+  // Validate Firebase configuration
+  const requiredFirebaseVars = [
+    'apiKey',
+    'authDomain',
+    'projectId',
+    'storageBucket',
+    'messagingSenderId',
+    'appId',
+  ] as const;
+
+  const missingVars = requiredFirebaseVars.filter(
+    key => !config.firebase[key]
+  );
+
+  if (missingVars.length > 0) {
+    throw new Error(
+      `Missing required Firebase environment variables: ${missingVars.map(v => `VITE_FIREBASE_${v.toUpperCase().replace(/([A-Z])/g, '_$1')}`).join(', ')}`
+    );
+  }
 }
 
 // Export individual values for convenience
-export const { apiUrl, appEnv, enableDebug } = getEnvConfig();
+export const { apiUrl, appEnv, enableDebug, firebase } = getEnvConfig();
