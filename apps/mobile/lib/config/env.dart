@@ -1,6 +1,8 @@
-/// Environment configuration for the mobile application
-/// This demonstrates how to access build-time environment variables via --dart-define
+import 'dart:developer' as developer;
 
+/// Environment configuration for the mobile application.
+///
+/// This demonstrates how to access build-time environment variables via --dart-define.
 class EnvConfig {
   /// Valid application environments
   static const List<String> validEnvironments = [
@@ -47,9 +49,10 @@ class EnvConfig {
     }
 
     if (!validEnvironments.contains(appEnv)) {
-      print(
+      developer.log(
         'Warning: Invalid APP_ENV: $appEnv. '
         'Should be one of: ${validEnvironments.join(', ')}',
+        name: 'EnvConfig',
       );
     }
   }
@@ -58,11 +61,11 @@ class EnvConfig {
   /// Only use in development mode
   static void printConfig() {
     if (isDevelopment) {
-      print('=== Environment Configuration ===');
-      print('API URL: $apiUrl');
-      print('Environment: $appEnv');
-      print('Analytics: $enableAnalytics');
-      print('================================');
+      developer.log('=== Environment Configuration ===', name: 'EnvConfig');
+      developer.log('API URL: $apiUrl', name: 'EnvConfig');
+      developer.log('Environment: $appEnv', name: 'EnvConfig');
+      developer.log('Analytics: $enableAnalytics', name: 'EnvConfig');
+      developer.log('================================', name: 'EnvConfig');
     }
   }
 }
