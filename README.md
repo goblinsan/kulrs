@@ -45,14 +45,18 @@ npm run format     # Format code
 npm run build      # Build for production
 ```
 
+**Environment Variables**: Copy `.env.example` to `.env.local` and configure for local development. See [docs/ENVIRONMENTS.md](docs/ENVIRONMENTS.md) for details.
+
 #### Mobile Application
 
 ```bash
 cd apps/mobile
-flutter run        # Run app
+./run-dev.sh       # Run with dev environment
 flutter analyze    # Run analyzer
 flutter test       # Run tests
 ```
+
+**Environment Variables**: Use `--dart-define` flags or the provided `run-dev.sh` script. See [docs/ENVIRONMENTS.md](docs/ENVIRONMENTS.md) for details.
 
 #### Shared Package
 
@@ -74,6 +78,17 @@ GitHub Actions workflows run on PRs:
 
 - **Web CI**: Lint, build web app and shared package
 - **Flutter CI**: Analyze and test mobile app
+
+See [docs/GITHUB_ACTIONS_SECRETS.md](docs/GITHUB_ACTIONS_SECRETS.md) for secrets configuration.
+
+## Environments & Secrets
+
+This project uses environment variables and secrets for configuration across different deployment platforms:
+
+- **[Environment Variables Strategy](docs/ENVIRONMENTS.md)** - Complete guide to environment variables, naming conventions, and local development
+- **[GitHub Actions Secrets](docs/GITHUB_ACTIONS_SECRETS.md)** - How to configure secrets for CI/CD pipelines
+- **[Cloudflare Setup](docs/CLOUDFLARE_SETUP.md)** - Configuration for Cloudflare Pages deployment
+- **[Google Cloud Setup](docs/GOOGLE_CLOUD_SETUP.md)** - Secret Manager and Cloud Functions configuration
 
 ## License
 
