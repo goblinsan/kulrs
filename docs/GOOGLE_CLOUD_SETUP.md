@@ -20,8 +20,8 @@ brew install --cask google-cloud-sdk
 
 **Linux:**
 ```bash
-# Download and verify the installer before running
-curl https://sdk.cloud.google.com > install-gcloud.sh
+# Download the installer with secure flags
+curl -fsSL https://sdk.cloud.google.com -o install-gcloud.sh
 # Review the script content before executing
 less install-gcloud.sh
 # Run the installer
@@ -105,22 +105,25 @@ gcloud secrets versions list DATABASE_URL
 ### Grant Access to Secrets
 
 By default, Cloud Functions use the default compute service account:
-`PROJECT_ID@appspot.gserviceaccount.com`
+`YOUR_PROJECT_ID@appspot.gserviceaccount.com`
+
+**Note**: Replace `YOUR_PROJECT_ID` with your actual Google Cloud project ID throughout this guide.
 
 ```bash
 # Grant access to DATABASE_URL secret
+# Replace YOUR_PROJECT_ID with your actual project ID
 gcloud secrets add-iam-policy-binding DATABASE_URL \
-  --member="serviceAccount:PROJECT_ID@appspot.gserviceaccount.com" \
+  --member="serviceAccount:YOUR_PROJECT_ID@appspot.gserviceaccount.com" \
   --role="roles/secretmanager.secretAccessor"
 
 # Grant access to JWT_SECRET secret
 gcloud secrets add-iam-policy-binding JWT_SECRET \
-  --member="serviceAccount:PROJECT_ID@appspot.gserviceaccount.com" \
+  --member="serviceAccount:YOUR_PROJECT_ID@appspot.gserviceaccount.com" \
   --role="roles/secretmanager.secretAccessor"
 
 # Grant access to API_KEY secret
 gcloud secrets add-iam-policy-binding API_KEY \
-  --member="serviceAccount:PROJECT_ID@appspot.gserviceaccount.com" \
+  --member="serviceAccount:YOUR_PROJECT_ID@appspot.gserviceaccount.com" \
   --role="roles/secretmanager.secretAccessor"
 ```
 
@@ -223,35 +226,36 @@ gcloud iam service-accounts create github-actions-deploy \
   --display-name="GitHub Actions Deployment" \
   --description="Service account for GitHub Actions to deploy Cloud Functions"
 
-# Get the email
-export SA_EMAIL="github-actions-deploy@PROJECT_ID.iam.gserviceaccount.com"
+# Get the email (replace YOUR_PROJECT_ID with your actual project ID)
+export SA_EMAIL="github-actions-deploy@YOUR_PROJECT_ID.iam.gserviceaccount.com"
 ```
 
 ### Grant Required Roles
 
 ```bash
 # Cloud Functions Developer (deploy, update, delete functions)
-gcloud projects add-iam-policy-binding PROJECT_ID \
+# Replace YOUR_PROJECT_ID with your actual project ID
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
   --member="serviceAccount:${SA_EMAIL}" \
   --role="roles/cloudfunctions.developer"
 
 # Service Account User (required to deploy functions)
-gcloud projects add-iam-policy-binding PROJECT_ID \
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
   --member="serviceAccount:${SA_EMAIL}" \
   --role="roles/iam.serviceAccountUser"
 
 # Secret Manager Secret Accessor (access secrets)
-gcloud projects add-iam-policy-binding PROJECT_ID \
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
   --member="serviceAccount:${SA_EMAIL}" \
   --role="roles/secretmanager.secretAccessor"
 
 # Cloud Build Editor (required for function builds)
-gcloud projects add-iam-policy-binding PROJECT_ID \
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
   --member="serviceAccount:${SA_EMAIL}" \
   --role="roles/cloudbuild.builds.editor"
 
 # Storage Admin (required for uploading function source)
-gcloud projects add-iam-policy-binding PROJECT_ID \
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
   --member="serviceAccount:${SA_EMAIL}" \
   --role="roles/storage.admin"
 ```
@@ -370,13 +374,13 @@ console.log(JSON.stringify({
 ### Permission Denied Errors
 
 ```bash
-# Check IAM permissions
-gcloud projects get-iam-policy PROJECT_ID \
+# Check IAM permissions (replace YOUR_PROJECT_ID with your actual project ID)
+gcloud projects get-iam-policy YOUR_PROJECT_ID \
   --flatten="bindings[].members" \
   --filter="bindings.members:serviceAccount:${SA_EMAIL}"
 
 # Grant missing permissions
-gcloud projects add-iam-policy-binding PROJECT_ID \
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
   --member="serviceAccount:${SA_EMAIL}" \
   --role="roles/ROLE_NAME"
 ```
