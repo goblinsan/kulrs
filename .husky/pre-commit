@@ -1,0 +1,4 @@
+echo "Running pre-commit checks..."
+# Add your pre-commit checks here, e.g.:
+# npm run lint:web
+
