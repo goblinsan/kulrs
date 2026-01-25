@@ -20,6 +20,11 @@ Use the provided script for local development:
 ./run-dev.sh
 ```
 
+**Note**: If you get a "Permission denied" error, make the script executable first:
+```bash
+chmod +x run-dev.sh
+```
+
 Or run manually with environment variables:
 
 ```bash
