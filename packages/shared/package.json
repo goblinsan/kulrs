@@ -1,0 +1,17 @@
+{
+  "name": "@kulrs/shared",
+  "version": "0.1.0",
+  "description": "Shared types and utilities for Kulrs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "keywords": ["kulrs", "shared", "types"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}
