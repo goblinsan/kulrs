@@ -9,6 +9,18 @@ This project is a Flutter application.
 ### Prerequisites
 
 - Flutter SDK (>= 3.0.0)
+- Firebase project configured (see [Firebase Setup Guide](../../docs/FIREBASE_SETUP.md))
+
+### Firebase Setup
+
+Before running the app, you need to add Firebase configuration files:
+
+1. **iOS**: Add `GoogleService-Info.plist` to `ios/Runner/`
+2. **Android**: Add `google-services.json` to `android/app/`
+
+These files are obtained from the Firebase Console when you register your mobile apps. See the [Firebase Setup Guide](../../docs/FIREBASE_SETUP.md) for detailed instructions.
+
+**Important**: These files are gitignored and must be added manually in each development environment.
 
 ### Running the app
 
