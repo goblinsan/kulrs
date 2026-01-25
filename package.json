@@ -9,7 +9,7 @@
     "packages/*"
   ],
   "scripts": {
-    "prepare": "husky",
+    "prepare": "husky || true",
     "lint:web": "cd apps/web && npm run lint",
     "format:web": "cd apps/web && npm run format",
     "build:web": "cd apps/web && npm run build",
