@@ -2,6 +2,13 @@
 /// This demonstrates how to access build-time environment variables via --dart-define
 
 class EnvConfig {
+  /// Valid application environments
+  static const List<String> validEnvironments = [
+    'development',
+    'staging',
+    'production',
+  ];
+
   /// API base URL (required)
   /// Set via: --dart-define=API_URL=https://api.kulrs.com
   static const String apiUrl = String.fromEnvironment(
@@ -39,10 +46,10 @@ class EnvConfig {
       throw Exception('API_URL environment variable is required');
     }
 
-    if (!['development', 'staging', 'production'].contains(appEnv)) {
+    if (!validEnvironments.contains(appEnv)) {
       print(
         'Warning: Invalid APP_ENV: $appEnv. '
-        'Should be one of: development, staging, production',
+        'Should be one of: ${validEnvironments.join(', ')}',
       );
     }
   }

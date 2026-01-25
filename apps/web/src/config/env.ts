@@ -1,11 +1,16 @@
 // Environment configuration for the web application
 // This file demonstrates how to access Vite environment variables
 
+type AppEnvironment = 'development' | 'staging' | 'production';
+
 interface EnvConfig {
   apiUrl: string;
-  appEnv: 'development' | 'staging' | 'production';
+  appEnv: AppEnvironment;
   enableDebug: boolean;
 }
+
+// Valid application environments
+const VALID_ENVIRONMENTS: AppEnvironment[] = ['development', 'staging', 'production'];
 
 /**
  * Get the current environment configuration
@@ -17,7 +22,7 @@ export function getEnvConfig(): EnvConfig {
     apiUrl: import.meta.env.VITE_API_URL || 'https://api.kulrs.com',
     
     // Application environment - required
-    appEnv: (import.meta.env.VITE_APP_ENV as EnvConfig['appEnv']) || 'production',
+    appEnv: (import.meta.env.VITE_APP_ENV as AppEnvironment) || 'production',
     
     // Debug mode - optional, defaults to false
     enableDebug: import.meta.env.VITE_ENABLE_DEBUG === 'true',
@@ -35,9 +40,9 @@ export function validateEnv(): void {
     throw new Error('VITE_API_URL environment variable is required');
   }
   
-  if (!['development', 'staging', 'production'].includes(config.appEnv)) {
+  if (!VALID_ENVIRONMENTS.includes(config.appEnv)) {
     console.warn(
-      `Invalid VITE_APP_ENV: ${config.appEnv}. Should be one of: development, staging, production`
+      `Invalid VITE_APP_ENV: ${config.appEnv}. Should be one of: ${VALID_ENVIRONMENTS.join(', ')}`
     );
   }
 }

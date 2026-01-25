@@ -20,12 +20,19 @@ brew install --cask google-cloud-sdk
 
 **Linux:**
 ```bash
-curl https://sdk.cloud.google.com | bash
+# Download and verify the installer before running
+curl https://sdk.cloud.google.com > install-gcloud.sh
+# Review the script content before executing
+less install-gcloud.sh
+# Run the installer
+bash install-gcloud.sh
 exec -l $SHELL
 ```
 
 **Windows:**
 Download from [Google Cloud SDK installer](https://cloud.google.com/sdk/docs/install)
+
+**Note**: For production environments, always verify installation scripts from official sources before execution.
 
 ### Authenticate and Configure
 
