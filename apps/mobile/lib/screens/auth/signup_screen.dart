@@ -234,7 +234,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   const SizedBox(height: 12),
                   OutlinedButton.icon(
                     onPressed: _isLoading ? null : _handleAppleSignIn,
-                    icon: const Icon(Icons.apple),
+                    icon: const Icon(Icons.phone_iphone),
                     label: const Text('Sign up with Apple'),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.all(16),

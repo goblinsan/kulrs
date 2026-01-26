@@ -212,7 +212,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 12),
                   OutlinedButton.icon(
                     onPressed: _isLoading ? null : _handleAppleSignIn,
-                    icon: const Icon(Icons.apple),
+                    icon: const Icon(Icons.phone_iphone),
                     label: const Text('Sign in with Apple'),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.all(16),
