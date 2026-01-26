@@ -84,8 +84,16 @@ export function validateEnv(): void {
   const missingVars = requiredFirebaseVars.filter(key => !config.firebase[key]);
 
   if (missingVars.length > 0) {
+    // Map camelCase to UPPER_SNAKE_CASE for Firebase env vars
+    const envVarNames = missingVars.map(v => {
+      const upperSnake = v
+        .replace(/([A-Z])/g, '_$1')
+        .toUpperCase()
+        .replace(/^_/, '');
+      return `VITE_FIREBASE_${upperSnake}`;
+    });
     throw new Error(
-      `Missing required Firebase environment variables: ${missingVars.map(v => `VITE_FIREBASE_${v.toUpperCase().replace(/([A-Z])/g, '_$1')}`).join(', ')}`
+      `Missing required Firebase environment variables: ${envVarNames.join(', ')}`
     );
   }
 }
