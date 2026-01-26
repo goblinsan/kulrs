@@ -1,5 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'dart:io' show Platform;
 
 /// Authentication service using Firebase Auth
 class AuthService {
@@ -54,6 +56,32 @@ class AuthService {
     );
 
     // Sign in to Firebase with the Google credential
+    return await _auth.signInWithCredential(credential);
+  }
+
+  /// Sign in with Apple provider
+  Future<UserCredential> signInWithApple() async {
+    // Check if Apple Sign In is available (iOS 13.0+ or macOS 10.15+)
+    if (!Platform.isIOS && !Platform.isMacOS) {
+      throw Exception('Apple Sign-In is only available on iOS and macOS');
+    }
+
+    // Request Apple ID credential
+    final appleCredential = await SignInWithApple.getAppleIDCredential(
+      scopes: [
+        AppleIDAuthorizationScopes.email,
+        AppleIDAuthorizationScopes.fullName,
+      ],
+    );
+
+    // Create OAuth credential for Firebase
+    final oAuthProvider = OAuthProvider('apple.com');
+    final credential = oAuthProvider.credential(
+      idToken: appleCredential.identityToken,
+      accessToken: appleCredential.authorizationCode,
+    );
+
+    // Sign in to Firebase with the Apple credential
     return await _auth.signInWithCredential(credential);
   }
 

@@ -1,6 +1,10 @@
 // Signup form component
 import { useState, type FormEvent } from 'react';
-import { signUpWithEmail, signInWithGoogle } from '../../services/auth';
+import {
+  signUpWithEmail,
+  signInWithGoogle,
+  signInWithApple,
+} from '../../services/auth';
 
 interface SignupFormProps {
   onSuccess?: () => void;
@@ -50,6 +54,22 @@ export function SignupForm({ onSuccess, onSwitchToLogin }: SignupFormProps) {
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Failed to sign in with Google'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAppleSignIn = async () => {
+    setError('');
+    setLoading(true);
+
+    try {
+      await signInWithApple();
+      onSuccess?.();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Failed to sign in with Apple'
       );
     } finally {
       setLoading(false);
@@ -118,6 +138,15 @@ export function SignupForm({ onSuccess, onSwitchToLogin }: SignupFormProps) {
         className="btn-google"
       >
         Sign up with Google
+      </button>
+
+      <button
+        type="button"
+        onClick={handleAppleSignIn}
+        disabled={loading}
+        className="btn-apple"
+      >
+        Sign up with Apple
       </button>
 
       {onSwitchToLogin && (

@@ -71,6 +71,27 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<void> _handleAppleSignIn() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await context.read<AuthProvider>().signInWithApple();
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString();
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   void _navigateToSignup() {
     Navigator.of(context).pushReplacementNamed('/signup');
   }
@@ -186,6 +207,17 @@ class _LoginScreenState extends State<LoginScreen> {
                     label: const Text('Sign in with Google'),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.all(16),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: _isLoading ? null : _handleAppleSignIn,
+                    icon: const Icon(Icons.apple),
+                    label: const Text('Sign in with Apple'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.all(16),
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 24),

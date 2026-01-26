@@ -4,6 +4,7 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
+  OAuthProvider,
   signOut as firebaseSignOut,
   type User,
   type UserCredential,
@@ -40,6 +41,18 @@ export async function signInWithEmail(
 export async function signInWithGoogle(): Promise<UserCredential> {
   const auth = getFirebaseAuth();
   const provider = new GoogleAuthProvider();
+  return signInWithPopup(auth, provider);
+}
+
+/**
+ * Sign in with Apple provider
+ */
+export async function signInWithApple(): Promise<UserCredential> {
+  const auth = getFirebaseAuth();
+  const provider = new OAuthProvider('apple.com');
+  // Request additional scopes (email and name)
+  provider.addScope('email');
+  provider.addScope('name');
   return signInWithPopup(auth, provider);
 }
 

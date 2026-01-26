@@ -36,6 +36,11 @@ This document provides step-by-step instructions for setting up Firebase Authent
      - Toggle **Enable**
      - Configure support email
      - Click **Save**
+   - **Apple** (recommended):
+     - Click on Apple provider
+     - Toggle **Enable**
+     - You'll need to configure Apple Developer credentials later
+     - Click **Save**
 
 ## Part 2: Register Web Application
 

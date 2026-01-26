@@ -100,6 +100,24 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Sign in with Apple
+  Future<void> signInWithApple() async {
+    try {
+      _error = null;
+      _isLoading = true;
+      notifyListeners();
+
+      await _authService.signInWithApple();
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   /// Sign out
   Future<void> signOut() async {
     try {
