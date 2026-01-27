@@ -11,6 +11,8 @@ jobs:
   promote-migrations:
     name: Promote Migrations to Production
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     
     steps:
       - name: Checkout code
@@ -25,7 +27,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: packages/db
-        run: npm install
+        run: npm ci
 
       # ⚠️ WARNING: The following step modifies the PRODUCTION database
       - name: Run database promotion

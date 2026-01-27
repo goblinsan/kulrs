@@ -1,10 +1,10 @@
 # Neon Database Setup Guide
 
-This guide explains how to set up and manage Neon PostgreSQL databases for the kulrs project.
+This guide explains how to set up and manage Neon PostgreSQL databases for the Kulrs project.
 
 ## Overview
 
-The kulrs project uses [Neon](https://neon.tech/) as its PostgreSQL database provider. Neon offers serverless PostgreSQL with features like branching, autoscaling, and automatic backups.
+The Kulrs project uses [Neon](https://neon.tech/) as its PostgreSQL database provider. Neon offers serverless PostgreSQL with features like branching, autoscaling, and automatic backups.
 
 ## Database Environments
 
@@ -49,7 +49,7 @@ To promote migrations from development to production:
 4. Select the branch (usually `main`)
 5. Click **Run workflow** to start the promotion
 
-⚠️ **Important**: The workflow includes a 5-second safety countdown before modifying the production database. This is your last chance to cancel if needed.
+⚠️ **Important**: The promotion script includes a 5-second safety countdown before modifying the production database. Monitor the workflow logs and be prepared to cancel the workflow run if needed.
 
 ### What the Workflow Does
 
