@@ -16,6 +16,17 @@ A mono-repo for the Kulrs application suite.
 - Node.js 20+
 - npm
 - Flutter SDK (for mobile development)
+- Firebase project (see [Firebase Setup Guide](docs/FIREBASE_SETUP.md))
+
+### Firebase Setup
+
+This project uses Firebase for authentication. Before running the apps locally, you need to:
+
+1. Create a Firebase project (if not already done)
+2. Register web and mobile apps in Firebase Console
+3. Configure environment variables and config files
+
+See the [Firebase Setup Guide](docs/FIREBASE_SETUP.md) for detailed step-by-step instructions.
 
 ### Installation
 
@@ -85,6 +96,7 @@ See [docs/GITHUB_ACTIONS_SECRETS.md](docs/GITHUB_ACTIONS_SECRETS.md) for secrets
 
 This project uses environment variables and secrets for configuration across different deployment platforms:
 
+- **[Firebase Setup Guide](docs/FIREBASE_SETUP.md)** - Step-by-step Firebase project setup and configuration
 - **[Environment Variables Strategy](docs/ENVIRONMENTS.md)** - Complete guide to environment variables, naming conventions, and local development
 - **[GitHub Actions Secrets](docs/GITHUB_ACTIONS_SECRETS.md)** - How to configure secrets for CI/CD pipelines
 - **[Cloudflare Setup](docs/CLOUDFLARE_SETUP.md)** - Configuration for Cloudflare Pages deployment
