@@ -257,8 +257,8 @@ To promote migrations from development to production:
 The automated workflow:
 1. Checks out the repository code
 2. Sets up Node.js (version 20)
-3. Installs dependencies with `npm ci`
-4. Runs `npm run db:promote` with the configured database URLs
+3. Installs all workspace dependencies from the repository root with `npm ci`
+4. Runs `npm run db:promote` (from packages/db) with the configured database URLs
 5. Logs the complete promotion process for audit purposes
 
 #### Why Use GitHub Actions?
