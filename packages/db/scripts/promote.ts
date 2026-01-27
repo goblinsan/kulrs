@@ -1,5 +1,5 @@
 import { Pool } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
+import { drizzle, NeonDatabase } from 'drizzle-orm/neon-serverless';
 import { migrate } from 'drizzle-orm/neon-serverless/migrator';
 import dotenv from 'dotenv';
 import { join } from 'path';
@@ -22,13 +22,17 @@ dotenv.config({ path: '.env.local' });
  * 4. Verifies both databases are in sync
  */
 
-async function getAppliedMigrations(db: any): Promise<string[]> {
+interface MigrationRow {
+  tag: string;
+}
+
+async function getAppliedMigrations(db: NeonDatabase<Record<string, never>>): Promise<string[]> {
   try {
     const result = await db.execute(`
       SELECT tag FROM drizzle.__drizzle_migrations 
       ORDER BY created_at ASC
     `);
-    return result.rows.map((row: any) => row.tag);
+    return result.rows.map((row: MigrationRow) => row.tag);
   } catch (error) {
     // Table doesn't exist yet, no migrations applied
     return [];
