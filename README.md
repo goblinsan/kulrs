@@ -87,6 +87,7 @@ cd packages/db
 npm run db:generate  # Generate migrations from schema
 npm run db:migrate   # Run migrations
 npm run db:seed      # Seed demo data (dev only)
+npm run db:promote   # Promote migrations from dev to prod
 npm run db:studio    # Launch Drizzle Studio
 ```
 

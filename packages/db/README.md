@@ -55,6 +55,25 @@ npm run db:seed
 
 The seed script is idempotent and can be re-run safely.
 
+### Promote to Production
+
+Safely promote migrations from development to production:
+
+```bash
+# Set both database URLs
+export DEV_DATABASE_URL="postgresql://..."
+export PROD_DATABASE_URL="postgresql://..."
+
+# Run promotion
+npm run db:promote
+```
+
+This automated script:
+- Validates both database connections
+- Shows what migrations will be promoted
+- Waits 5 seconds before applying changes
+- Verifies both databases are in sync after promotion
+
 ### Drizzle Studio
 
 Launch the Drizzle Studio GUI to explore your database:
@@ -83,9 +102,8 @@ See the [ERD diagram](../../docs/ERD.md) for a visual representation of the sche
 
 We use Neon's branching feature to maintain separate databases for each environment:
 
-- **Development** (`main` branch) - Local development and testing
-- **Staging** (`staging` branch) - Pre-production testing
-- **Production** (`production` branch) - Live production data
+- **Development** (`development` branch) - Local development and testing
+- **Production** (`main` branch) - Live production data
 
 See [Neon Setup Guide](../../docs/NEON_SETUP.md) for details on managing branches.
 

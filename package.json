@@ -20,6 +20,7 @@
     "db:generate": "cd packages/db && npm run db:generate",
     "db:migrate": "cd packages/db && npm run db:migrate",
     "db:seed": "cd packages/db && npm run db:seed",
+    "db:promote": "cd packages/db && npm run db:promote",
     "db:studio": "cd packages/db && npm run db:studio"
   },
   "keywords": [],

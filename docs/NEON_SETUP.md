@@ -43,7 +43,6 @@ Neon supports database branching similar to Git branches. We use the following s
 
 ```
 main (production)
-├── staging
 └── development
 ```
 
@@ -52,15 +51,11 @@ main (production)
 | Branch | Purpose | Environment | Auto-Delete |
 |--------|---------|-------------|-------------|
 | `main` | Production database | Production | Never |
-| `staging` | Pre-production testing | Staging | Never |
 | `development` | Local development & testing | Development | Never |
 
 #### Create Branches
 
 ```bash
-# Create staging branch from main
-neonctl branches create --name staging --parent main
-
 # Create development branch from main  
 neonctl branches create --name development --parent main
 ```
@@ -74,9 +69,6 @@ For each branch, you'll need the connection string:
 ```bash
 # Get connection string for main (production)
 neonctl connection-string main
-
-# Get connection string for staging
-neonctl connection-string staging
 
 # Get connection string for development
 neonctl connection-string development
@@ -98,7 +90,7 @@ Store in `.env.local` files:
 DATABASE_URL=postgresql://user:password@ep-dev-123.us-east-1.aws.neon.tech/neondb?sslmode=require
 ```
 
-### Staging & Production (Google Cloud Secret Manager)
+### Production (Google Cloud Secret Manager)
 
 For secure secret storage, use Google Cloud Secret Manager:
 
@@ -108,15 +100,11 @@ For secure secret storage, use Google Cloud Secret Manager:
 # Set your development connection string
 export DEV_DB_URL="postgresql://user:password@ep-dev-123..."
 
-# Set your staging connection string  
-export STAGING_DB_URL="postgresql://user:password@ep-staging-123..."
-
 # Set your production connection string
 export PROD_DB_URL="postgresql://user:password@ep-prod-123..."
 
 # Create secrets in Google Cloud
 echo -n "$DEV_DB_URL" | gcloud secrets create DATABASE_URL_DEV --data-file=-
-echo -n "$STAGING_DB_URL" | gcloud secrets create DATABASE_URL_STAGING --data-file=-
 echo -n "$PROD_DB_URL" | gcloud secrets create DATABASE_URL_PROD --data-file=-
 ```
 
@@ -134,11 +122,6 @@ gcloud secrets add-iam-policy-binding DATABASE_URL_DEV \
   --member="serviceAccount:${SA_EMAIL}" \
   --role="roles/secretmanager.secretAccessor"
 
-# Grant access to staging secret
-gcloud secrets add-iam-policy-binding DATABASE_URL_STAGING \
-  --member="serviceAccount:${SA_EMAIL}" \
-  --role="roles/secretmanager.secretAccessor"
-
 # Grant access to production secret
 gcloud secrets add-iam-policy-binding DATABASE_URL_PROD \
   --member="serviceAccount:${SA_EMAIL}" \
@@ -153,10 +136,6 @@ Deploy functions with the appropriate secret:
 # Development function
 gcloud functions deploy api-handler-dev \
   --set-secrets="DATABASE_URL=DATABASE_URL_DEV:latest"
-
-# Staging function
-gcloud functions deploy api-handler-staging \
-  --set-secrets="DATABASE_URL=DATABASE_URL_STAGING:latest"
 
 # Production function
 gcloud functions deploy api-handler \
@@ -190,9 +169,6 @@ Run migrations against your database:
 # Development
 npm run db:migrate
 
-# Staging (set DATABASE_URL first)
-DATABASE_URL=$STAGING_DB_URL npm run db:migrate
-
 # Production (set DATABASE_URL first)
 DATABASE_URL=$PROD_DB_URL npm run db:migrate
 ```
@@ -204,6 +180,42 @@ npm run db:seed
 ```
 
 The seed script is idempotent - it can be run multiple times safely.
+
+### 5. Promote Migrations to Production
+
+**Automated Promotion Script**
+
+After testing migrations in development, use the promotion script to safely apply them to production:
+
+```bash
+# Set connection strings for both environments
+export DEV_DATABASE_URL="postgresql://user:password@ep-dev-123..."
+export PROD_DATABASE_URL="postgresql://user:password@ep-prod-123..."
+
+# Run promotion script
+npm run db:promote
+```
+
+The promotion script will:
+1. ✅ Validate connections to both databases
+2. ✅ Check which migrations are applied in each environment
+3. ✅ Show you exactly what will be promoted
+4. ⏸️ Wait 5 seconds before proceeding (giving you time to cancel)
+5. ✅ Apply missing migrations to production
+6. ✅ Verify both databases are in sync
+
+**Safety Features:**
+- Shows a clear diff of what will be promoted
+- Includes a 5-second countdown before making changes
+- Validates both databases are accessible before starting
+- Verifies success by checking migration counts after promotion
+- Exits with error if production has more migrations than dev (unexpected state)
+
+**Best Practices:**
+- Always test migrations in development first
+- Review the migration list shown by the script before confirming
+- Keep backups of production data (Neon provides automatic backups)
+- Run during low-traffic periods for large schema changes
 
 ## Neon Console Features
 
@@ -257,19 +269,17 @@ neonctl branches delete feature/new-table
 Workflow for promoting schema changes:
 
 1. **Development**: Test migrations on `development` branch
-2. **Staging**: Apply and test on `staging` branch
-3. **Production**: Apply to `main` branch during deployment window
+2. **Production**: Use automated promotion script to apply to `main` branch
 
 ```bash
 # 1. Test on development
 DATABASE_URL=$DEV_DB_URL npm run db:migrate
 
-# 2. Apply to staging
-DATABASE_URL=$STAGING_DB_URL npm run db:migrate
-
-# 3. Apply to production (after thorough testing)
-DATABASE_URL=$PROD_DB_URL npm run db:migrate
+# 2. Promote to production using automation script
+DEV_DATABASE_URL=$DEV_DB_URL PROD_DATABASE_URL=$PROD_DB_URL npm run db:promote
 ```
+
+The promotion script automates the process and includes safety checks to prevent errors.
 
 ## Connection Pooling
 
