@@ -2,14 +2,10 @@ import { drizzle } from 'drizzle-orm/neon-serverless';
 import { migrate } from 'drizzle-orm/neon-serverless/migrator';
 import { Pool } from '@neondatabase/serverless';
 import dotenv from 'dotenv';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { join } from 'path';
 
 // Load environment variables
 dotenv.config({ path: '.env.local' });
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 async function runMigrations() {
   const connectionString = process.env.DATABASE_URL;
@@ -25,7 +21,7 @@ async function runMigrations() {
   
   try {
     await migrate(db, { 
-      migrationsFolder: join(__dirname, '../migrations'),
+      migrationsFolder: join(import.meta.dirname, '../migrations'),
     });
     
     console.log('✅ Migrations completed successfully');
