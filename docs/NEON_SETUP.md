@@ -7,9 +7,11 @@ This guide explains how to set up and manage the Neon Postgres database for the 
 Kulrs uses [Neon](https://neon.tech/) as its PostgreSQL database provider. Neon offers:
 
 - **Serverless Postgres** - Auto-scaling and usage-based pricing
-- **Branching** - Database branches for dev/staging/production
+- **Branching** - Database branches for dev/production
 - **High Performance** - Fast cold starts and connection pooling
 - **Easy Integration** - Works seamlessly with Vercel, Cloudflare, and Google Cloud
+
+**Database Promotion**: The project includes automated tools for promoting migrations from development to production, including a GitHub Actions workflow for safe production deployments.
 
 ## Initial Setup
 
@@ -217,6 +219,56 @@ The promotion script will:
 - Keep backups of production data (Neon provides automatic backups)
 - Run during low-traffic periods for large schema changes
 
+### 6. Automated Promotion via GitHub Actions (Recommended)
+
+**For production deployments, use the GitHub Actions workflow instead of running the promotion script manually.**
+
+The repository includes a GitHub Actions workflow (`.github/workflows/db-promote.yml`) that automates database migration promotion with better audit trails and consistency.
+
+#### Prerequisites
+
+Configure two GitHub Secrets in your repository:
+
+1. Navigate to your repository on GitHub
+2. Go to **Settings** → **Secrets and variables** → **Actions**
+3. Click **New repository secret**
+4. Add the following secrets:
+   - **Name**: `DEV_DATABASE_URL`
+     - **Value**: Your Neon development database connection string
+   - **Name**: `PROD_DATABASE_URL`
+     - **Value**: Your Neon production database connection string
+
+For more information, see [GitHub's documentation on using secrets](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions).
+
+#### Running the Workflow
+
+To promote migrations from development to production:
+
+1. Navigate to the **Actions** tab in your GitHub repository
+2. Select the **Promote Database Migrations** workflow from the left sidebar
+3. Click the **Run workflow** button
+4. Select the branch (usually `main`)
+5. Click **Run workflow** to start the promotion
+
+⚠️ **Important**: The workflow includes the same 5-second safety countdown. Monitor the workflow logs and be prepared to cancel if needed.
+
+#### What the Workflow Does
+
+The automated workflow:
+1. Checks out the repository code
+2. Sets up Node.js (version 20)
+3. Installs dependencies with `npm ci`
+4. Runs `npm run db:promote` with the configured database URLs
+5. Logs the complete promotion process for audit purposes
+
+#### Why Use GitHub Actions?
+
+- **Audit Trail**: All production deployments are logged in GitHub Actions
+- **Consistency**: Same environment and process every time
+- **Security**: Connection strings never leave GitHub Secrets
+- **Collaboration**: Team members can see promotion history
+- **Rollback**: Easy to identify when migrations were promoted
+
 ## Neon Console Features
 
 Access the [Neon Console](https://console.neon.tech/) to:
@@ -370,8 +422,8 @@ neonctl branches create --name rollback --parent main --timestamp "2024-01-20T09
 - 7-day point-in-time recovery
 
 ### Tips
-1. **Delete unused branches** - Keep only dev/staging/prod
-2. **Configure auto-suspend** - Set to 5 minutes for dev/staging
+1. **Delete unused branches** - Keep only dev and prod
+2. **Configure auto-suspend** - Set to 5 minutes for dev
 3. **Monitor usage** - Set up alerts before hitting limits
 4. **Use appropriate compute** - Start with smallest size, scale as needed
 

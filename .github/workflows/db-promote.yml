@@ -1,0 +1,38 @@
+name: Promote Database Migrations
+
+# This workflow promotes database migrations from development to production.
+# ⚠️ WARNING: This workflow modifies the PRODUCTION database.
+# Only run this after thoroughly testing migrations in development.
+
+on:
+  workflow_dispatch:  # Manual trigger only - no automatic runs
+
+jobs:
+  promote-migrations:
+    name: Promote Migrations to Production
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        working-directory: packages/db
+        run: npm ci
+
+      # ⚠️ WARNING: The following step modifies the PRODUCTION database
+      - name: Run database promotion
+        working-directory: packages/db
+        env:
+          DEV_DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
+          PROD_DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+        run: npm run db:promote
