@@ -7,6 +7,7 @@ A mono-repo for the Kulrs application suite.
 - **apps/web** - React + Vite web application
 - **apps/mobile** - Flutter mobile application
 - **packages/shared** - Shared types and utilities
+- **packages/db** - Database schema and migrations (Drizzle ORM + Neon Postgres)
 - **docs/** - Project documentation
 
 ## Getting Started
@@ -39,6 +40,9 @@ cd apps/web && npm install
 
 # Install shared package dependencies
 cd packages/shared && npm install
+
+# Install database package dependencies
+cd packages/db && npm install
 
 # Get Flutter dependencies
 cd apps/mobile && flutter pub get
@@ -76,6 +80,18 @@ cd packages/shared
 npm run build      # Build shared package
 ```
 
+#### Database Package
+
+```bash
+cd packages/db
+npm run db:generate  # Generate migrations from schema
+npm run db:migrate   # Run migrations
+npm run db:seed      # Seed demo data (dev only)
+npm run db:studio    # Launch Drizzle Studio
+```
+
+See the [Database Package README](packages/db/README.md) for detailed setup instructions.
+
 ## Code Standards
 
 - **Web**: ESLint + Prettier configured
@@ -101,6 +117,8 @@ This project uses environment variables and secrets for configuration across dif
 - **[GitHub Actions Secrets](docs/GITHUB_ACTIONS_SECRETS.md)** - How to configure secrets for CI/CD pipelines
 - **[Cloudflare Setup](docs/CLOUDFLARE_SETUP.md)** - Configuration for Cloudflare Pages deployment
 - **[Google Cloud Setup](docs/GOOGLE_CLOUD_SETUP.md)** - Secret Manager and Cloud Functions configuration
+- **[Neon Database Setup](docs/NEON_SETUP.md)** - Neon Postgres setup and branching strategy
+- **[Database ERD](docs/ERD.md)** - Entity Relationship Diagram and schema documentation
 
 ## License
 
