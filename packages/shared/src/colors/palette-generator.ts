@@ -89,7 +89,7 @@ export function generateFromBaseColor(baseColor: OKLCHColor): GeneratedPalette {
   return {
     colors: assignedColors,
     metadata: {
-      generator: 'base-color',
+      generator: 'color',
       explanation: `Generated palette from base color with ${assignedColors.length} harmonious colors using complementary, analogous, and neutral strategies.`,
       timestamp: new Date().toISOString(),
     },
