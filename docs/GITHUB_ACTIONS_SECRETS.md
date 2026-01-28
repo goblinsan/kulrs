@@ -21,6 +21,21 @@ Configure these secrets in your GitHub repository:
 | `GCP_SERVICE_ACCOUNT_KEY` | Google Cloud service account key (JSON) | GCP Console → IAM & Admin → Service Accounts → Create/Select → Keys → Add Key → JSON |
 | `GCP_PROJECT_ID` | Google Cloud project ID | GCP Console → Project dropdown → Copy Project ID |
 
+**Required IAM Roles for Service Account:**
+- `Cloud Functions Developer`
+- `Secret Manager Secret Accessor`
+- `Service Account User`
+- `Cloud Build Editor`
+- `Storage Admin`
+
+### Repository Variables
+
+These are configured in **Settings → Secrets and variables → Actions → Variables**:
+
+| Variable Name | Description | Example Value |
+|--------------|-------------|---------------|
+| `CORS_ORIGIN` | Allowed CORS origins for API | `https://kulrs.com,https://www.kulrs.com` |
+
 ### Optional Secrets
 
 | Secret Name | Description | Used For |
@@ -55,6 +70,8 @@ Configure these secrets in your GitHub repository:
    - `Cloud Functions Developer`
    - `Secret Manager Secret Accessor`
    - `Service Account User`
+   - `Cloud Build Editor`
+   - `Storage Admin`
 5. Click **Done**
 6. Select the service account → **Keys** tab
 7. Click **Add Key → Create new key**
