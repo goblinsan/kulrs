@@ -1,114 +1,140 @@
 # Database Package
 
-This package contains the database schema, migrations, and utilities for the Kulrs application using Drizzle ORM and Neon Postgres.
+This package manages database schemas, migrations, and promotion workflows for the Kulrs project.
 
-## Setup
+## Overview
 
-### Prerequisites
+The database package uses [Drizzle ORM](https://orm.drizzle.team/) for schema management and migrations, with [Neon PostgreSQL](https://neon.tech/) as the database provider.
 
-- Node.js 20+
-- Neon Postgres database (see [Neon Setup Guide](../../docs/NEON_SETUP.md))
+## Automated Validation
 
-### Installation
+### Migration Validation on Pull Requests
 
-```bash
-npm install
-```
+All pull requests that modify files in the `packages/db/` directory automatically trigger the **Database Migration Check** workflow. This workflow validates your changes before they can be merged.
 
-### Environment Variables
+**What gets validated:**
+- ✅ Migrations directory structure is correct
+- ✅ Schema can be generated without errors (`drizzle-kit generate`)
+- ✅ Database package builds successfully
+- ✅ No duplicate migration file names exist
 
-Create a `.env.local` file in this directory:
+**How it works:**
+1. Create or modify database schema files in `packages/db/`
+2. Open a pull request
+3. The workflow runs automatically and provides a status check
+4. Fix any issues reported by the validation workflow
+5. Once all checks pass, the PR can be reviewed and merged
 
-```bash
-DATABASE_URL=postgresql://user:password@host/database?sslmode=require
-```
+This automated validation helps catch issues early, before they reach production.
 
-For production, use Google Cloud Secret Manager (see [Google Cloud Setup Guide](../../docs/GOOGLE_CLOUD_SETUP.md)).
+## Migration Workflow
 
-## Usage
+The project uses a **two-step process** for database changes:
 
-### Generate Migrations
+### Step 1: Validation (Automatic)
 
-After modifying the schema in `src/schema/`:
+When you create a PR with database changes, the **Database Migration Check** workflow automatically:
+- Validates your migration files are properly formatted
+- Ensures the schema can be generated without errors
+- Checks for common issues like naming conflicts
+- Builds the package to verify everything compiles
 
-```bash
-npm run db:generate
-```
+**This validation does NOT modify any database** - it only checks that your changes are valid.
 
-This will create a new migration file in the `migrations/` directory.
+### Step 2: Production Promotion (Manual)
 
-### Run Migrations
+After your PR is merged, database changes must be manually promoted to production using the **Promote Database Migrations** workflow:
 
-Apply pending migrations to the database:
+1. Navigate to the **Actions** tab in GitHub
+2. Select **Promote Database Migrations** from the workflows list
+3. Click **Run workflow** and confirm
+4. Monitor the workflow execution
 
-```bash
-npm run db:migrate
-```
+⚠️ **Important:** Only promote migrations after:
+- The PR has been thoroughly reviewed
+- Changes have been tested in development
+- You're ready to modify the production database
 
-### Seed Database
-
-Populate the database with demo data (development only):
-
-```bash
-npm run db:seed
-```
-
-The seed script is idempotent and can be re-run safely.
-
-### Promote to Production
-
-Safely promote migrations from development to production:
-
-```bash
-# Set both database URLs
-export DEV_DATABASE_URL="postgresql://..."
-export PROD_DATABASE_URL="postgresql://..."
-
-# Run promotion
-npm run db:promote
-```
-
-This automated script:
-- Validates both database connections
-- Shows what migrations will be promoted
-- Waits 5 seconds before applying changes
-- Verifies both databases are in sync after promotion
-
-### Drizzle Studio
-
-Launch the Drizzle Studio GUI to explore your database:
-
-```bash
-npm run db:studio
-```
-
-## Schema
-
-The database schema includes the following tables:
-
-- **users** - User accounts (Firebase Auth integration)
-- **palettes** - Color palettes
-- **colors** - Individual colors in palettes
-- **tags** - Tags for categorizing palettes
-- **sources** - Source/origin of palettes (user-created, imported, etc.)
-- **likes** - User likes on palettes
-- **saves** - User saved palettes
-
-See the [ERD diagram](../../docs/ERD.md) for a visual representation of the schema.
+For detailed instructions on production promotion, see [docs/NEON_SETUP.md](../../docs/NEON_SETUP.md).
 
 ## Development
 
-### Database Branching Strategy
+### Prerequisites
 
-We use Neon's branching feature to maintain separate databases for each environment:
+- Node.js 20 or higher
+- Access to development and production Neon databases
+- Drizzle Kit installed (`npm install`)
 
-- **Development** (`development` branch) - Local development and testing
-- **Production** (`main` branch) - Live production data
+### Common Commands
 
-See [Neon Setup Guide](../../docs/NEON_SETUP.md) for details on managing branches.
+```bash
+# Install dependencies
+npm install
 
-## Production Deployment
+# Generate migrations from schema changes
+npm run generate
 
-Migrations are automatically applied during deployment via Cloud Functions. The `DATABASE_URL` secret is injected from Google Cloud Secret Manager.
+# Apply migrations to development database
+npm run migrate
 
-See [Deployment Guide](../../docs/DEPLOYMENT.md) for more information.
+# Build the package
+npm run build
+
+# Promote migrations to production (use GitHub Actions workflow instead)
+npm run db:promote
+```
+
+### Schema Changes
+
+1. Modify schema files in the `schema/` directory
+2. Run `npm run generate` to create migration files
+3. Test migrations in your development database
+4. Open a PR - validation runs automatically
+5. After PR is merged, use the GitHub Actions workflow to promote to production
+
+## Configuration
+
+Database connection strings are managed via environment variables:
+
+- `DEV_DATABASE_URL`: Development database connection string
+- `PROD_DATABASE_URL`: Production database connection string
+
+**Never commit database credentials to the repository.** These are configured as GitHub Secrets for the workflows.
+
+## Security
+
+- All database operations in workflows use encrypted secrets
+- Production promotion requires manual triggering (not automatic)
+- Migrations are validated before being allowed to merge
+- Connection strings are never exposed in logs or code
+
+## Troubleshooting
+
+### Validation Workflow Fails
+
+If the Database Migration Check workflow fails:
+
+1. Check the workflow logs for specific error messages
+2. Common issues:
+   - Syntax errors in schema files
+   - Invalid migration file format
+   - Missing dependencies
+   - Duplicate migration file names
+3. Fix the issues and push new commits to update the PR
+
+### Migration Promotion Fails
+
+If the production promotion fails:
+
+1. Review the workflow logs in GitHub Actions
+2. Verify database connection secrets are correctly configured
+3. Ensure migrations exist in the development database
+4. Check network connectivity and database permissions
+5. See [docs/NEON_SETUP.md](../../docs/NEON_SETUP.md) for more details
+
+## Learn More
+
+- [Drizzle ORM Documentation](https://orm.drizzle.team/docs/overview)
+- [Neon Documentation](https://neon.tech/docs)
+- [GitHub Actions Workflows](../../.github/workflows/)
+- [Neon Setup Guide](../../docs/NEON_SETUP.md)

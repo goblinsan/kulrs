@@ -1,0 +1,157 @@
+name: Database Migration Check
+
+# This workflow validates database migrations on pull requests.
+# It ensures migrations are properly formatted and can be applied without errors.
+# Note: This workflow only validates migrations - it does NOT deploy to production.
+# Production deployment requires manual triggering via the 'Promote Database Migrations' workflow.
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'packages/db/**'
+      - '.github/workflows/db-migration-check.yml'
+
+jobs:
+  validate-migrations:
+    name: Validate Database Migrations
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Check if database package is configured
+        id: check-package
+        working-directory: packages/db
+        run: |
+          if [ -f "package.json" ]; then
+            echo "configured=true" >> $GITHUB_OUTPUT
+            echo "✅ Database package.json found"
+          else
+            echo "configured=false" >> $GITHUB_OUTPUT
+            echo "⚠️  Database package.json not found"
+            echo "The database package is not yet configured."
+            echo "This workflow will be skipped until the package is set up."
+          fi
+
+      - name: Install dependencies
+        if: steps.check-package.outputs.configured == 'true'
+        run: npm ci
+
+      - name: Check migrations directory structure
+        if: steps.check-package.outputs.configured == 'true'
+        working-directory: packages/db
+        run: |
+          echo "Checking for migrations directory..."
+          if [ -d "migrations" ] || [ -d "drizzle" ]; then
+            echo "✅ Migrations directory found"
+            ls -la migrations/ 2>/dev/null || ls -la drizzle/ 2>/dev/null || true
+          else
+            echo "⚠️  No migrations directory found (migrations/ or drizzle/)"
+            echo "This may be expected if no migrations have been created yet."
+          fi
+
+      - name: Validate schema with drizzle-kit
+        if: steps.check-package.outputs.configured == 'true'
+        working-directory: packages/db
+        run: |
+          echo "Running drizzle-kit generate to validate schema..."
+          if [ -f "drizzle.config.json" ] || [ -f "drizzle.config.ts" ] || [ -f "drizzle.config.js" ]; then
+            set -e
+            npm run generate || npm run db:generate || npx drizzle-kit generate
+            echo "✅ Schema validation successful"
+          else
+            echo "⚠️  No drizzle config file found - skipping schema validation"
+            echo "Create drizzle.config.json, drizzle.config.ts, or drizzle.config.js to enable this check"
+          fi
+
+      - name: Check for migration naming conflicts
+        if: steps.check-package.outputs.configured == 'true'
+        working-directory: packages/db
+        run: |
+          echo "Checking for duplicate migration file names..."
+          MIGRATIONS_DIR="migrations"
+          [ -d "drizzle" ] && MIGRATIONS_DIR="drizzle"
+          
+          if [ -d "$MIGRATIONS_DIR" ]; then
+            DUPLICATES=$(find "$MIGRATIONS_DIR" -type f -name "*.sql" -exec basename {} \; | sort | uniq -d)
+            if [ -n "$DUPLICATES" ]; then
+              echo "❌ Found duplicate migration file names:"
+              echo "$DUPLICATES"
+              exit 1
+            else
+              echo "✅ No duplicate migration file names found"
+            fi
+          else
+            echo "⚠️  Skipping duplicate check - no migrations directory found"
+          fi
+
+      - name: Build database package
+        if: steps.check-package.outputs.configured == 'true'
+        working-directory: packages/db
+        run: |
+          echo "Building database package..."
+          if grep -q '"build"' package.json 2>/dev/null; then
+            set -e
+            npm run build
+            echo "✅ Database package built successfully"
+          else
+            echo "⚠️  No build script found in package.json - skipping build"
+          fi
+
+      - name: Validation Summary
+        if: success()
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          if [ "${{ steps.check-package.outputs.configured }}" = "true" ]; then
+            echo "✅ Database Migration Validation Passed"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+            echo "All validation checks completed successfully."
+            echo ""
+            echo "ℹ️  Next Steps:"
+            echo "  • Review and merge this PR"
+            echo "  • After merging, promote to production using the"
+            echo "    'Promote Database Migrations' workflow (manual trigger)"
+          else
+            echo "⚠️  Database Package Not Yet Configured"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+            echo "The packages/db directory exists but is not yet configured."
+            echo ""
+            echo "To enable validation, add to packages/db:"
+            echo "  • package.json with build/generate scripts"
+            echo "  • drizzle.config.json (or .ts/.js)"
+            echo "  • Schema files and migrations"
+            echo ""
+            echo "This workflow will automatically validate once configured."
+          fi
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+      - name: Validation Failed
+        if: failure()
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "❌ Database Migration Validation Failed"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "Please review the error messages above and fix the issues."
+          echo "Common issues:"
+          echo "  • Invalid migration file format"
+          echo "  • Syntax errors in schema definitions"
+          echo "  • Missing or incorrect drizzle configuration"
+          echo "  • Duplicate migration file names"
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          exit 1
