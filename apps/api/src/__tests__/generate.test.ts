@@ -75,9 +75,7 @@ describe('Generate Routes', () => {
     });
 
     it('should reject missing color object', async () => {
-      const response = await request(app)
-        .post('/generate/base-color')
-        .send({});
+      const response = await request(app).post('/generate/base-color').send({});
 
       expect(response.status).toBe(400);
       expect(response.body.error).toBe('Validation failed');
@@ -86,11 +84,9 @@ describe('Generate Routes', () => {
 
   describe('POST /generate/mood', () => {
     it('should generate palette from valid mood text', async () => {
-      const response = await request(app)
-        .post('/generate/mood')
-        .send({
-          mood: 'calm ocean sunset',
-        });
+      const response = await request(app).post('/generate/mood').send({
+        mood: 'calm ocean sunset',
+      });
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
@@ -99,7 +95,9 @@ describe('Generate Routes', () => {
       expect(response.body.data.colors.length).toBeGreaterThanOrEqual(8);
       expect(response.body.data.colors.length).toBeLessThanOrEqual(12);
       expect(response.body.data.metadata.generator).toBe('mood');
-      expect(response.body.data.metadata.explanation).toContain('calm ocean sunset');
+      expect(response.body.data.metadata.explanation).toContain(
+        'calm ocean sunset'
+      );
     });
 
     it('should be deterministic without seed', async () => {
@@ -111,7 +109,9 @@ describe('Generate Routes', () => {
         .post('/generate/mood')
         .send({ mood });
 
-      expect(response1.body.data.colors.length).toBe(response2.body.data.colors.length);
+      expect(response1.body.data.colors.length).toBe(
+        response2.body.data.colors.length
+      );
       // Check first color matches
       expect(response1.body.data.colors[0].color.l).toBeCloseTo(
         response2.body.data.colors[0].color.l,
@@ -129,7 +129,9 @@ describe('Generate Routes', () => {
         .post('/generate/mood')
         .send({ mood, seed });
 
-      expect(response1.body.data.colors.length).toBe(response2.body.data.colors.length);
+      expect(response1.body.data.colors.length).toBe(
+        response2.body.data.colors.length
+      );
       expect(response1.body.data.colors[0].color.h).toBeCloseTo(
         response2.body.data.colors[0].color.h,
         5
@@ -137,11 +139,9 @@ describe('Generate Routes', () => {
     });
 
     it('should reject empty mood text', async () => {
-      const response = await request(app)
-        .post('/generate/mood')
-        .send({
-          mood: '',
-        });
+      const response = await request(app).post('/generate/mood').send({
+        mood: '',
+      });
 
       expect(response.status).toBe(400);
       expect(response.body.error).toBe('Validation failed');
@@ -159,9 +159,7 @@ describe('Generate Routes', () => {
     });
 
     it('should reject missing mood', async () => {
-      const response = await request(app)
-        .post('/generate/mood')
-        .send({});
+      const response = await request(app).post('/generate/mood').send({});
 
       expect(response.status).toBe(400);
       expect(response.body.error).toBe('Validation failed');
@@ -234,11 +232,9 @@ describe('Generate Routes', () => {
     });
 
     it('should reject empty pixel array', async () => {
-      const response = await request(app)
-        .post('/generate/image')
-        .send({
-          pixels: [],
-        });
+      const response = await request(app).post('/generate/image').send({
+        pixels: [],
+      });
 
       expect(response.status).toBe(400);
       expect(response.body.error).toBe('Validation failed');
@@ -246,20 +242,16 @@ describe('Generate Routes', () => {
 
     it('should reject too many pixels (> 10000)', async () => {
       const pixels = Array(10001).fill({ r: 100, g: 100, b: 100 });
-      const response = await request(app)
-        .post('/generate/image')
-        .send({
-          pixels,
-        });
+      const response = await request(app).post('/generate/image').send({
+        pixels,
+      });
 
       // Could be 400 (validation) or 413 (payload too large from express)
       expect([400, 413]).toContain(response.status);
     });
 
     it('should reject missing pixels', async () => {
-      const response = await request(app)
-        .post('/generate/image')
-        .send({});
+      const response = await request(app).post('/generate/image').send({});
 
       expect(response.status).toBe(400);
       expect(response.body.error).toBe('Validation failed');

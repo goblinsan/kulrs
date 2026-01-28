@@ -17,7 +17,7 @@ const router = Router();
  * POST /generate/base-color
  * Generate palette from a base color
  */
-router.post('/base-color', async (req: Request, res: Response) => {
+router.post('/base-color', async (req: Request, res: Response): Promise<void> => {
   try {
     // Validate request body
     const validation = generateFromBaseColorSchema.safeParse(req.body);
@@ -51,7 +51,7 @@ router.post('/base-color', async (req: Request, res: Response) => {
  * POST /generate/mood
  * Generate palette from mood text (seeded/repeatable)
  */
-router.post('/mood', async (req: Request, res: Response) => {
+router.post('/mood', async (req: Request, res: Response): Promise<void> => {
   try {
     // Validate request body
     const validation = generateFromMoodSchema.safeParse(req.body);
@@ -85,7 +85,7 @@ router.post('/mood', async (req: Request, res: Response) => {
  * POST /generate/image
  * Generate palette from image pixel data
  */
-router.post('/image', async (req: Request, res: Response) => {
+router.post('/image', async (req: Request, res: Response): Promise<void> => {
   try {
     // Validate request body
     const validation = generateFromImageSchema.safeParse(req.body);

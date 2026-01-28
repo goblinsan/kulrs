@@ -309,6 +309,15 @@ export function generateFromMood(mood: string, seed?: number): GeneratedPalette 
 }
 
 /**
+ * Calculate circular distance between two hue values (0-360)
+ * Accounts for the wraparound at 0/360 degrees
+ */
+function circularHueDistance(h1: number, h2: number): number {
+  const diff = Math.abs(h1 - h2);
+  return Math.min(diff, 360 - diff);
+}
+
+/**
  * Extract dominant colors from RGB pixel data
  * Uses a simple k-means clustering approach
  * 
@@ -328,15 +337,16 @@ export function extractDominantColors(
   const oklchPixels: OKLCHColor[] = pixels.map(rgbToOklch);
   
   // Simple k-means clustering
-  // Initialize centroids randomly
+  // Initialize centroids using evenly spaced indices from the pixel array
   const centroids: OKLCHColor[] = [];
   for (let i = 0; i < numColors; i++) {
     const idx = Math.floor((i / numColors) * oklchPixels.length);
     centroids.push({ ...oklchPixels[idx] });
   }
   
-  // Run k-means for a few iterations
-  for (let iter = 0; iter < 10; iter++) {
+  // Run k-means for up to 10 iterations (usually converges faster)
+  const maxIterations = 10;
+  for (let iter = 0; iter < maxIterations; iter++) {
     // Assign pixels to nearest centroid
     const clusters: OKLCHColor[][] = Array(numColors).fill(null).map(() => []);
     
@@ -345,10 +355,12 @@ export function extractDominantColors(
       let closestCluster = 0;
       
       for (let i = 0; i < centroids.length; i++) {
+        // Calculate distance using circular hue distance
+        const hueDist = circularHueDistance(pixel.h, centroids[i].h) / 360;
         const dist = Math.sqrt(
           Math.pow(pixel.l - centroids[i].l, 2) +
           Math.pow(pixel.c - centroids[i].c, 2) +
-          Math.pow((pixel.h - centroids[i].h) / 360, 2) // Normalize hue
+          Math.pow(hueDist, 2) // Normalized hue distance
         );
         
         if (dist < minDist) {
@@ -374,6 +386,8 @@ export function extractDominantColors(
         
         centroids[i] = { l: avgL, c: avgC, h: avgH };
       }
+      // Empty clusters retain their previous centroid position
+      // This is acceptable for our use case and avoids reinitializing
     }
   }
   
@@ -391,13 +405,15 @@ export function generateFromImage(
   imagePixels: { r: number; g: number; b: number }[]
 ): GeneratedPalette {
   // Extract 2-4 dominant colors from image
-  const numDominant = Math.min(4, Math.max(2, Math.floor(imagePixels.length / 1000)));
+  // For every ~1000 pixels, extract 1 dominant color (up to 4)
+  const PIXELS_PER_DOMINANT_COLOR = 1000;
+  const numDominant = Math.min(4, Math.max(2, Math.floor(imagePixels.length / PIXELS_PER_DOMINANT_COLOR)));
   const dominantColors = extractDominantColors(imagePixels, numDominant);
   
   const colors: OKLCHColor[] = [...dominantColors];
   
-  // Use the most vibrant color as base for generating additional colors
-  const baseColor = dominantColors.reduce((prev, curr) => 
+  // Use the most vibrant (highest chroma) color as base for generating additional colors
+  const mostVibrantColor = dominantColors.reduce((prev, curr) => 
     curr.c > prev.c ? curr : prev
   );
   
@@ -407,8 +423,8 @@ export function generateFromImage(
     colors.push(...analogous);
   }
   
-  // Add neutrals based on base color
-  const neutrals = generateNeutrals(baseColor, 3);
+  // Add neutrals based on most vibrant color
+  const neutrals = generateNeutrals(mostVibrantColor, 3);
   colors.push(...neutrals);
   
   // Apply quality gates
@@ -421,7 +437,7 @@ export function generateFromImage(
   // Ensure 8-12 colors
   let finalColors = filtered;
   if (filtered.length < 8) {
-    const extra = generateAnalogous(baseColor, 30, 4);
+    const extra = generateAnalogous(mostVibrantColor, 30, 4);
     finalColors = applyQualityGates([...filtered, ...extra], {
       maxChroma: 0.4,
       removeDuplicates: true,
