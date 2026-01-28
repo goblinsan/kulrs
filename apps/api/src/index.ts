@@ -54,6 +54,9 @@ app.get('/hello', (_req, res) => {
 });
 
 // Protected routes - require authentication
+// Note: Rate limiting is handled by Google Cloud Functions and can be
+// configured via quotas and API Gateway if needed. For additional protection,
+// consider implementing express-rate-limit middleware in production.
 app.use('/palettes', verifyFirebaseToken, palettesRouter);
 
 // 404 handler

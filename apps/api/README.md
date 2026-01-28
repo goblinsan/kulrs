@@ -218,6 +218,24 @@ All write endpoints require a valid Firebase ID token in the `Authorization` hea
 Authorization: Bearer <firebase-id-token>
 ```
 
+### Rate Limiting
+Rate limiting is handled at the Google Cloud Functions level. You can configure:
+- **Quotas**: Set maximum requests per user/IP in Cloud Console
+- **API Gateway**: Add API Gateway with rate limiting policies for production
+- **Application-level**: For additional protection, implement `express-rate-limit` middleware
+
+Example with express-rate-limit:
+```typescript
+import rateLimit from 'express-rate-limit';
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+});
+
+app.use('/palettes', limiter, verifyFirebaseToken, palettesRouter);
+```
+
 ### CORS
 CORS is configured via the `CORS_ORIGIN` environment variable. In production, set this to your web app's domain.
 
