@@ -7,11 +7,12 @@ import {
   type ReactNode,
 } from 'react';
 import type { User } from 'firebase/auth';
-import { onAuthChange } from '../services/auth';
+import { onAuthChange, signOut as authSignOut } from '../services/auth';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -38,8 +39,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => unsubscribe();
   }, []);
 
+  const handleSignOut = async () => {
+    await authSignOut();
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, loading, signOut: handleSignOut }}>
       {children}
     </AuthContext.Provider>
   );

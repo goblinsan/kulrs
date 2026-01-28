@@ -1,0 +1,30 @@
+.login-page {
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-container {
+  width: 100%;
+  max-width: 400px;
+  padding: 2rem;
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  border: 1px solid #333;
+  text-align: center;
+}
+
+.login-container h1 {
+  margin-bottom: 0.5rem;
+  font-size: 2rem;
+}
+
+.login-subtitle {
+  color: #888;
+  margin-bottom: 2rem;
+}
+
+.login-form {
+  text-align: left;
+}

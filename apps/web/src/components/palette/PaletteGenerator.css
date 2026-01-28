@@ -1,0 +1,37 @@
+.palette-generator {
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  border: 1px solid #333;
+  overflow: hidden;
+}
+
+.generator-tabs {
+  display: flex;
+  border-bottom: 1px solid #333;
+}
+
+.tab {
+  flex: 1;
+  padding: 1rem;
+  background-color: transparent;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.tab:hover {
+  background-color: #252525;
+  color: #fff;
+}
+
+.tab.active {
+  background-color: #2a2a2a;
+  color: #646cff;
+  border-bottom: 2px solid #646cff;
+}
+
+.generator-content {
+  padding: 2rem;
+}
