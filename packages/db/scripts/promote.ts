@@ -22,19 +22,37 @@ dotenv.config({ path: '.env.local' });
  * 4. Verifies both databases are in sync
  */
 
-interface MigrationRow {
-  tag: string;
-}
-
 async function getAppliedMigrations(db: NeonDatabase<Record<string, never>>): Promise<string[]> {
   try {
-    const result = await db.execute(`
-      SELECT tag FROM drizzle.__drizzle_migrations 
-      ORDER BY created_at ASC
-    `);
-    return result.rows.map((row: MigrationRow) => row.tag);
-  } catch (error) {
+    // First try checking for table existence/columns
+    // We select * because column names might vary (tag vs hash)
+    // But we need to know WHICH one to pick to return string[]
+    
+    // Try the old schema (with 'tag') first as checking columns is database specific
+    try {
+        const result = await db.execute(`
+        SELECT tag FROM drizzle.__drizzle_migrations 
+        ORDER BY created_at ASC
+        `);
+        return result.rows.map((row: any) => row.tag);
+    } catch (e: any) {
+        // If column "tag" does not exist (42703), fallback to new schema
+        if (e.code === '42703') { 
+             const result = await db.execute(`
+                SELECT id FROM drizzle.__drizzle_migrations 
+                ORDER BY created_at ASC
+              `);
+             // Start returning placeholders - correct length is the important part here
+             return result.rows.map(() => 'unknown-migration');
+        }
+        throw e;
+    }
+  } catch (error: any) {
     // Table doesn't exist yet, no migrations applied
+    if (error.code === '42P01') { 
+      return [];
+    }
+    console.error('getAppliedMigrations warning:', error);
     return [];
   }
 }
