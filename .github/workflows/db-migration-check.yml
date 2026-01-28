@@ -65,9 +65,9 @@ jobs:
         if: steps.check-package.outputs.configured == 'true'
         working-directory: packages/db
         run: |
-          set -e
           echo "Running drizzle-kit generate to validate schema..."
           if [ -f "drizzle.config.json" ] || [ -f "drizzle.config.ts" ] || [ -f "drizzle.config.js" ]; then
+            set -e
             npm run generate || npm run db:generate || npx drizzle-kit generate
             echo "✅ Schema validation successful"
           else
@@ -100,9 +100,9 @@ jobs:
         if: steps.check-package.outputs.configured == 'true'
         working-directory: packages/db
         run: |
-          set -e
           echo "Building database package..."
-          if grep -q '"build"' package.json; then
+          if grep -q '"build"' package.json 2>/dev/null; then
+            set -e
             npm run build
             echo "✅ Database package built successfully"
           else
@@ -113,7 +113,7 @@ jobs:
         if: success()
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          if [ "${{ steps.check-package.outputs.configured }}" == "true" ]; then
+          if [ "${{ steps.check-package.outputs.configured }}" = "true" ]; then
             echo "✅ Database Migration Validation Passed"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             echo ""
