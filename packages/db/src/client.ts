@@ -1,6 +1,6 @@
 import { drizzle } from 'drizzle-orm/neon-serverless';
 import { Pool } from '@neondatabase/serverless';
-import * as schema from './schema';
+import * as schema from './schema/index.js';
 
 /**
  * Create a database client using the provided connection string

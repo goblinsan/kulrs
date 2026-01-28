@@ -1,2 +1,2 @@
-export * from './tables';
-export * from './relations';
+export * from './tables.js';
+export * from './relations.js';

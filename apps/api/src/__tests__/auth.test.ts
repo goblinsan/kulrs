@@ -1,6 +1,6 @@
 import { Response, NextFunction } from 'express';
-import { verifyFirebaseToken, AuthenticatedRequest } from '../middleware/auth';
-import * as firebase from '../config/firebase';
+import { verifyFirebaseToken, AuthenticatedRequest } from '../middleware/auth.js';
+import * as firebase from '../config/firebase.js';
 
 // Mock Firebase
 jest.mock('../config/firebase', () => ({

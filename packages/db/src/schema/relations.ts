@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm';
-import { users, palettes, colors, tags, paletteTags, sources, likes, saves } from './tables';
+import { users, palettes, colors, tags, paletteTags, sources, likes, saves } from './tables.js';
 
 /**
  * Define relationships between tables
