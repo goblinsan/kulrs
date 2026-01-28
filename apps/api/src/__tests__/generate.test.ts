@@ -26,7 +26,7 @@ describe('Generate Routes', () => {
       expect(response.body.data.colors).toBeDefined();
       expect(response.body.data.colors.length).toBeGreaterThanOrEqual(8);
       expect(response.body.data.colors.length).toBeLessThanOrEqual(12);
-      expect(response.body.data.metadata.generator).toBe('base-color');
+      expect(response.body.data.metadata.generator).toBe('color');
     });
 
     it('should reject invalid lightness value', async () => {

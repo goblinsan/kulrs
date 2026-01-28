@@ -33,7 +33,7 @@ describe('Palette Generators', () => {
       const baseColor: OKLCHColor = { l: 0.6, c: 0.2, h: 220 };
       const palette = generateFromBaseColor(baseColor);
       
-      expect(palette.metadata.generator).toBe('base-color');
+      expect(palette.metadata.generator).toBe('color');
       expect(palette.metadata.explanation).toContain('Generated palette');
       expect(palette.metadata.timestamp).toBeDefined();
     });
