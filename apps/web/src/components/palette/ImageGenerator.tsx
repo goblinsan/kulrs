@@ -16,14 +16,16 @@ export function ImageGenerator({ onGenerate, loading }: ImageGeneratorProps) {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = event => {
       const url = event.target?.result as string;
       setPreviewUrl(url);
     };
     reader.readAsDataURL(file);
   };
 
-  const extractPixels = async (imageUrl: string): Promise<{ r: number; g: number; b: number }[]> => {
+  const extractPixels = async (
+    imageUrl: string
+  ): Promise<{ r: number; g: number; b: number }[]> => {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
@@ -86,7 +88,7 @@ export function ImageGenerator({ onGenerate, loading }: ImageGeneratorProps) {
       <p className="generator-description">
         Upload an image to extract a color palette from its dominant colors
       </p>
-      
+
       <div className="image-upload">
         <input
           ref={fileInputRef}
@@ -104,7 +106,7 @@ export function ImageGenerator({ onGenerate, loading }: ImageGeneratorProps) {
         >
           Choose Image
         </button>
-        
+
         {previewUrl && (
           <div className="image-preview">
             <img src={previewUrl} alt="Preview" />

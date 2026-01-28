@@ -75,7 +75,9 @@
   color: #fff;
   cursor: pointer;
   font-size: 0.9rem;
-  transition: background-color 0.2s, border-color 0.2s;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
 }
 
 .mood-chip:hover:not(:disabled) {
@@ -130,7 +132,9 @@
   border-radius: 4px;
   font-size: 1rem;
   cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
   align-self: flex-start;
 }
 

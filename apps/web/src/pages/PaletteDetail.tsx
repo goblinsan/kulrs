@@ -5,7 +5,7 @@ import './PaletteDetail.css';
 
 export function PaletteDetail() {
   const { id } = useParams<{ id: string }>();
-  
+
   let palette: GeneratedPalette | null = null;
   let error: string | null = null;
 
@@ -40,14 +40,15 @@ export function PaletteDetail() {
       <div className="palette-detail-header">
         <h1>Color Palette</h1>
         <p className="palette-metadata">
-          Generated via {palette.metadata.generator} • {new Date(palette.metadata.timestamp).toLocaleDateString()}
+          Generated via {palette.metadata.generator} •{' '}
+          {new Date(palette.metadata.timestamp).toLocaleDateString()}
         </p>
         <p className="palette-explanation">{palette.metadata.explanation}</p>
         <button onClick={handleCopyShareLink} className="share-button">
           📋 Copy Share Link
         </button>
       </div>
-      
+
       <PaletteDisplay palette={palette} showControls={true} />
     </div>
   );

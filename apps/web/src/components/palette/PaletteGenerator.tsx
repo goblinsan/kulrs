@@ -17,7 +17,11 @@ export function PaletteGenerator({ onGenerate }: PaletteGeneratorProps) {
 
   const handleGenerate = async (
     type: 'mood' | 'color' | 'image',
-    data: { mood?: string; color?: OKLCHColor; pixels?: { r: number; g: number; b: number }[] }
+    data: {
+      mood?: string;
+      color?: OKLCHColor;
+      pixels?: { r: number; g: number; b: number }[];
+    }
   ) => {
     setLoading(true);
     try {
@@ -69,19 +73,19 @@ export function PaletteGenerator({ onGenerate }: PaletteGeneratorProps) {
       <div className="generator-content">
         {activeTab === 'mood' && (
           <MoodGenerator
-            onGenerate={(mood) => handleGenerate('mood', { mood })}
+            onGenerate={mood => handleGenerate('mood', { mood })}
             loading={loading}
           />
         )}
         {activeTab === 'color' && (
           <ColorGenerator
-            onGenerate={(color) => handleGenerate('color', { color })}
+            onGenerate={color => handleGenerate('color', { color })}
             loading={loading}
           />
         )}
         {activeTab === 'image' && (
           <ImageGenerator
-            onGenerate={(pixels) => handleGenerate('image', { pixels })}
+            onGenerate={pixels => handleGenerate('image', { pixels })}
             loading={loading}
           />
         )}

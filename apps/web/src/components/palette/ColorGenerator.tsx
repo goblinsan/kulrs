@@ -15,7 +15,7 @@ export function ColorGenerator({ onGenerate, loading }: ColorGeneratorProps) {
     const r = parseInt(hex.slice(1, 3), 16);
     const g = parseInt(hex.slice(3, 5), 16);
     const b = parseInt(hex.slice(5, 7), 16);
-    
+
     // Use the proper conversion from shared package
     return rgbToOklch({ r, g, b });
   };
@@ -32,20 +32,20 @@ export function ColorGenerator({ onGenerate, loading }: ColorGeneratorProps) {
       <p className="generator-description">
         Pick a base color to generate a harmonious palette
       </p>
-      
+
       <form onSubmit={handleSubmit}>
         <div className="color-input-group">
           <input
             type="color"
             value={hexColor}
-            onChange={(e) => setHexColor(e.target.value)}
+            onChange={e => setHexColor(e.target.value)}
             className="color-picker"
             disabled={loading}
           />
           <input
             type="text"
             value={hexColor}
-            onChange={(e) => setHexColor(e.target.value)}
+            onChange={e => setHexColor(e.target.value)}
             placeholder="#646cff"
             className="hex-input"
             disabled={loading}

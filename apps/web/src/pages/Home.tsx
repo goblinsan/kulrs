@@ -25,11 +25,14 @@ export function Home() {
     <div className="home">
       <div className="home-header">
         <h1>Generate Your Color Palette</h1>
-        <p>Create beautiful, accessible color palettes from moods, colors, or images</p>
+        <p>
+          Create beautiful, accessible color palettes from moods, colors, or
+          images
+        </p>
       </div>
-      
+
       <PaletteGenerator onGenerate={handlePaletteGenerated} />
-      
+
       {palette && (
         <div className="palette-result">
           <h2>Generated Palette</h2>

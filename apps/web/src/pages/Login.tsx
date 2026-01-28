@@ -23,7 +23,9 @@ export function Login() {
       <div className="login-container">
         <h1>Kulrs</h1>
         <p className="login-subtitle">
-          {authMode === 'login' ? 'Sign in to your account' : 'Create a new account'}
+          {authMode === 'login'
+            ? 'Sign in to your account'
+            : 'Create a new account'}
         </p>
         <div className="login-form">
           {authMode === 'login' ? (
