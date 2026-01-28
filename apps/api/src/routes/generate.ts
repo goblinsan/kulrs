@@ -17,35 +17,38 @@ const router = Router();
  * POST /generate/base-color
  * Generate palette from a base color
  */
-router.post('/base-color', async (req: Request, res: Response): Promise<void> => {
-  try {
-    // Validate request body
-    const validation = generateFromBaseColorSchema.safeParse(req.body);
-    if (!validation.success) {
-      res.status(400).json({
-        error: 'Validation failed',
-        details: validation.error.errors,
+router.post(
+  '/base-color',
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      // Validate request body
+      const validation = generateFromBaseColorSchema.safeParse(req.body);
+      if (!validation.success) {
+        res.status(400).json({
+          error: 'Validation failed',
+          details: validation.error.errors,
+        });
+        return;
+      }
+
+      const { color } = validation.data;
+
+      // Generate palette
+      const palette = generateFromBaseColor(color as OKLCHColor);
+
+      res.status(200).json({
+        success: true,
+        data: palette,
       });
-      return;
+    } catch (error) {
+      console.error('Error generating palette from base color:', error);
+      res.status(500).json({
+        error: 'Internal Server Error',
+        message: 'Failed to generate palette from base color',
+      });
     }
-
-    const { color } = validation.data;
-
-    // Generate palette
-    const palette = generateFromBaseColor(color as OKLCHColor);
-
-    res.status(200).json({
-      success: true,
-      data: palette,
-    });
-  } catch (error) {
-    console.error('Error generating palette from base color:', error);
-    res.status(500).json({
-      error: 'Internal Server Error',
-      message: 'Failed to generate palette from base color',
-    });
   }
-});
+);
 
 /**
  * POST /generate/mood
