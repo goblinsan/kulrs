@@ -1,0 +1,35 @@
+{
+  "name": "@kulrs/db",
+  "version": "0.1.0",
+  "description": "Database schema and migrations for Kulrs using Drizzle ORM",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "db:seed": "tsx scripts/seed.ts",
+    "db:promote": "tsx scripts/promote.ts",
+    "db:studio": "drizzle-kit studio"
+  },
+  "keywords": [
+    "kulrs",
+    "database",
+    "drizzle",
+    "neon",
+    "postgres"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
+    "drizzle-orm": "^0.38.3"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.30.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "dotenv": "^16.4.7"
+  }
+}
