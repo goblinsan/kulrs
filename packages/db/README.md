@@ -104,7 +104,7 @@ Database connection strings are managed via environment variables:
 ## Security
 
 - All database operations in workflows use encrypted secrets
-- Production promotion requires manual approval
+- Production promotion requires manual triggering (not automatic)
 - Migrations are validated before being allowed to merge
 - Connection strings are never exposed in logs or code
 

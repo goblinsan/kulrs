@@ -3,7 +3,7 @@ name: Database Migration Check
 # This workflow validates database migrations on pull requests.
 # It ensures migrations are properly formatted and can be applied without errors.
 # Note: This workflow only validates migrations - it does NOT deploy to production.
-# Production deployment requires manual approval via the 'Promote Database Migrations' workflow.
+# Production deployment requires manual triggering via the 'Promote Database Migrations' workflow.
 
 on:
   pull_request:
@@ -31,7 +31,6 @@ jobs:
           cache-dependency-path: package-lock.json
 
       - name: Install dependencies
-        working-directory: packages/db
         run: npm ci
 
       - name: Check migrations directory structure
@@ -49,6 +48,7 @@ jobs:
       - name: Validate schema with drizzle-kit
         working-directory: packages/db
         run: |
+          set -e
           echo "Running drizzle-kit generate to validate schema..."
           npm run generate || npm run db:generate || npx drizzle-kit generate
           echo "✅ Schema validation successful"
@@ -76,6 +76,7 @@ jobs:
       - name: Build database package
         working-directory: packages/db
         run: |
+          set -e
           echo "Building database package..."
           npm run build
           echo "✅ Database package built successfully"
