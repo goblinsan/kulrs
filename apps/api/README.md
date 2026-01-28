@@ -165,7 +165,25 @@ npm run format:check  # Check formatting
 
 ## Deployment
 
-### Deploy to Google Cloud Functions
+### Automated Deployment (CI/CD)
+
+The API automatically deploys to Google Cloud Functions when changes are merged to `main` branch via GitHub Actions.
+
+**Workflows:**
+- `.github/workflows/api-ci.yml` - Runs linting, tests, and builds on PRs
+- `.github/workflows/api-deploy.yml` - Deploys to GCF on merge to main
+
+**Setup:**
+1. Configure GitHub secrets (see [GitHub Actions Secrets](../../docs/GITHUB_ACTIONS_SECRETS.md))
+2. Merge PR to `main` - deployment happens automatically
+3. Monitor deployment in GitHub Actions tab
+
+**Manual Trigger:**
+You can manually deploy via GitHub Actions UI → **Deploy API to Google Cloud Functions** → **Run workflow**
+
+### Manual Deployment
+
+For manual deployment or local testing:
 
 ```bash
 # Build the project
@@ -184,9 +202,7 @@ gcloud functions deploy kulrs-api \
   --set-env-vars="NODE_ENV=production,FIREBASE_PROJECT_ID=your-project-id,CORS_ORIGIN=https://kulrs.com,LOG_LEVEL=info"
 ```
 
-### CI/CD Deployment
-
-Deployment is typically handled via GitHub Actions. See `.github/workflows/` for deployment workflows.
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
 
 ## Project Structure
 

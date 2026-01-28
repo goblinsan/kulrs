@@ -2,7 +2,52 @@
 
 This guide provides step-by-step instructions for deploying the Kulrs Write API to Google Cloud Functions.
 
-## Prerequisites
+## Automated Deployment (Recommended)
+
+The API is automatically deployed to Google Cloud Functions via GitHub Actions when changes are merged to the `main` branch.
+
+### Prerequisites for CI/CD
+
+1. ✅ Configure GitHub repository secrets (see [GitHub Actions Secrets Guide](../../docs/GITHUB_ACTIONS_SECRETS.md)):
+   - `GCP_SERVICE_ACCOUNT_KEY` - Service account JSON key
+   - `GCP_PROJECT_ID` - Your Google Cloud project ID
+
+2. ✅ Configure GitHub repository variables:
+   - `CORS_ORIGIN` - Allowed CORS origins (e.g., `https://kulrs.com,https://www.kulrs.com`)
+
+3. ✅ Set up Google Cloud Secret Manager with required secrets:
+   - `DATABASE_URL` - Neon Postgres connection string
+
+### Deployment Workflows
+
+Two workflows are configured:
+
+1. **API CI** (`.github/workflows/api-ci.yml`) - Runs on all PRs
+   - Lints code
+   - Runs tests
+   - Builds TypeScript
+
+2. **API Deploy** (`.github/workflows/api-deploy.yml`) - Runs on merge to `main`
+   - Builds the API
+   - Deploys to Google Cloud Functions
+   - Tests the deployment
+   - Reports function URL
+
+### Manual Deployment Trigger
+
+You can manually trigger a deployment via GitHub Actions:
+
+1. Go to **Actions** tab in GitHub
+2. Select **Deploy API to Google Cloud Functions** workflow
+3. Click **Run workflow**
+4. Select environment (production/staging)
+5. Click **Run workflow**
+
+## Manual Deployment
+
+If you need to deploy manually (for testing or troubleshooting), follow these steps:
+
+### Prerequisites
 
 Before deploying, ensure you have:
 
