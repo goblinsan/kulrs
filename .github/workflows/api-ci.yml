@@ -6,12 +6,14 @@ on:
     paths:
       - 'apps/api/**'
       - 'packages/db/**'
+      - 'packages/shared/**'
       - '.github/workflows/api-ci.yml'
   push:
     branches: [ main ]
     paths:
       - 'apps/api/**'
       - 'packages/db/**'
+      - 'packages/shared/**'
       - '.github/workflows/api-ci.yml'
 
 jobs:
@@ -34,6 +36,10 @@ jobs:
 
       - name: Install root dependencies
         run: npm ci
+
+      - name: Build shared package
+        working-directory: packages/shared
+        run: npm run build
 
       - name: Build database package
         working-directory: packages/db
