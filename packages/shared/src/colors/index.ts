@@ -4,3 +4,4 @@ export * from './oklch';
 export * from './conversions';
 export * from './harmony';
 export * from './contrast';
+export * from './palette-generator';

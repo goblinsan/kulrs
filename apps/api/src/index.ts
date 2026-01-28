@@ -3,6 +3,7 @@ import { HttpFunction } from '@google-cloud/functions-framework';
 import { initializeFirebase } from './config/firebase.js';
 import { verifyFirebaseToken } from './middleware/auth.js';
 import palettesRouter from './routes/palettes.js';
+import generateRouter from './routes/generate.js';
 
 // Initialize Firebase Admin SDK
 initializeFirebase();
@@ -58,6 +59,7 @@ app.get('/hello', (_req, res) => {
 // configured via quotas and API Gateway if needed. For additional protection,
 // consider implementing express-rate-limit middleware in production.
 app.use('/palettes', verifyFirebaseToken, palettesRouter);
+app.use('/generate', verifyFirebaseToken, generateRouter);
 
 // 404 handler
 app.use((_req, res) => {

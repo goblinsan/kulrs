@@ -1,5 +1,8 @@
 import { Response, NextFunction } from 'express';
-import { verifyFirebaseToken, AuthenticatedRequest } from '../middleware/auth.js';
+import {
+  verifyFirebaseToken,
+  AuthenticatedRequest,
+} from '../middleware/auth.js';
 import * as firebase from '../config/firebase.js';
 
 // Mock Firebase
