@@ -6,6 +6,7 @@ A mono-repo for the Kulrs application suite.
 
 - **apps/web** - React + Vite web application
 - **apps/mobile** - Flutter mobile application
+- **apps/api** - Google Cloud Functions write API
 - **packages/shared** - Shared types and utilities
 - **packages/db** - Database schema and migrations (Drizzle ORM + Neon Postgres)
 - **docs/** - Project documentation
@@ -37,6 +38,9 @@ npm install
 
 # Install web app dependencies
 cd apps/web && npm install
+
+# Install API dependencies
+cd apps/api && npm install
 
 # Install shared package dependencies
 cd packages/shared && npm install
@@ -80,6 +84,19 @@ cd packages/shared
 npm run build      # Build shared package
 ```
 
+#### API Application
+
+```bash
+cd apps/api
+npm run build      # Build TypeScript
+npm run dev        # Start local dev server (requires build first)
+npm run dev:watch  # Watch TypeScript files
+npm run lint       # Run linting
+npm run test       # Run tests
+```
+
+**Environment Variables**: Copy `.env.example` to `.env.local` and configure for local development. See [apps/api/README.md](apps/api/README.md) for details.
+
 #### Database Package
 
 ```bash
@@ -120,6 +137,7 @@ This project uses environment variables and secrets for configuration across dif
 - **[Google Cloud Setup](docs/GOOGLE_CLOUD_SETUP.md)** - Secret Manager and Cloud Functions configuration
 - **[Neon Database Setup](docs/NEON_SETUP.md)** - Neon Postgres setup and branching strategy
 - **[Database ERD](docs/ERD.md)** - Entity Relationship Diagram and schema documentation
+- **[Read Strategy](docs/READ_STRATEGY.md)** - Architecture decision: direct DB access vs read API
 
 ## License
 
