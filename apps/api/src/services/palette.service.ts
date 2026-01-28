@@ -1,4 +1,4 @@
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, sql, asc } from 'drizzle-orm';
 import { db } from '../config/database.js';
 import { users, palettes, colors, paletteTags, likes, saves } from '@kulrs/db';
 import { CreatePaletteInput } from '../utils/validation.js';
@@ -150,7 +150,7 @@ export class PaletteService {
       .select()
       .from(colors)
       .where(eq(colors.paletteId, paletteId))
-      .orderBy(colors.position);
+      .orderBy(asc(colors.position));
 
     // Create new palette
     const [newPalette] = await db

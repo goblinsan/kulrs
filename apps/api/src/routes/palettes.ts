@@ -141,12 +141,23 @@ router.post('/:id/remix', async (req: AuthenticatedRequest, res: Response) => {
     );
 
     // Remix palette
-    const newPalette = await paletteService.remixPalette(user.id, paletteId);
+    try {
+      const newPalette = await paletteService.remixPalette(user.id, paletteId);
 
-    res.status(201).json({
-      success: true,
-      data: newPalette,
-    });
+      res.status(201).json({
+        success: true,
+        data: newPalette,
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message === 'Palette not found') {
+        res.status(404).json({
+          error: 'Not Found',
+          message: 'Palette not found',
+        });
+        return;
+      }
+      throw error;
+    }
   } catch (error) {
     console.error('Error remixing palette:', error);
     res.status(500).json({

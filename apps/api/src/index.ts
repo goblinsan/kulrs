@@ -65,13 +65,21 @@ app.use((_req, res) => {
 });
 
 // Error handler
-app.use((err: Error, _req: express.Request, res: express.Response) => {
-  console.error('Unhandled error:', err);
-  res.status(500).json({
-    error: 'Internal Server Error',
-    message: err.message || 'An unexpected error occurred',
-  });
-});
+app.use(
+  (
+    err: Error,
+    _req: express.Request,
+    res: express.Response,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _next: express.NextFunction
+  ) => {
+    console.error('Unhandled error:', err);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: err.message || 'An unexpected error occurred',
+    });
+  }
+);
 
 // Export the HTTP handler for Google Cloud Functions
 export const handler: HttpFunction = app;
