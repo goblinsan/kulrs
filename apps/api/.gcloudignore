@@ -1,0 +1,10 @@
+.git
+.gitignore
+node_modules/
+test/
+# src/ # Keep src for building on GCF if needed
+# tsconfig.json # Keep tsconfig for building
+.github
+.vscode
+.DS_Store
+*.log

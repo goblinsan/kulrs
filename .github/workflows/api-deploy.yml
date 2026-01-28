@@ -43,9 +43,16 @@ jobs:
         working-directory: packages/db
         run: npm run build
 
-      - name: Install API dependencies
-        working-directory: apps/api
-        run: npm install
+      - name: Pack database and prepare API
+        run: |
+          cd packages/db
+          npm pack
+          mv kulrs-db-*.tgz ../../apps/api/kulrs-db.tgz
+          cd ../../apps/api
+          # Install dependencies including the packed local db package
+          # This updates package.json to point to the local tarball file for deployment
+          npm install
+          npm install ./kulrs-db.tgz
 
       - name: Build API
         working-directory: apps/api
