@@ -143,21 +143,3 @@ export function oklchToRgb(oklch: OKLCHColor): RGBColor {
   const linear = oklabToLinearRgb(oklab);
   return linearRgbToRgb(linear);
 }
-
-/**
- * Converts OKLCH to HSL (via RGB)
- */
-export function oklchToHsl(oklch: OKLCHColor) {
-  const { rgbToHsl } = require('./hsl');
-  const rgb = oklchToRgb(oklch);
-  return rgbToHsl(rgb);
-}
-
-/**
- * Converts HSL to OKLCH (via RGB)
- */
-export function hslToOklch(hsl: any) {
-  const { hslToRgb } = require('./hsl');
-  const rgb = hslToRgb(hsl);
-  return rgbToOklch(rgb);
-}
