@@ -8,10 +8,10 @@ app.use(express.json());
 app.use('/generate', generateRouter);
 
 describe('Generate Routes', () => {
-  describe('POST /generate/base-color', () => {
+  describe('POST /generate/color', () => {
     it('should generate palette from valid base color', async () => {
       const response = await request(app)
-        .post('/generate/base-color')
+        .post('/generate/color')
         .send({
           color: {
             l: 0.6,
@@ -31,7 +31,7 @@ describe('Generate Routes', () => {
 
     it('should reject invalid lightness value', async () => {
       const response = await request(app)
-        .post('/generate/base-color')
+        .post('/generate/color')
         .send({
           color: {
             l: 1.5, // Invalid: > 1
@@ -46,7 +46,7 @@ describe('Generate Routes', () => {
 
     it('should reject invalid chroma value', async () => {
       const response = await request(app)
-        .post('/generate/base-color')
+        .post('/generate/color')
         .send({
           color: {
             l: 0.6,
@@ -61,7 +61,7 @@ describe('Generate Routes', () => {
 
     it('should reject invalid hue value', async () => {
       const response = await request(app)
-        .post('/generate/base-color')
+        .post('/generate/color')
         .send({
           color: {
             l: 0.6,
@@ -75,7 +75,7 @@ describe('Generate Routes', () => {
     });
 
     it('should reject missing color object', async () => {
-      const response = await request(app).post('/generate/base-color').send({});
+      const response = await request(app).post('/generate/color').send({});
 
       expect(response.status).toBe(400);
       expect(response.body.error).toBe('Validation failed');

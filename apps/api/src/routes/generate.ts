@@ -14,11 +14,11 @@ import {
 const router = Router();
 
 /**
- * POST /generate/base-color
+ * POST /generate/color
  * Generate palette from a base color
  */
 router.post(
-  '/base-color',
+  '/color',
   async (req: Request, res: Response): Promise<void> => {
     try {
       // Validate request body
