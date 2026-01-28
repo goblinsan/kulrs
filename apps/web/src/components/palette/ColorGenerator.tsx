@@ -11,6 +11,11 @@ export function ColorGenerator({ onGenerate, loading }: ColorGeneratorProps) {
   const [hexColor, setHexColor] = useState('#646cff');
 
   const hexToOklch = (hex: string): OKLCHColor => {
+    // Validate hex format
+    if (!/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+      throw new Error('Invalid hex color format');
+    }
+
     // Convert hex to RGB
     const r = parseInt(hex.slice(1, 3), 16);
     const g = parseInt(hex.slice(3, 5), 16);
@@ -22,8 +27,12 @@ export function ColorGenerator({ onGenerate, loading }: ColorGeneratorProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const oklch = hexToOklch(hexColor);
-    onGenerate(oklch);
+    try {
+      const oklch = hexToOklch(hexColor);
+      onGenerate(oklch);
+    } catch (error) {
+      console.error('Invalid color:', error);
+    }
   };
 
   return (

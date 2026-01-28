@@ -34,9 +34,15 @@ export function ColorSwatch({ color, showControls = false }: ColorSwatchProps) {
   const textColor = getTextColor(hex);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(hex);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    navigator.clipboard
+      .writeText(hex)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch((error) => {
+        console.error('Failed to copy to clipboard:', error);
+      });
   };
 
   return (

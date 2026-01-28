@@ -31,8 +31,15 @@ export function PaletteDetail() {
   const shareUrl = window.location.href;
 
   const handleCopyShareLink = () => {
-    navigator.clipboard.writeText(shareUrl);
-    alert('Share link copied to clipboard!');
+    navigator.clipboard
+      .writeText(shareUrl)
+      .then(() => {
+        alert('Share link copied to clipboard!');
+      })
+      .catch((error) => {
+        console.error('Failed to copy to clipboard:', error);
+        alert('Failed to copy link. Please copy the URL manually.');
+      });
   };
 
   return (

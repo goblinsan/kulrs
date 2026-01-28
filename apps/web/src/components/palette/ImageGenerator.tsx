@@ -54,8 +54,8 @@ export function ImageGenerator({ onGenerate, loading }: ImageGeneratorProps) {
         const imageData = ctx.getImageData(0, 0, width, height);
         const pixels: { r: number; g: number; b: number }[] = [];
 
-        // Sample every 10th pixel to reduce data size
-        for (let i = 0; i < imageData.data.length; i += 40) {
+        // Sample every 4th pixel (increment by 16 bytes: 4 pixels × 4 bytes/pixel)
+        for (let i = 0; i < imageData.data.length; i += 16) {
           pixels.push({
             r: imageData.data[i],
             g: imageData.data[i + 1],
