@@ -13,7 +13,7 @@ import {
 } from '../middleware/auth.js';
 
 // Mock Firebase getAuth
-const mockVerifyIdToken = jest.fn();
+const mockVerifyIdToken = jest.fn<() => Promise<unknown>>();
 const mockGetAuth = jest.fn(() => ({
   verifyIdToken: mockVerifyIdToken,
 }));
@@ -32,9 +32,11 @@ describe('Auth Middleware', () => {
     mockRequest = {
       headers: {},
     };
+    const statusMock = jest.fn().mockReturnThis();
+    const jsonMock = jest.fn().mockReturnThis();
     mockResponse = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis(),
+      status: statusMock as unknown as Response['status'],
+      json: jsonMock as unknown as Response['json'],
     };
     nextFunction = jest.fn() as unknown as NextFunction;
     mockVerifyIdToken.mockReset();
