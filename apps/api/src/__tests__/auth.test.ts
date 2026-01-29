@@ -1,20 +1,25 @@
+import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { Response, NextFunction } from 'express';
 import {
   verifyFirebaseToken,
   AuthenticatedRequest,
 } from '../middleware/auth.js';
-import * as firebase from '../config/firebase.js';
 
-// Mock Firebase
-jest.mock('../config/firebase', () => ({
-  getAuth: jest.fn(),
+// Mock Firebase getAuth
+const mockVerifyIdToken = jest.fn();
+const mockGetAuth = jest.fn(() => ({
+  verifyIdToken: mockVerifyIdToken,
+}));
+
+// Mock the firebase module
+jest.unstable_mockModule('../config/firebase.js', () => ({
+  getAuth: mockGetAuth,
 }));
 
 describe('Auth Middleware', () => {
   let mockRequest: Partial<AuthenticatedRequest>;
   let mockResponse: Partial<Response>;
   let nextFunction: NextFunction;
-  let mockVerifyIdToken: jest.Mock;
 
   beforeEach(() => {
     mockRequest = {
@@ -24,11 +29,9 @@ describe('Auth Middleware', () => {
       status: jest.fn().mockReturnThis(),
       json: jest.fn().mockReturnThis(),
     };
-    nextFunction = jest.fn();
-    mockVerifyIdToken = jest.fn();
-    (firebase.getAuth as jest.Mock).mockReturnValue({
-      verifyIdToken: mockVerifyIdToken,
-    });
+    nextFunction = jest.fn() as unknown as NextFunction;
+    mockVerifyIdToken.mockReset();
+    mockGetAuth.mockClear();
   });
 
   afterEach(() => {
