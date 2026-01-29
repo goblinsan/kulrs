@@ -19,7 +19,7 @@ export class PaletteService {
     }
 
     // Create new user
-    const [newUser] = await db
+    const result = await db
       .insert(users)
       .values({
         firebaseUid,
@@ -27,7 +27,8 @@ export class PaletteService {
       })
       .returning();
 
-    return newUser;
+    // @ts-expect-error - Neon DB type definitions issue with returning()
+    return result[0];
   }
 
   /**
@@ -35,7 +36,7 @@ export class PaletteService {
    */
   async createPalette(userId: string, input: CreatePaletteInput) {
     // Create palette
-    const [palette] = await db
+    const paletteResult = await db
       .insert(palettes)
       .values({
         name: input.name,
@@ -45,6 +46,9 @@ export class PaletteService {
         isPublic: input.isPublic,
       })
       .returning();
+
+    // @ts-expect-error - Neon DB type definitions issue with returning()
+    const palette = paletteResult[0];
 
     // Create colors
     if (input.colors && input.colors.length > 0) {
@@ -153,7 +157,7 @@ export class PaletteService {
       .orderBy(asc(colors.position));
 
     // Create new palette
-    const [newPalette] = await db
+    const newPaletteResult = await db
       .insert(palettes)
       .values({
         name: `${originalPalette.name} (Remix)`,
@@ -163,6 +167,9 @@ export class PaletteService {
         isPublic: true,
       })
       .returning();
+
+    // @ts-expect-error - Neon DB type definitions issue with returning()
+    const newPalette = newPaletteResult[0];
 
     // Copy colors
     if (originalColors.length > 0) {

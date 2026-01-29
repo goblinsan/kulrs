@@ -7,11 +7,9 @@ export default {
   extensionsToTreatAsEsm: ['.ts'],
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
-    '^@kulrs/shared$': '<rootDir>/../../packages/shared/src/index.ts',
-    '^@kulrs/db$': '<rootDir>/../../packages/db/src/index.ts',
   },
   transform: {
-    '^.+\\.ts$': [
+    '^.+\\.(ts|js)$': [
       'ts-jest',
       {
         useESM: true,
@@ -23,7 +21,7 @@ export default {
     ],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(@kulrs)/)',
+    'node_modules/(?!@kulrs)',
   ],
   collectCoverageFrom: [
     'src/**/*.ts',
