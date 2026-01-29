@@ -1,4 +1,11 @@
-import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import {
+  jest,
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import { Response, NextFunction } from 'express';
 import {
   verifyFirebaseToken,
