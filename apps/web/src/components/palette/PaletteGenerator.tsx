@@ -3,12 +3,18 @@ import { type GeneratedPalette, type OKLCHColor } from '@kulrs/shared';
 import { MoodGenerator } from './MoodGenerator';
 import { ColorGenerator } from './ColorGenerator';
 import { ImageGenerator } from './ImageGenerator';
+import { apiPost } from '../../services/api';
 import './PaletteGenerator.css';
 
 type GeneratorTab = 'mood' | 'color' | 'image';
 
 interface PaletteGeneratorProps {
   onGenerate: (palette: GeneratedPalette) => void;
+}
+
+interface GenerateResponse {
+  success: boolean;
+  data: GeneratedPalette;
 }
 
 export function PaletteGenerator({ onGenerate }: PaletteGeneratorProps) {
@@ -25,23 +31,11 @@ export function PaletteGenerator({ onGenerate }: PaletteGeneratorProps) {
   ) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/generate/${type}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate palette');
-      }
-
-      const result = await response.json();
+      const result = await apiPost<GenerateResponse>(`/generate/${type}`, data);
       onGenerate(result.data);
     } catch (error) {
       console.error('Error generating palette:', error);
-      alert('Failed to generate palette. Please try again.');
+      alert('Failed to generate palette. Please sign in and try again.');
     } finally {
       setLoading(false);
     }
