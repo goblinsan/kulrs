@@ -1,6 +1,6 @@
-import { OKLCHColor, HSLColor } from './types';
-import { rgbToHsl, hslToRgb } from './hsl';
-import { rgbToOklch, oklchToRgb } from './oklch';
+import { OKLCHColor, HSLColor } from './types.js';
+import { rgbToHsl, hslToRgb } from './hsl.js';
+import { rgbToOklch, oklchToRgb } from './oklch.js';
 
 /**
  * Converts OKLCH to HSL (via RGB)

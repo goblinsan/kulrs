@@ -1,5 +1,5 @@
-import { OKLCHColor, RGBColor } from './types';
-import { oklchToRgb } from './oklch';
+import { OKLCHColor, RGBColor } from './types.js';
+import { oklchToRgb } from './oklch.js';
 
 /**
  * Color roles in a palette

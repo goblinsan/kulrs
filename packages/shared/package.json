@@ -2,8 +2,13 @@
   "name": "@kulrs/shared",
   "version": "0.1.0",
   "description": "Shared types and utilities for Kulrs",
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "package.json"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "jest",

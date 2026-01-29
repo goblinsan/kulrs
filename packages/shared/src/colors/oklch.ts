@@ -1,4 +1,4 @@
-import { RGBColor, OKLCHColor, OKLABColor, LinearRGBColor } from './types';
+import { RGBColor, OKLCHColor, OKLABColor, LinearRGBColor } from './types.js';
 
 /**
  * Clamps a value between min and max

@@ -1,4 +1,4 @@
-import { OKLCHColor } from './types';
+import { OKLCHColor } from './types.js';
 
 /**
  * Normalizes hue to 0-360 range

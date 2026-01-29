@@ -1,4 +1,4 @@
-import { RGBColor, HSLColor } from './types';
+import { RGBColor, HSLColor } from './types.js';
 
 /**
  * Converts HSL color to RGB

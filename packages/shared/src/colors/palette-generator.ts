@@ -1,4 +1,4 @@
-import { OKLCHColor } from './types';
+import { OKLCHColor } from './types.js';
 import {
   generateAnalogous,
   generateComplementary,
@@ -6,9 +6,9 @@ import {
   generateTriadic,
   generateNeutrals,
   applyQualityGates,
-} from './harmony';
-import { assignRoles, AssignedColor } from './contrast';
-import { rgbToOklch } from './oklch';
+} from './harmony.js';
+import { assignRoles, AssignedColor } from './contrast.js';
+import { rgbToOklch } from './oklch.js';
 
 /**
  * Color role metadata
