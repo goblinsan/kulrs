@@ -6,6 +6,7 @@ on:
     paths:
       - 'apps/api/**'
       - 'packages/db/**'
+      - 'packages/shared/**'
       - '.github/workflows/api-deploy.yml'
   workflow_dispatch:
     inputs:
@@ -39,17 +40,30 @@ jobs:
       - name: Install root dependencies
         run: npm ci
 
+      - name: Build shared package
+        working-directory: packages/shared
+        run: npm run build
+
       - name: Build database package
         working-directory: packages/db
         run: npm run build
 
-      - name: Pack database and prepare API
+      - name: Pack packages and prepare API
         run: |
-          cd packages/db
+          # Pack shared package
+          cd packages/shared
+          npm pack
+          mv kulrs-shared-*.tgz ../../apps/api/kulrs-shared.tgz
+          
+          # Pack database package
+          cd ../db
           npm pack
           mv kulrs-db-*.tgz ../../apps/api/kulrs-db.tgz
+          
+          # Prepare API
           cd ../../apps/api
-          # Update package.json to point to local tarball instead of file reference
+          # Update package.json to point to local tarballs instead of file references
+          npm pkg set dependencies.@kulrs/shared="file:kulrs-shared.tgz"
           npm pkg set dependencies.@kulrs/db="file:kulrs-db.tgz"
           # Install dependencies
           npm install
@@ -67,8 +81,8 @@ jobs:
           ls -F dist/
           # Generate package-lock.json for GCF (as recommended by warning)
           npm install --package-lock-only
-          # Verify tarball is present
-          ls -la kulrs-db.tgz
+          # Verify tarballs are present
+          ls -la kulrs-shared.tgz kulrs-db.tgz
           echo "Ready to deploy pre-built artifact"
 
 
