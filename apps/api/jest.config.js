@@ -9,13 +9,20 @@ export default {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   transform: {
-    '^.+\\.ts$': [
+    '^.+\\.(ts|js)$': [
       'ts-jest',
       {
         useESM: true,
+        tsconfig: {
+          module: 'NodeNext',
+          moduleResolution: 'NodeNext',
+        },
       },
     ],
   },
+  transformIgnorePatterns: [
+    'node_modules/(?!@kulrs)',
+  ],
   collectCoverageFrom: [
     'src/**/*.ts',
     '!src/**/*.d.ts',
