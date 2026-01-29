@@ -40,7 +40,7 @@ export function ColorSwatch({ color, showControls = false }: ColorSwatchProps) {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       })
-      .catch((error) => {
+      .catch(error => {
         console.error('Failed to copy to clipboard:', error);
       });
   };

@@ -36,7 +36,7 @@ export function PaletteDetail() {
       .then(() => {
         alert('Share link copied to clipboard!');
       })
-      .catch((error) => {
+      .catch(error => {
         console.error('Failed to copy to clipboard:', error);
         alert('Failed to copy link. Please copy the URL manually.');
       });
