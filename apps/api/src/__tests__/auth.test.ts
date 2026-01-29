@@ -13,7 +13,7 @@ import {
 } from '../middleware/auth.js';
 
 // Mock Firebase getAuth
-const mockVerifyIdToken = jest.fn<() => Promise<unknown>>();
+const mockVerifyIdToken = jest.fn();
 const mockGetAuth = jest.fn(() => ({
   verifyIdToken: mockVerifyIdToken,
 }));
@@ -82,6 +82,7 @@ describe('Auth Middleware', () => {
 
     it('should reject requests with invalid token', async () => {
       mockRequest.headers = { authorization: 'Bearer invalid-token' };
+      // @ts-expect-error - Mock type inference limitation
       mockVerifyIdToken.mockRejectedValue(new Error('Invalid token'));
 
       await verifyFirebaseToken(
@@ -105,6 +106,7 @@ describe('Auth Middleware', () => {
         email: 'test@example.com',
       };
       mockRequest.headers = { authorization: 'Bearer valid-token' };
+      // @ts-expect-error - Mock type inference limitation
       mockVerifyIdToken.mockResolvedValue(mockDecodedToken);
 
       await verifyFirebaseToken(
@@ -127,6 +129,7 @@ describe('Auth Middleware', () => {
         uid: 'test-uid-123',
       };
       mockRequest.headers = { authorization: 'Bearer valid-token' };
+      // @ts-expect-error - Mock type inference limitation
       mockVerifyIdToken.mockResolvedValue(mockDecodedToken);
 
       await verifyFirebaseToken(
