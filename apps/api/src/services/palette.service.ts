@@ -27,7 +27,6 @@ export class PaletteService {
       })
       .returning();
 
-    // @ts-expect-error - Neon DB type definitions issue with returning()
     return result[0];
   }
 
@@ -47,7 +46,6 @@ export class PaletteService {
       })
       .returning();
 
-    // @ts-expect-error - Neon DB type definitions issue with returning()
     const palette = paletteResult[0];
 
     // Create colors
@@ -168,7 +166,6 @@ export class PaletteService {
       })
       .returning();
 
-    // @ts-expect-error - Neon DB type definitions issue with returning()
     const newPalette = newPaletteResult[0];
 
     // Copy colors
