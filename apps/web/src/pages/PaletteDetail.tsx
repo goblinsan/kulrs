@@ -1,23 +1,53 @@
-import { useParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { type GeneratedPalette } from '@kulrs/shared';
 import { PaletteDisplay } from '../components/palette/PaletteDisplay';
+import { usePaletteActions } from '../hooks/usePaletteActions';
 import './PaletteDetail.css';
 
 export function PaletteDetail() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const {
+    loading,
+    error: apiError,
+    savePaletteToDb,
+    saveExistingPalette,
+    likePalette: likePaletteAction,
+    remixPalette: remixPaletteAction,
+  } = usePaletteActions();
 
-  let palette: GeneratedPalette | null = null;
-  let error: string | null = null;
+  const [palette, setPalette] = useState<GeneratedPalette | null>(null);
+  const [paletteId, setPaletteId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [actionFeedback, setActionFeedback] = useState<string | null>(null);
 
-  try {
-    if (id) {
-      const decoded = decodeURIComponent(id);
-      palette = JSON.parse(decoded);
+  // Parse palette from URL on mount
+  useEffect(() => {
+    if (!id) {
+      setError('No palette data provided');
+      return;
     }
-  } catch (e) {
-    error = 'Invalid palette data';
-    console.error('Error parsing palette data:', e);
-  }
+
+    try {
+      const decoded = decodeURIComponent(id);
+      const parsedPalette = JSON.parse(decoded);
+      setPalette(parsedPalette);
+
+      // Auto-save palette to database when viewing details
+      savePaletteToDb(parsedPalette).then(savedId => {
+        if (savedId) {
+          setPaletteId(savedId);
+          setIsSaved(true);
+        }
+      });
+    } catch (e) {
+      setError('Invalid palette data');
+      console.error('Error parsing palette data:', e);
+    }
+  }, [id]);
 
   if (error || !palette) {
     return (
@@ -34,12 +64,71 @@ export function PaletteDetail() {
     navigator.clipboard
       .writeText(shareUrl)
       .then(() => {
-        alert('Share link copied to clipboard!');
+        setActionFeedback('Share link copied to clipboard!');
+        setTimeout(() => setActionFeedback(null), 3000);
       })
       .catch(error => {
         console.error('Failed to copy to clipboard:', error);
-        alert('Failed to copy link. Please copy the URL manually.');
+        setActionFeedback('Failed to copy link');
+        setTimeout(() => setActionFeedback(null), 3000);
       });
+  };
+
+  const handleSave = async () => {
+    if (!paletteId) {
+      setActionFeedback('Palette not yet saved to database');
+      setTimeout(() => setActionFeedback(null), 3000);
+      return;
+    }
+
+    const result = await saveExistingPalette(paletteId);
+    if (result.success) {
+      if (result.alreadySaved) {
+        setActionFeedback('Already in your saved collection');
+      } else {
+        setActionFeedback('Added to your saved collection!');
+        setIsSaved(true);
+      }
+      setTimeout(() => setActionFeedback(null), 3000);
+    }
+  };
+
+  const handleLike = async () => {
+    if (!paletteId) {
+      setActionFeedback('Palette not yet saved to database');
+      setTimeout(() => setActionFeedback(null), 3000);
+      return;
+    }
+
+    const result = await likePaletteAction(paletteId);
+    if (result.success) {
+      if (result.alreadyLiked) {
+        setActionFeedback('Already liked');
+      } else {
+        setActionFeedback('Liked!');
+        setIsLiked(true);
+      }
+      setTimeout(() => setActionFeedback(null), 3000);
+    }
+  };
+
+  const handleRemix = async () => {
+    if (!paletteId) {
+      setActionFeedback('Palette not yet saved to database');
+      setTimeout(() => setActionFeedback(null), 3000);
+      return;
+    }
+
+    const newPaletteId = await remixPaletteAction(paletteId);
+    if (newPaletteId) {
+      setActionFeedback('Palette remixed! Redirecting...');
+      setTimeout(() => {
+        // For now, we'll stay on the same page since we don't have a way to view by ID yet
+        // In the future, this would navigate to /palette/:id where id is the database ID
+        setActionFeedback('Remix created successfully!');
+        setTimeout(() => setActionFeedback(null), 3000);
+      }, 1000);
+    }
   };
 
   return (
@@ -51,9 +140,45 @@ export function PaletteDetail() {
           {new Date(palette.metadata.timestamp).toLocaleDateString()}
         </p>
         <p className="palette-explanation">{palette.metadata.explanation}</p>
-        <button onClick={handleCopyShareLink} className="share-button">
-          📋 Copy Share Link
-        </button>
+
+        <div className="palette-actions">
+          <button
+            onClick={handleSave}
+            className={`action-button save-button ${isSaved ? 'active' : ''}`}
+            disabled={loading}
+            title="Save to your collection"
+          >
+            {isSaved ? '✓ Saved' : '💾 Save'}
+          </button>
+          <button
+            onClick={handleLike}
+            className={`action-button like-button ${isLiked ? 'active' : ''}`}
+            disabled={loading}
+            title="Like this palette"
+          >
+            {isLiked ? '❤️ Liked' : '🤍 Like'}
+          </button>
+          <button
+            onClick={handleRemix}
+            className="action-button remix-button"
+            disabled={loading}
+            title="Create a remix of this palette"
+          >
+            🎨 Remix
+          </button>
+          <button
+            onClick={handleCopyShareLink}
+            className="action-button share-button"
+            title="Copy share link"
+          >
+            📋 Share
+          </button>
+        </div>
+
+        {actionFeedback && (
+          <div className="action-feedback">{actionFeedback}</div>
+        )}
+        {apiError && <div className="action-error">{apiError}</div>}
       </div>
 
       <PaletteDisplay palette={palette} showControls={true} />
