@@ -7,6 +7,7 @@ interface ColorGeneratorProps {
   colors: string[];
   hexInput: string;
   onColorsChange: (colors: string[], hexInput: string) => void;
+  onRandomGenerate?: () => void;
 }
 
 const MAX_COLORS = 5;
@@ -17,6 +18,7 @@ export function ColorGenerator({
   colors,
   hexInput,
   onColorsChange,
+  onRandomGenerate,
 }: ColorGeneratorProps) {
   const hexToOklch = (hex: string): OKLCHColor | null => {
     // Clean and validate hex format
@@ -150,9 +152,22 @@ export function ColorGenerator({
           )}
         </div>
 
-        <button type="submit" className="generate-button" disabled={loading}>
-          {loading ? 'Generating...' : 'Generate Palette'}
-        </button>
+        <div className="generator-buttons-row">
+          <button type="submit" className="generate-button" disabled={loading}>
+            {loading ? 'Generating...' : 'Generate Palette'}
+          </button>
+          {onRandomGenerate && (
+            <button
+              type="button"
+              className="random-button"
+              onClick={onRandomGenerate}
+              disabled={loading}
+              title="Generate a random palette"
+            >
+              🎲 Random
+            </button>
+          )}
+        </div>
       </form>
     </div>
   );

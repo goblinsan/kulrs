@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PaletteGenerator } from '../components/palette/PaletteGenerator';
-import { type GeneratedPalette } from '@kulrs/shared';
+import { type GeneratedPalette, generateFromMood } from '@kulrs/shared';
 import { PaletteDisplay } from '../components/palette/PaletteDisplay';
 import { HeroPalette } from '../components/palette/HeroPalette';
+import { initialPalette, MOODS } from '../components/palette/paletteUtils';
 import './Home.css';
 
 export function Home() {
@@ -14,6 +15,12 @@ export function Home() {
     setPalette(newPalette);
   };
 
+  const handleRandomGenerate = useCallback(() => {
+    const randomMood = MOODS[Math.floor(Math.random() * MOODS.length)];
+    const newPalette = generateFromMood(randomMood);
+    setPalette(newPalette);
+  }, []);
+
   const handleViewDetails = () => {
     if (palette) {
       // Encode palette data in URL
@@ -22,13 +29,22 @@ export function Home() {
     }
   };
 
+  // Use palette if set, otherwise use the initial palette for color tab
+  const displayPalette = palette || initialPalette;
+
   return (
     <div className="home">
       <div className="hero-wrapper">
         <HeroPalette palette={palette} />
 
         <div className="home-header">
-          <h1>Generate Your Color Palette</h1>
+          <button
+            className="hero-title-button"
+            onClick={handleRandomGenerate}
+            title="Click to generate a random palette"
+          >
+            Generate Your Color Palette
+          </button>
           <p>
             Create beautiful, accessible color palettes from moods, colors, or
             images
@@ -36,7 +52,11 @@ export function Home() {
         </div>
       </div>
 
-      <PaletteGenerator onGenerate={handlePaletteGenerated} palette={palette} />
+      <PaletteGenerator
+        onGenerate={handlePaletteGenerated}
+        palette={displayPalette}
+        onRandomGenerate={handleRandomGenerate}
+      />
 
       {palette && (
         <div className="palette-result">

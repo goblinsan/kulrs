@@ -1,12 +1,9 @@
 import { useState, useMemo } from 'react';
-import {
-  type GeneratedPalette,
-  type OKLCHColor,
-  oklchToRgb,
-} from '@kulrs/shared';
+import { type GeneratedPalette, type OKLCHColor } from '@kulrs/shared';
 import { MoodGenerator } from './MoodGenerator';
 import { ColorGenerator } from './ColorGenerator';
 import { ImageGenerator } from './ImageGenerator';
+import { oklchToHex } from './paletteUtils';
 import { apiPost } from '../../services/api';
 import './PaletteGenerator.css';
 
@@ -15,6 +12,7 @@ type GeneratorTab = 'mood' | 'color' | 'image';
 interface PaletteGeneratorProps {
   onGenerate: (palette: GeneratedPalette) => void;
   palette?: GeneratedPalette | null;
+  onRandomGenerate?: () => void;
 }
 
 interface GenerateResponse {
@@ -24,19 +22,10 @@ interface GenerateResponse {
 
 const MAX_COLORS = 5;
 
-// Convert OKLCH to hex string
-function oklchToHex(oklch: OKLCHColor): string {
-  const rgb = oklchToRgb(oklch);
-  const toHex = (n: number) =>
-    Math.round(Math.max(0, Math.min(255, n)))
-      .toString(16)
-      .padStart(2, '0');
-  return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`.toUpperCase();
-}
-
 export function PaletteGenerator({
   onGenerate,
   palette,
+  onRandomGenerate,
 }: PaletteGeneratorProps) {
   const [activeTab, setActiveTab] = useState<GeneratorTab>('mood');
   const [loading, setLoading] = useState(false);
@@ -131,6 +120,7 @@ export function PaletteGenerator({
             colors={colorPickerColors}
             hexInput={colorPickerHexInput}
             onColorsChange={handleColorsChange}
+            onRandomGenerate={onRandomGenerate}
           />
         )}
         {activeTab === 'image' && (

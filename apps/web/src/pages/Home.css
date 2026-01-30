@@ -28,6 +28,31 @@
   font-weight: 800;
 }
 
+.hero-title-button {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: #fff;
+  font-weight: 800;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  transition:
+    transform 0.2s ease,
+    text-shadow 0.2s ease;
+  font-family: inherit;
+  padding: 0;
+}
+
+.hero-title-button:hover {
+  transform: scale(1.02);
+  text-shadow: 0 6px 20px rgba(0, 0, 0, 0.8);
+}
+
+.hero-title-button:active {
+  transform: scale(0.98);
+}
+
 .home-header p {
   font-size: 1.25rem;
   color: #f0f0f0;
