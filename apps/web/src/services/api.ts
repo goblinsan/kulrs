@@ -1,16 +1,30 @@
 import { getFirebaseAuth } from '../config/firebase';
 import { apiUrl } from '../config/env';
+import { onAuthStateChanged } from 'firebase/auth';
 
 /**
- * Get the current user's ID token for API authentication
+ * Wait for Firebase auth to be ready and get the current user's ID token
  */
 async function getAuthToken(): Promise<string | null> {
   const auth = getFirebaseAuth();
-  const user = auth.currentUser;
-  if (!user) {
-    return null;
+  
+  // If currentUser exists, get token directly
+  if (auth.currentUser) {
+    return auth.currentUser.getIdToken();
   }
-  return user.getIdToken();
+  
+  // Otherwise wait for auth state to be determined
+  return new Promise((resolve) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      unsubscribe();
+      if (user) {
+        const token = await user.getIdToken();
+        resolve(token);
+      } else {
+        resolve(null);
+      }
+    });
+  });
 }
 
 /**
