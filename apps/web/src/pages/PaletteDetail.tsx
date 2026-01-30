@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { type GeneratedPalette } from '@kulrs/shared';
 import { PaletteDisplay } from '../components/palette/PaletteDisplay';
@@ -10,7 +10,7 @@ export function PaletteDetail() {
   const {
     loading,
     error: apiError,
-    savePaletteToDb,
+    createPaletteInDb,
     saveExistingPalette,
     likePalette: likePaletteAction,
     remixPalette: remixPaletteAction,
@@ -22,8 +22,18 @@ export function PaletteDetail() {
   const [isSaved, setIsSaved] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
+  const timeoutRef = useRef<number | null>(null);
 
-  // Parse palette from URL on mount
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current !== null) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Parse palette from URL and create in database on mount
   useEffect(() => {
     if (!id) {
       setError('No palette data provided');
@@ -35,19 +45,41 @@ export function PaletteDetail() {
       const parsedPalette = JSON.parse(decoded);
       setPalette(parsedPalette);
 
-      // Auto-save palette to database when viewing details
-      savePaletteToDb(parsedPalette).then(savedId => {
-        if (savedId) {
-          setPaletteId(savedId);
-          setIsSaved(true);
-        }
-      });
+      // Create palette in database (not saved to user's collection yet)
+      createPaletteInDb(parsedPalette)
+        .then(savedId => {
+          if (savedId) {
+            setPaletteId(savedId);
+          } else {
+            setActionFeedback(
+              'Warning: Could not create palette in database. Save/Like/Remix may not work.'
+            );
+          }
+        })
+        .catch(err => {
+          console.error('Error creating palette:', err);
+          setActionFeedback(
+            'Warning: Could not create palette in database. Save/Like/Remix may not work.'
+          );
+        });
     } catch (e) {
       setError('Invalid palette data');
       console.error('Error parsing palette data:', e);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  // Helper to show feedback with auto-dismiss
+  const showFeedback = (message: string, duration = 3000) => {
+    if (timeoutRef.current !== null) {
+      clearTimeout(timeoutRef.current);
+    }
+    setActionFeedback(message);
+    timeoutRef.current = window.setTimeout(() => {
+      setActionFeedback(null);
+      timeoutRef.current = null;
+    }, duration);
+  };
 
   if (error || !palette) {
     return (
@@ -64,70 +96,63 @@ export function PaletteDetail() {
     navigator.clipboard
       .writeText(shareUrl)
       .then(() => {
-        setActionFeedback('Share link copied to clipboard!');
-        setTimeout(() => setActionFeedback(null), 3000);
+        showFeedback('Share link copied to clipboard!');
       })
       .catch(error => {
         console.error('Failed to copy to clipboard:', error);
-        setActionFeedback('Failed to copy link');
-        setTimeout(() => setActionFeedback(null), 3000);
+        showFeedback('Failed to copy link');
       });
   };
 
   const handleSave = async () => {
     if (!paletteId) {
-      setActionFeedback('Palette not yet saved to database');
-      setTimeout(() => setActionFeedback(null), 3000);
+      showFeedback('Please wait a moment and try again');
       return;
     }
 
     const result = await saveExistingPalette(paletteId);
     if (result.success) {
       if (result.alreadySaved) {
-        setActionFeedback('Already in your saved collection');
+        showFeedback('Already in your saved collection');
       } else {
-        setActionFeedback('Added to your saved collection!');
+        showFeedback('Added to your saved collection!');
         setIsSaved(true);
       }
-      setTimeout(() => setActionFeedback(null), 3000);
+    } else {
+      showFeedback('Failed to save palette. Please try again.');
     }
   };
 
   const handleLike = async () => {
     if (!paletteId) {
-      setActionFeedback('Palette not yet saved to database');
-      setTimeout(() => setActionFeedback(null), 3000);
+      showFeedback('Please wait a moment and try again');
       return;
     }
 
     const result = await likePaletteAction(paletteId);
     if (result.success) {
       if (result.alreadyLiked) {
-        setActionFeedback('Already liked');
+        showFeedback('Already liked');
       } else {
-        setActionFeedback('Liked!');
+        showFeedback('Liked!');
         setIsLiked(true);
       }
-      setTimeout(() => setActionFeedback(null), 3000);
+    } else {
+      showFeedback('Failed to like palette. Please try again.');
     }
   };
 
   const handleRemix = async () => {
     if (!paletteId) {
-      setActionFeedback('Palette not yet saved to database');
-      setTimeout(() => setActionFeedback(null), 3000);
+      showFeedback('Please wait a moment and try again');
       return;
     }
 
     const newPaletteId = await remixPaletteAction(paletteId);
     if (newPaletteId) {
-      setActionFeedback('Palette remixed! Redirecting...');
-      setTimeout(() => {
-        // For now, we'll stay on the same page since we don't have a way to view by ID yet
-        // In the future, this would navigate to /palette/:id where id is the database ID
-        setActionFeedback('Remix created successfully!');
-        setTimeout(() => setActionFeedback(null), 3000);
-      }, 1000);
+      showFeedback('Remix created successfully!');
+    } else {
+      showFeedback('Failed to remix palette. Please try again.');
     }
   };
 
@@ -145,7 +170,8 @@ export function PaletteDetail() {
           <button
             onClick={handleSave}
             className={`action-button save-button ${isSaved ? 'active' : ''}`}
-            disabled={loading}
+            disabled={loading || !paletteId}
+            aria-label="Save palette to your collection"
             title="Save to your collection"
           >
             {isSaved ? '✓ Saved' : '💾 Save'}
@@ -153,7 +179,8 @@ export function PaletteDetail() {
           <button
             onClick={handleLike}
             className={`action-button like-button ${isLiked ? 'active' : ''}`}
-            disabled={loading}
+            disabled={loading || !paletteId}
+            aria-label="Like this palette"
             title="Like this palette"
           >
             {isLiked ? '❤️ Liked' : '🤍 Like'}
@@ -161,7 +188,8 @@ export function PaletteDetail() {
           <button
             onClick={handleRemix}
             className="action-button remix-button"
-            disabled={loading}
+            disabled={loading || !paletteId}
+            aria-label="Create a remix based on this palette"
             title="Create a remix of this palette"
           >
             🎨 Remix
@@ -169,6 +197,7 @@ export function PaletteDetail() {
           <button
             onClick={handleCopyShareLink}
             className="action-button share-button"
+            aria-label="Copy share link to clipboard"
             title="Copy share link"
           >
             📋 Share

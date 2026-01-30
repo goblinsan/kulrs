@@ -32,9 +32,10 @@ export function usePaletteActions() {
   };
 
   /**
-   * Save a palette to the database and return its ID
+   * Create a palette in the database and return its ID
+   * This does not save it to the user's collection - use saveExistingPalette for that
    */
-  const savePaletteToDb = async (
+  const createPaletteInDb = async (
     palette: GeneratedPalette
   ): Promise<string | null> => {
     setLoading(true);
@@ -127,7 +128,7 @@ export function usePaletteActions() {
   return {
     loading,
     error,
-    savePaletteToDb,
+    createPaletteInDb,
     saveExistingPalette,
     likePalette,
     remixPalette,

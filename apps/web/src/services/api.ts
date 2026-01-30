@@ -145,7 +145,7 @@ export async function likePalette(
 }
 
 /**
- * Remix a palette (create a copy)
+ * Remix a palette (create a derived palette that tracks its relationship to the original)
  */
 export async function remixPalette(
   paletteId: string
