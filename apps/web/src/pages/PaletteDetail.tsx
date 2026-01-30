@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { type GeneratedPalette } from '@kulrs/shared';
 import { PaletteDisplay } from '../components/palette/PaletteDisplay';
 import { usePaletteActions } from '../hooks/usePaletteActions';
@@ -7,7 +7,6 @@ import './PaletteDetail.css';
 
 export function PaletteDetail() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const {
     loading,
     error: apiError,
@@ -47,6 +46,7 @@ export function PaletteDetail() {
       setError('Invalid palette data');
       console.error('Error parsing palette data:', e);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   if (error || !palette) {

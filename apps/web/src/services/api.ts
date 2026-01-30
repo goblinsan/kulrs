@@ -129,14 +129,18 @@ export async function createPalette(
 /**
  * Save a palette to user's collection
  */
-export async function savePalette(paletteId: string): Promise<SaveLikeResponse> {
+export async function savePalette(
+  paletteId: string
+): Promise<SaveLikeResponse> {
   return apiPost<SaveLikeResponse>(`/palettes/${paletteId}/save`, {});
 }
 
 /**
  * Like a palette
  */
-export async function likePalette(paletteId: string): Promise<SaveLikeResponse> {
+export async function likePalette(
+  paletteId: string
+): Promise<SaveLikeResponse> {
   return apiPost<SaveLikeResponse>(`/palettes/${paletteId}/like`, {});
 }
 
