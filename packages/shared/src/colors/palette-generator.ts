@@ -414,14 +414,58 @@ export function generateFromMood(mood: string, seed?: number): GeneratedPalette 
     finalColors = finalColors.slice(0, 12);
   }
   
-  // Assign roles
+  // Assign roles - this creates BACKGROUND, TEXT, PRIMARY, SECONDARY, etc.
   const assignedColors = assignRoles(finalColors);
   
+  // Shuffle the first 5 main colors (excluding BACKGROUND/TEXT which will be 
+  // treated as derived) to create variety in palette presentation
+  // Fisher-Yates shuffle on the main saturated colors
+  const mainColorRoles = [
+    ColorRole.PRIMARY,
+    ColorRole.SECONDARY,
+    ColorRole.ACCENT,
+    ColorRole.INFO,
+    ColorRole.SUCCESS,
+    ColorRole.WARNING,
+    ColorRole.ERROR,
+  ];
+  
+  // Separate main colors from background/text
+  const mainColors = assignedColors.filter(c => mainColorRoles.includes(c.role as ColorRole));
+  const derivedColors = assignedColors.filter(c => 
+    c.role === ColorRole.BACKGROUND || c.role === ColorRole.TEXT
+  );
+  
+  // Shuffle main colors using seeded random for deterministic but varied results
+  for (let i = mainColors.length - 1; i > 0; i--) {
+    const j = Math.floor(random.next() * (i + 1));
+    [mainColors[i], mainColors[j]] = [mainColors[j], mainColors[i]];
+  }
+  
+  // Take up to 5 main colors (shuffled order) + derived colors at the end
+  const shuffledMain = mainColors.slice(0, 5);
+  
+  // Reassign roles to shuffled main colors (order now varies)
+  const roleOrder = [
+    ColorRole.PRIMARY,
+    ColorRole.SECONDARY,
+    ColorRole.ACCENT,
+    ColorRole.INFO,
+    ColorRole.SUCCESS,
+  ];
+  const reorderedColors: AssignedColor[] = shuffledMain.map((color, i) => ({
+    role: roleOrder[i] || ColorRole.ACCENT,
+    color: color.color,
+  }));
+  
+  // Add background and text at the end (these are "derived" colors in the UI)
+  reorderedColors.push(...derivedColors);
+  
   return {
-    colors: assignedColors,
+    colors: reorderedColors,
     metadata: {
       generator: 'mood',
-      explanation: `Generated ${params.harmony} palette with ${assignedColors.length} colors inspired by: "${mood}"`,
+      explanation: `Generated ${params.harmony} palette with ${reorderedColors.length} colors inspired by: "${mood}"`,
       timestamp: new Date().toISOString(),
     },
   };
