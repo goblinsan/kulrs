@@ -14,7 +14,7 @@ import { apiPost, likePalette, unlikePalette } from '../services/api';
 import './Home.css';
 
 export function Home() {
-  const [palette, setPalette] = useState<GeneratedPalette | null>(null);
+  const [palette, setPalette] = useState<GeneratedPalette>(initialPalette);
   const [paletteId, setPaletteId] = useState<string | null>(null);
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
@@ -104,15 +104,10 @@ export function Home() {
   };
 
   const handleViewDetails = () => {
-    if (palette) {
-      // Encode palette data in URL
-      const paletteData = encodeURIComponent(JSON.stringify(palette));
-      navigate(`/palette/${paletteData}`);
-    }
+    // Encode palette data in URL
+    const paletteData = encodeURIComponent(JSON.stringify(palette));
+    navigate(`/palette/${paletteData}`);
   };
-
-  // Use palette if set, otherwise use the initial palette for color tab
-  const displayPalette = palette || initialPalette;
 
   return (
     <div className="home">
@@ -136,44 +131,42 @@ export function Home() {
 
       <PaletteGenerator
         onGenerate={handlePaletteGenerated}
-        palette={displayPalette}
+        palette={palette}
         onRandomGenerate={handleRandomGenerate}
       />
 
-      {palette && (
-        <div className="palette-result">
-          <h2>Generated Palette</h2>
-          <p className="palette-explanation">{palette.metadata.explanation}</p>
-          <PaletteDisplay
-            palette={palette}
-            showControls={true}
-            onPaletteChange={handlePaletteChange}
-          />
-          <div className="palette-actions">
+      <div className="palette-result">
+        <h2>Generated Palette</h2>
+        <p className="palette-explanation">{palette.metadata.explanation}</p>
+        <PaletteDisplay
+          palette={palette}
+          showControls={true}
+          onPaletteChange={handlePaletteChange}
+        />
+        <div className="palette-actions">
+          <button
+            onClick={handleLike}
+            className={`like-button ${liked ? 'liked' : ''}`}
+            title={liked ? 'Unlike palette' : 'Like palette'}
+          >
+            {liked ? '❤️' : '🤍'} {likeCount > 0 ? likeCount : ''}{' '}
+            {liked ? 'Liked' : 'Like'}
+          </button>
+          {user && (
             <button
-              onClick={handleLike}
-              className={`like-button ${liked ? 'liked' : ''}`}
-              title={liked ? 'Unlike palette' : 'Like palette'}
+              onClick={handleSave}
+              className={`save-button ${saved ? 'saved' : ''}`}
+              disabled={saving || saved}
+              title={saved ? 'Palette saved' : 'Save palette to your account'}
             >
-              {liked ? '❤️' : '🤍'} {likeCount > 0 ? likeCount : ''}{' '}
-              {liked ? 'Liked' : 'Like'}
+              {saving ? '💾 Saving...' : saved ? '✓ Saved' : '💾 Save'}
             </button>
-            {user && (
-              <button
-                onClick={handleSave}
-                className={`save-button ${saved ? 'saved' : ''}`}
-                disabled={saving || saved}
-                title={saved ? 'Palette saved' : 'Save palette to your account'}
-              >
-                {saving ? '💾 Saving...' : saved ? '✓ Saved' : '💾 Save'}
-              </button>
-            )}
-            <button onClick={handleViewDetails} className="view-details-button">
-              View Details & Share
-            </button>
-          </div>
+          )}
+          <button onClick={handleViewDetails} className="view-details-button">
+            View Details & Share
+          </button>
         </div>
-      )}
+      </div>
     </div>
   );
 }
