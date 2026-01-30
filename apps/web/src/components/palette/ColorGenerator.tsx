@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { type OKLCHColor, rgbToOklch } from '@kulrs/shared';
 import './Generators.css';
 
@@ -20,6 +21,9 @@ export function ColorGenerator({
   onColorsChange,
   onRandomGenerate,
 }: ColorGeneratorProps) {
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
   const hexToOklch = (hex: string): OKLCHColor | null => {
     // Clean and validate hex format
     const cleanHex = hex.trim();
@@ -79,6 +83,71 @@ export function ColorGenerator({
     }
   };
 
+  // Drag and drop handlers
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (targetIndex: number) => {
+    if (draggedIndex === null || draggedIndex === targetIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    const newColors = [...colors];
+    const [draggedColor] = newColors.splice(draggedIndex, 1);
+    newColors.splice(targetIndex, 0, draggedColor);
+
+    onColorsChange(newColors, newColors.join(', '));
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  // Touch handlers for mobile drag and drop
+  const handleTouchStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (draggedIndex === null) return;
+
+    const touch = e.touches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    const colorItem = element?.closest('.color-picker-item');
+    if (colorItem) {
+      const index = parseInt(colorItem.getAttribute('data-index') || '-1', 10);
+      if (index >= 0 && index !== dragOverIndex) {
+        setDragOverIndex(index);
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (draggedIndex !== null && dragOverIndex !== null && draggedIndex !== dragOverIndex) {
+      const newColors = [...colors];
+      const [draggedColor] = newColors.splice(draggedIndex, 1);
+      newColors.splice(dragOverIndex, 0, draggedColor);
+      onColorsChange(newColors, newColors.join(', '));
+    }
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -116,9 +185,29 @@ export function ColorGenerator({
           />
         </div>
 
-        <div className="color-pickers-row">
+        <p className="drag-hint">Drag to reorder colors</p>
+
+        <div
+          className="color-pickers-row"
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           {colors.map((color, index) => (
-            <div key={index} className="color-picker-item">
+            <div
+              key={index}
+              data-index={index}
+              className={`color-picker-item ${draggedIndex === index ? 'dragging' : ''} ${dragOverIndex === index ? 'drag-over' : ''}`}
+              draggable={!loading}
+              onDragStart={() => handleDragStart(index)}
+              onDragOver={e => handleDragOver(e, index)}
+              onDragLeave={handleDragLeave}
+              onDrop={() => handleDrop(index)}
+              onDragEnd={handleDragEnd}
+              onTouchStart={() => handleTouchStart(index)}
+            >
+              <div className="drag-handle" title="Drag to reorder">
+                ⋮⋮
+              </div>
               <input
                 type="color"
                 value={color}

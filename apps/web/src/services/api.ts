@@ -79,6 +79,15 @@ export async function apiGet<T>(endpoint: string): Promise<T> {
   });
 }
 
+/**
+ * DELETE request helper
+ */
+export async function apiDelete<T>(endpoint: string): Promise<T> {
+  return apiRequest<T>(endpoint, {
+    method: 'DELETE',
+  });
+}
+
 // Palette API types
 export interface CreatePaletteRequest {
   name: string;
@@ -114,6 +123,16 @@ export interface SaveLikeResponse {
   data: {
     alreadySaved?: boolean;
     alreadyLiked?: boolean;
+    wasLiked?: boolean;
+    likesCount?: number;
+  };
+}
+
+export interface LikeInfoResponse {
+  success: boolean;
+  data: {
+    likesCount: number;
+    userLiked: boolean;
   };
 }
 
@@ -142,6 +161,24 @@ export async function likePalette(
   paletteId: string
 ): Promise<SaveLikeResponse> {
   return apiPost<SaveLikeResponse>(`/palettes/${paletteId}/like`, {});
+}
+
+/**
+ * Unlike a palette
+ */
+export async function unlikePalette(
+  paletteId: string
+): Promise<SaveLikeResponse> {
+  return apiDelete<SaveLikeResponse>(`/palettes/${paletteId}/like`);
+}
+
+/**
+ * Get like info for a palette (count and user's like status)
+ */
+export async function getLikeInfo(
+  paletteId: string
+): Promise<LikeInfoResponse> {
+  return apiGet<LikeInfoResponse>(`/palettes/${paletteId}/likes`);
 }
 
 /**

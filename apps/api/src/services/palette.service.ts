@@ -70,7 +70,52 @@ export class PaletteService {
       );
     }
 
+    // Add auto-likes from bot users (1-5 initial likes for engagement)
+    await this.addAutoLikes(palette.id);
+
     return palette;
+  }
+
+  /**
+   * Add auto-likes from bot users to a palette
+   * This creates initial engagement for site-generated content
+   */
+  async addAutoLikes(paletteId: string) {
+    try {
+      // Get bot users
+      const botUsers = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.isBot, true));
+
+      if (botUsers.length === 0) {
+        return 0;
+      }
+
+      // Randomly select 1-5 bots to like
+      const numLikes = Math.floor(Math.random() * 5) + 1;
+      const shuffledBots = [...botUsers].sort(() => Math.random() - 0.5);
+      const selectedBots = shuffledBots.slice(0, Math.min(numLikes, shuffledBots.length));
+
+      // Add likes
+      for (const bot of selectedBots) {
+        await db.insert(likes).values({
+          userId: bot.id,
+          paletteId,
+        });
+      }
+
+      // Update likes count
+      await db
+        .update(palettes)
+        .set({ likesCount: selectedBots.length })
+        .where(eq(palettes.id, paletteId));
+
+      return selectedBots.length;
+    } catch (error) {
+      console.error('Error adding auto-likes:', error);
+      return 0;
+    }
   }
 
   /**
@@ -130,7 +175,82 @@ export class PaletteService {
       .set({ likesCount: sql`${palettes.likesCount} + 1` })
       .where(eq(palettes.id, paletteId));
 
-    return { alreadyLiked: false };
+    // Get updated count
+    const [palette] = await db
+      .select({ likesCount: palettes.likesCount })
+      .from(palettes)
+      .where(eq(palettes.id, paletteId))
+      .limit(1);
+
+    return { alreadyLiked: false, likesCount: palette?.likesCount ?? 0 };
+  }
+
+  /**
+   * Unlike a palette
+   */
+  async unlikePalette(userId: string, paletteId: string) {
+    // Check if liked
+    const [existing] = await db
+      .select()
+      .from(likes)
+      .where(and(eq(likes.userId, userId), eq(likes.paletteId, paletteId)))
+      .limit(1);
+
+    if (!existing) {
+      return { wasLiked: false };
+    }
+
+    // Delete like record
+    await db
+      .delete(likes)
+      .where(and(eq(likes.userId, userId), eq(likes.paletteId, paletteId)));
+
+    // Decrement likes count
+    await db
+      .update(palettes)
+      .set({ likesCount: sql`GREATEST(${palettes.likesCount} - 1, 0)` })
+      .where(eq(palettes.id, paletteId));
+
+    // Get updated count
+    const [palette] = await db
+      .select({ likesCount: palettes.likesCount })
+      .from(palettes)
+      .where(eq(palettes.id, paletteId))
+      .limit(1);
+
+    return { wasLiked: true, likesCount: palette?.likesCount ?? 0 };
+  }
+
+  /**
+   * Get like info for a palette
+   */
+  async getLikeInfo(paletteId: string, userId: string | null) {
+    // Get palette likes count
+    const [palette] = await db
+      .select({ likesCount: palettes.likesCount })
+      .from(palettes)
+      .where(eq(palettes.id, paletteId))
+      .limit(1);
+
+    if (!palette) {
+      return { likesCount: 0, userLiked: false };
+    }
+
+    // Check if user has liked
+    let userLiked = false;
+    if (userId) {
+      const [userLike] = await db
+        .select()
+        .from(likes)
+        .where(and(eq(likes.userId, userId), eq(likes.paletteId, paletteId)))
+        .limit(1);
+      userLiked = !!userLike;
+    }
+
+    return {
+      likesCount: palette.likesCount,
+      userLiked,
+    };
   }
 
   /**

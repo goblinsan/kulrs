@@ -8,6 +8,13 @@
       "when": 1769481396310,
       "tag": "0000_fearless_brother_voodoo",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1769788723064,
+      "tag": "0001_far_jack_murdock",
+      "breakpoints": true
     }
   ]
 }

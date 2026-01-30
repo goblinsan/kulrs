@@ -155,10 +155,47 @@
   margin-bottom: 1.5rem;
 }
 
+.drag-hint {
+  margin: 0 0 0.5rem 0;
+  color: #666;
+  font-size: 0.8rem;
+}
+
 .color-picker-item {
   position: relative;
   display: flex;
   align-items: center;
+  cursor: grab;
+  transition:
+    transform 0.2s,
+    opacity 0.2s;
+  touch-action: none;
+}
+
+.color-picker-item:active {
+  cursor: grabbing;
+}
+
+.color-picker-item.dragging {
+  opacity: 0.5;
+  transform: scale(0.95);
+}
+
+.color-picker-item.drag-over {
+  transform: translateX(10px);
+}
+
+.drag-handle {
+  color: #666;
+  font-size: 12px;
+  letter-spacing: -2px;
+  margin-right: 4px;
+  cursor: grab;
+  user-select: none;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
 }
 
 .color-picker-item .color-picker {

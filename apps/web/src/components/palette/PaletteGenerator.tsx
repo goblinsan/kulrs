@@ -7,7 +7,7 @@ import { oklchToHex } from './paletteUtils';
 import { apiPost } from '../../services/api';
 import './PaletteGenerator.css';
 
-type GeneratorTab = 'mood' | 'color' | 'image';
+type GeneratorTab = 'color' | 'mood' | 'image';
 
 interface PaletteGeneratorProps {
   onGenerate: (palette: GeneratedPalette) => void;
@@ -27,7 +27,7 @@ export function PaletteGenerator({
   palette,
   onRandomGenerate,
 }: PaletteGeneratorProps) {
-  const [activeTab, setActiveTab] = useState<GeneratorTab>('mood');
+  const [activeTab, setActiveTab] = useState<GeneratorTab>('color');
   const [loading, setLoading] = useState(false);
 
   // Derive colors from palette for ColorGenerator
@@ -43,12 +43,22 @@ export function PaletteGenerator({
     string | null
   >(null);
 
-  // State for ColorGenerator
-  const [colorPickerColors, setColorPickerColors] =
-    useState<string[]>(paletteHexColors);
-  const [colorPickerHexInput, setColorPickerHexInput] = useState(
-    paletteHexColors.join(', ')
-  );
+  // State for ColorGenerator - initialize with a function to ensure proper first render
+  const [colorPickerColors, setColorPickerColors] = useState<string[]>(() => {
+    if (!palette || palette.colors.length === 0) {
+      return ['#646cff'];
+    }
+    return palette.colors.slice(0, MAX_COLORS).map(c => oklchToHex(c.color));
+  });
+  const [colorPickerHexInput, setColorPickerHexInput] = useState(() => {
+    if (!palette || palette.colors.length === 0) {
+      return '#646cff';
+    }
+    return palette.colors
+      .slice(0, MAX_COLORS)
+      .map(c => oklchToHex(c.color))
+      .join(', ');
+  });
 
   // Sync colors when palette changes (from Mood or Image generation)
   const currentTimestamp = palette?.metadata.timestamp ?? null;
@@ -87,16 +97,16 @@ export function PaletteGenerator({
     <div className="palette-generator">
       <div className="generator-tabs">
         <button
-          className={`tab ${activeTab === 'mood' ? 'active' : ''}`}
-          onClick={() => setActiveTab('mood')}
-        >
-          Mood
-        </button>
-        <button
           className={`tab ${activeTab === 'color' ? 'active' : ''}`}
           onClick={() => setActiveTab('color')}
         >
           Color
+        </button>
+        <button
+          className={`tab ${activeTab === 'mood' ? 'active' : ''}`}
+          onClick={() => setActiveTab('mood')}
+        >
+          Mood
         </button>
         <button
           className={`tab ${activeTab === 'image' ? 'active' : ''}`}

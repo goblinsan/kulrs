@@ -122,6 +122,75 @@ router.post('/:id/like', async (req: AuthenticatedRequest, res: Response) => {
 });
 
 /**
+ * DELETE /palettes/:id/like
+ * Unlike a palette
+ */
+router.delete('/:id/like', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const paletteId = String(req.params.id);
+
+    // Get or create user
+    const user = await paletteService.getOrCreateUser(
+      req.user.uid,
+      req.user.email
+    );
+
+    // Unlike palette
+    const result = await paletteService.unlikePalette(user.id, paletteId);
+
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    console.error('Error unliking palette:', error);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to unlike palette',
+    });
+  }
+});
+
+/**
+ * GET /palettes/:id/likes
+ * Get like count and user's like status for a palette
+ */
+router.get('/:id/likes', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const paletteId = String(req.params.id);
+    
+    // Get user if authenticated
+    let userId: string | null = null;
+    if (req.user) {
+      const user = await paletteService.getOrCreateUser(
+        req.user.uid,
+        req.user.email
+      );
+      userId = user.id;
+    }
+
+    // Get like info
+    const result = await paletteService.getLikeInfo(paletteId, userId);
+
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    console.error('Error getting like info:', error);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to get like info',
+    });
+  }
+});
+
+/**
  * POST /palettes/:id/remix
  * Remix a palette (create a copy)
  */

@@ -1,10 +1,36 @@
 import { getDb } from '../src/client';
-import { users, sources, palettes, colors, tags, paletteTags } from '../src/schema';
+import { users, sources, palettes, colors, tags, paletteTags, likes } from '../src/schema';
 import dotenv from 'dotenv';
 import { eq } from 'drizzle-orm';
 
 // Load environment variables
 dotenv.config({ path: '.env.local' });
+
+/**
+ * Bot user data - 20 generated usernames for auto-likes
+ */
+const BOT_USERS = [
+  { displayName: 'ColorCrafter', email: 'colorcrafter@kulrs.bot' },
+  { displayName: 'PalettePixie', email: 'palettepixie@kulrs.bot' },
+  { displayName: 'HueMaster', email: 'huemaster@kulrs.bot' },
+  { displayName: 'ChromaQueen', email: 'chromaqueen@kulrs.bot' },
+  { displayName: 'TintTitan', email: 'tinttitan@kulrs.bot' },
+  { displayName: 'ShadeSeeker', email: 'shadeseeker@kulrs.bot' },
+  { displayName: 'SpectrumSage', email: 'spectrumsage@kulrs.bot' },
+  { displayName: 'VibrantViper', email: 'vibrantviper@kulrs.bot' },
+  { displayName: 'PastelPanda', email: 'pastelpanda@kulrs.bot' },
+  { displayName: 'NeonNinja', email: 'neonninja@kulrs.bot' },
+  { displayName: 'GradientGuru', email: 'gradientguru@kulrs.bot' },
+  { displayName: 'SwatchStar', email: 'swatchstar@kulrs.bot' },
+  { displayName: 'PigmentPro', email: 'pigmentpro@kulrs.bot' },
+  { displayName: 'ToneTamer', email: 'tonetamer@kulrs.bot' },
+  { displayName: 'ColorCurator', email: 'colorcurator@kulrs.bot' },
+  { displayName: 'ArtisticAura', email: 'artisticaura@kulrs.bot' },
+  { displayName: 'RainbowRider', email: 'rainbowrider@kulrs.bot' },
+  { displayName: 'DesignDragon', email: 'designdragon@kulrs.bot' },
+  { displayName: 'StyleSorcerer', email: 'stylesorcerer@kulrs.bot' },
+  { displayName: 'ColorCompass', email: 'colorcompass@kulrs.bot' },
+];
 
 /**
  * Seed script for development demo data
@@ -52,6 +78,29 @@ async function seed() {
     }
     
     const userId = demoUser[0].id;
+    
+    // 3. Create bot users for auto-likes
+    console.log('  → Creating bot users...');
+    const botUserIds: string[] = [];
+    
+    for (const bot of BOT_USERS) {
+      const firebaseUid = `bot-${bot.displayName.toLowerCase()}`;
+      const existing = await db.select().from(users).where(eq(users.firebaseUid, firebaseUid)).limit(1);
+      
+      if (existing.length === 0) {
+        const [newBot] = await db.insert(users).values({
+          firebaseUid,
+          email: bot.email,
+          displayName: bot.displayName,
+          isBot: true,
+        }).returning();
+        botUserIds.push(newBot.id);
+        console.log(`    ✓ Created bot user: ${bot.displayName}`);
+      } else {
+        botUserIds.push(existing[0].id);
+        console.log(`    ⊙ Bot user already exists: ${bot.displayName}`);
+      }
+    }
     
     // Get source IDs
     const allSources = await db.select().from(sources);
@@ -151,7 +200,24 @@ async function seed() {
           }
         }
         
-        console.log(`    ✓ Created palette: ${paletteInfo.name} (${paletteInfo.colors.length} colors)`);
+        // Add random likes from bot users (3-12 likes per palette)
+        const numLikes = Math.floor(Math.random() * 10) + 3;
+        const shuffledBots = [...botUserIds].sort(() => Math.random() - 0.5);
+        const likeCount = Math.min(numLikes, shuffledBots.length);
+        
+        for (let i = 0; i < likeCount; i++) {
+          await db.insert(likes).values({
+            paletteId: newPalette.id,
+            userId: shuffledBots[i],
+          });
+        }
+        
+        // Update the likes count on the palette
+        await db.update(palettes)
+          .set({ likesCount: likeCount })
+          .where(eq(palettes.id, newPalette.id));
+        
+        console.log(`    ✓ Created palette: ${paletteInfo.name} (${paletteInfo.colors.length} colors, ${likeCount} likes)`);
       } else {
         console.log(`    ⊙ Palette already exists: ${paletteInfo.name}`);
       }
@@ -161,8 +227,9 @@ async function seed() {
     console.log('\n📊 Summary:');
     console.log(`   - ${sourceData.length} sources`);
     console.log(`   - 1 demo user`);
+    console.log(`   - ${BOT_USERS.length} bot users`);
     console.log(`   - ${tagData.length} tags`);
-    console.log(`   - ${paletteData.length} palettes`);
+    console.log(`   - ${paletteData.length} palettes (with random likes)`);
     
   } catch (error) {
     console.error('❌ Seeding failed:', error);

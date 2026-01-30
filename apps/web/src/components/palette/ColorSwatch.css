@@ -68,36 +68,44 @@
 
 /* Editable Swatch Styles */
 .editable-swatch {
-  cursor: pointer;
   position: relative;
 }
 
 .editable-swatch .swatch-color {
-  cursor: pointer;
+  position: relative;
 }
 
-.editable-swatch:hover .edit-indicator {
-  opacity: 1;
-}
-
-.edit-indicator {
+.edit-color-label {
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
-  background: rgba(0, 0, 0, 0.5);
-  color: white;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  opacity: 0;
-  transition: opacity 0.2s;
-  pointer-events: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
 }
 
-.hidden-color-picker {
+.edit-indicator-visible {
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 0.35rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: background-color 0.2s;
+}
+
+.edit-color-label:hover .edit-indicator-visible {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.swatch-color-picker {
   position: absolute;
   opacity: 0;
-  width: 0;
-  height: 0;
-  pointer-events: none;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  cursor: pointer;
 }

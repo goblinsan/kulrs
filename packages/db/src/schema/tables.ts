@@ -10,11 +10,13 @@ export const users = pgTable('users', {
   email: varchar('email', { length: 255 }).notNull(),
   displayName: varchar('display_name', { length: 255 }),
   photoUrl: text('photo_url'),
+  isBot: boolean('is_bot').notNull().default(false),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => ({
   firebaseUidIdx: uniqueIndex('users_firebase_uid_idx').on(table.firebaseUid),
   emailIdx: index('users_email_idx').on(table.email),
+  isBotIdx: index('users_is_bot_idx').on(table.isBot),
 }));
 
 /**

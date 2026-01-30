@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { type AssignedColor, oklchToRgb, rgbToOklch } from '@kulrs/shared';
 import './ColorSwatch.css';
 
@@ -33,7 +33,6 @@ export function EditableColorSwatch({
   onColorChange,
 }: EditableColorSwatchProps) {
   const [copied, setCopied] = useState(false);
-  const colorPickerRef = useRef<HTMLInputElement>(null);
   const hex = oklchToHex(color);
   const textColor = getTextColor(hex);
 
@@ -64,29 +63,25 @@ export function EditableColorSwatch({
     });
   };
 
-  const handleSwatchClick = () => {
-    colorPickerRef.current?.click();
-  };
-
   return (
     <div className="color-swatch editable-swatch">
-      <input
-        ref={colorPickerRef}
-        type="color"
-        value={hex}
-        onChange={handleColorPickerChange}
-        className="hidden-color-picker"
-      />
       <div
         className="swatch-color"
         style={{ backgroundColor: hex, color: textColor }}
-        onClick={handleSwatchClick}
       >
         <div className="swatch-info">
           <div className="swatch-role">{color.role}</div>
           <div className="swatch-hex">{hex}</div>
         </div>
-        <div className="edit-indicator">✏️</div>
+        <label className="edit-color-label">
+          <span className="edit-indicator-visible">✏️ Edit</span>
+          <input
+            type="color"
+            value={hex}
+            onChange={handleColorPickerChange}
+            className="swatch-color-picker"
+          />
+        </label>
       </div>
 
       {showControls && (
