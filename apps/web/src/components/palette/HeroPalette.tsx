@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { generateFromMood, type GeneratedPalette } from '@kulrs/shared';
 import './HeroPalette.css';
 
@@ -16,19 +16,13 @@ const MOODS = [
   'spring bloom',
 ];
 
+// Generate a palette once at module load time for consistent SSR
+const initialMood = MOODS[Math.floor(Math.random() * MOODS.length)];
+const initialPalette = generateFromMood(initialMood);
+
 export function HeroPalette() {
-  const [palette, setPalette] = useState<GeneratedPalette | null>(null);
-
-  useEffect(() => {
-    // Pick a random mood and generate a palette
-    const randomMood = MOODS[Math.floor(Math.random() * MOODS.length)];
-    const generated = generateFromMood(randomMood);
-    setPalette(generated);
-  }, []);
-
-  if (!palette) {
-    return <div className="hero-palette hero-palette-loading" />;
-  }
+  // Use the pre-generated palette to avoid effects
+  const palette: GeneratedPalette = useMemo(() => initialPalette, []);
 
   // Take first 5 colors for the hero display
   const heroColors = palette.colors.slice(0, 5);
@@ -39,7 +33,7 @@ export function HeroPalette() {
         // Convert OKLCH to CSS
         const { l, c, h } = colorItem.color;
         const cssColor = `oklch(${l} ${c} ${h})`;
-        
+
         return (
           <div
             key={index}

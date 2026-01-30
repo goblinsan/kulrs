@@ -7,15 +7,15 @@ import { onAuthStateChanged } from 'firebase/auth';
  */
 async function getAuthToken(): Promise<string | null> {
   const auth = getFirebaseAuth();
-  
+
   // If currentUser exists, get token directly
   if (auth.currentUser) {
     return auth.currentUser.getIdToken();
   }
-  
+
   // Otherwise wait for auth state to be determined
-  return new Promise((resolve) => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+  return new Promise(resolve => {
+    const unsubscribe = onAuthStateChanged(auth, async user => {
       unsubscribe();
       if (user) {
         const token = await user.getIdToken();
@@ -51,7 +51,9 @@ export async function apiRequest<T>(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Unknown error' }));
+    const error = await response
+      .json()
+      .catch(() => ({ message: 'Unknown error' }));
     throw new Error(error.message || `API error: ${response.status}`);
   }
 

@@ -25,7 +25,7 @@ export function Home() {
   return (
     <div className="home">
       <HeroPalette />
-      
+
       <div className="home-header">
         <h1>Generate Your Color Palette</h1>
         <p>
