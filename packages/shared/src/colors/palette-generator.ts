@@ -7,7 +7,7 @@ import {
   generateNeutrals,
   applyQualityGates,
 } from './harmony.js';
-import { assignRoles, AssignedColor } from './contrast.js';
+import { assignRoles, AssignedColor, ColorRole } from './contrast.js';
 import { rgbToOklch } from './oklch.js';
 
 /**
@@ -99,6 +99,7 @@ export function generateFromBaseColor(baseColor: OKLCHColor): GeneratedPalette {
 /**
  * Generate palette from multiple base colors
  * Returns 8-12 colors harmonizing across all provided base colors
+ * The input base colors are preserved exactly as-is in their original order
  * 
  * @param baseColors - Array of OKLCH colors (1-5 colors)
  * @returns Generated palette with colors and metadata
@@ -113,42 +114,58 @@ export function generateFromBaseColors(baseColors: OKLCHColor[]): GeneratedPalet
     return generateFromBaseColor(baseColors[0]);
   }
   
-  const colors: OKLCHColor[] = [];
+  // Preserve the user's base colors exactly as-is
+  const preservedColors: OKLCHColor[] = [...baseColors];
   
-  // Add all base colors first
-  colors.push(...baseColors);
+  // Generate additional harmonious colors
+  const additionalColors: OKLCHColor[] = [];
   
   // For each base color, generate some harmonious variations
   for (const baseColor of baseColors) {
     // Add analogous colors for each base (1 per base)
     const analogous = generateAnalogous(baseColor, 25, 1);
-    colors.push(...analogous);
+    additionalColors.push(...analogous);
   }
   
   // Add neutrals based on the first base color
   const neutrals = generateNeutrals(baseColors[0], 3);
-  colors.push(...neutrals);
+  additionalColors.push(...neutrals);
   
   // If we still have room, add complementary colors
-  if (colors.length < 10) {
+  if (preservedColors.length + additionalColors.length < 10) {
     const complement = generateComplementary(baseColors[0]);
-    colors.push(complement);
+    additionalColors.push(complement);
   }
   
-  // Apply quality gates to filter out duplicates and excessive chroma
-  let finalColors = applyQualityGates(colors, {
+  // Apply quality gates ONLY to additional colors (not the user's input)
+  let filteredAdditional = applyQualityGates(additionalColors, {
     maxChroma: 0.4,
     removeDuplicates: true,
     duplicateThreshold: 0.02,
   });
   
-  // Take up to 12 colors
+  // Also filter out any additional colors that are too similar to preserved colors
+  filteredAdditional = filteredAdditional.filter(additional => {
+    return !preservedColors.some(preserved => {
+      const hDiff = Math.abs(preserved.h - additional.h);
+      const normalizedHDiff = Math.min(hDiff, 360 - hDiff) / 360;
+      const lDiff = Math.abs(preserved.l - additional.l);
+      const cDiff = Math.abs(preserved.c - additional.c);
+      const distance = Math.sqrt(normalizedHDiff ** 2 + lDiff ** 2 + cDiff ** 2);
+      return distance < 0.05; // Too similar to a preserved color
+    });
+  });
+  
+  // Combine: preserved colors first, then additional colors
+  let finalColors = [...preservedColors, ...filteredAdditional];
+  
+  // Take up to 12 colors total
   if (finalColors.length > 12) {
     finalColors = finalColors.slice(0, 12);
   }
   
-  // Assign roles to colors
-  const assignedColors = assignRoles(finalColors);
+  // Assign roles while preserving order - user's colors keep their positions
+  const assignedColors = assignRolesPreservingOrder(finalColors, preservedColors.length);
   
   return {
     colors: assignedColors,
@@ -158,6 +175,51 @@ export function generateFromBaseColors(baseColors: OKLCHColor[]): GeneratedPalet
       timestamp: new Date().toISOString(),
     },
   };
+}
+
+/**
+ * Assign roles to colors while preserving the order of the first N colors
+ */
+function assignRolesPreservingOrder(colors: OKLCHColor[], preserveCount: number): AssignedColor[] {
+  const assigned: AssignedColor[] = [];
+  
+  // Assign the preserved colors as PRIMARY for the first, then SECONDARY, ACCENT, etc.
+  const baseRoles: ColorRole[] = [
+    ColorRole.PRIMARY,
+    ColorRole.SECONDARY,
+    ColorRole.ACCENT,
+    ColorRole.INFO,
+    ColorRole.SUCCESS,
+  ];
+  
+  for (let i = 0; i < preserveCount && i < colors.length; i++) {
+    assigned.push({
+      role: baseRoles[i] || ColorRole.ACCENT,
+      color: colors[i],
+    });
+  }
+  
+  // Assign roles to remaining colors
+  const remaining = colors.slice(preserveCount);
+  for (let i = 0; i < remaining.length; i++) {
+    const color = remaining[i];
+    let role: ColorRole;
+    
+    if (color.l > 0.85) {
+      role = ColorRole.BACKGROUND;
+    } else if (color.l < 0.15) {
+      role = ColorRole.TEXT;
+    } else if (color.c < 0.05) {
+      // Low chroma = neutral-ish, use INFO or WARNING
+      role = ColorRole.INFO;
+    } else {
+      role = ColorRole.WARNING;
+    }
+    
+    assigned.push({ role, color });
+  }
+  
+  return assigned;
 }
 
 /**
