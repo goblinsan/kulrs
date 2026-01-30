@@ -2,14 +2,54 @@
   width: 100%;
 }
 
+.palette-section {
+  margin-bottom: 1.5rem;
+}
+
+.palette-section:last-child {
+  margin-bottom: 0;
+}
+
+.section-title {
+  font-size: 0.875rem;
+  color: #888;
+  margin: 0 0 0.75rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.editable-hint {
+  font-size: 0.75rem;
+  color: #666;
+  font-weight: 400;
+  margin-left: 0.5rem;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
 .swatches-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 1rem;
 }
 
+.derived-grid {
+  grid-template-columns: repeat(2, 1fr);
+  max-width: 450px;
+}
+
+.derived-section {
+  padding-top: 1rem;
+  border-top: 1px solid #333;
+}
+
 @media (max-width: 768px) {
   .swatches-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+  
+  .derived-grid {
+    grid-template-columns: 1fr 1fr;
   }
 }

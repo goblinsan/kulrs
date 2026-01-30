@@ -100,6 +100,7 @@ export function generateFromBaseColor(baseColor: OKLCHColor): GeneratedPalette {
  * Generate palette from multiple base colors
  * Returns 8-12 colors harmonizing across all provided base colors
  * The input base colors are preserved exactly as-is in their original order
+ * Background and text colors are derived from the base colors for good contrast
  * 
  * @param baseColors - Array of OKLCH colors (1-5 colors)
  * @returns Generated palette with colors and metadata
@@ -117,7 +118,23 @@ export function generateFromBaseColors(baseColors: OKLCHColor[]): GeneratedPalet
   // Preserve the user's base colors exactly as-is
   const preservedColors: OKLCHColor[] = [...baseColors];
   
-  // Generate additional harmonious colors
+  // Derive background and text colors from the base colors
+  // Background: very light version of the first color (or white-ish with hint of hue)
+  const baseForDerivation = baseColors[0];
+  const derivedBackground: OKLCHColor = {
+    l: 0.97, // Very light
+    c: Math.min(baseForDerivation.c * 0.1, 0.02), // Very low chroma
+    h: baseForDerivation.h, // Same hue family
+  };
+  
+  // Text: very dark version of the first color (or near-black with hint of hue)
+  const derivedText: OKLCHColor = {
+    l: 0.1, // Very dark
+    c: Math.min(baseForDerivation.c * 0.15, 0.03), // Very low chroma
+    h: baseForDerivation.h, // Same hue family
+  };
+  
+  // Generate additional harmonious colors (not including bg/text - those are derived)
   const additionalColors: OKLCHColor[] = [];
   
   // For each base color, generate some harmonious variations
@@ -125,16 +142,6 @@ export function generateFromBaseColors(baseColors: OKLCHColor[]): GeneratedPalet
     // Add analogous colors for each base (1 per base)
     const analogous = generateAnalogous(baseColor, 25, 1);
     additionalColors.push(...analogous);
-  }
-  
-  // Add neutrals based on the first base color
-  const neutrals = generateNeutrals(baseColors[0], 3);
-  additionalColors.push(...neutrals);
-  
-  // If we still have room, add complementary colors
-  if (preservedColors.length + additionalColors.length < 10) {
-    const complement = generateComplementary(baseColors[0]);
-    additionalColors.push(complement);
   }
   
   // Apply quality gates ONLY to additional colors (not the user's input)
@@ -156,34 +163,13 @@ export function generateFromBaseColors(baseColors: OKLCHColor[]): GeneratedPalet
     });
   });
   
-  // Combine: preserved colors first, then additional colors
-  let finalColors = [...preservedColors, ...filteredAdditional];
+  // Build final color list:
+  // 1. User's base colors (preserved in order)
+  // 2. Derived background and text
+  // 3. Additional harmonious colors
+  const assignedColors: AssignedColor[] = [];
   
-  // Take up to 12 colors total
-  if (finalColors.length > 12) {
-    finalColors = finalColors.slice(0, 12);
-  }
-  
-  // Assign roles while preserving order - user's colors keep their positions
-  const assignedColors = assignRolesPreservingOrder(finalColors, preservedColors.length);
-  
-  return {
-    colors: assignedColors,
-    metadata: {
-      generator: 'colors',
-      explanation: `Generated palette from ${baseColors.length} base colors with ${assignedColors.length} harmonious colors blending analogous, complementary, and neutral strategies.`,
-      timestamp: new Date().toISOString(),
-    },
-  };
-}
-
-/**
- * Assign roles to colors while preserving the order of the first N colors
- */
-function assignRolesPreservingOrder(colors: OKLCHColor[], preserveCount: number): AssignedColor[] {
-  const assigned: AssignedColor[] = [];
-  
-  // Assign the preserved colors as PRIMARY for the first, then SECONDARY, ACCENT, etc.
+  // Assign the preserved colors as PRIMARY, SECONDARY, ACCENT, etc.
   const baseRoles: ColorRole[] = [
     ColorRole.PRIMARY,
     ColorRole.SECONDARY,
@@ -192,34 +178,41 @@ function assignRolesPreservingOrder(colors: OKLCHColor[], preserveCount: number)
     ColorRole.SUCCESS,
   ];
   
-  for (let i = 0; i < preserveCount && i < colors.length; i++) {
-    assigned.push({
+  for (let i = 0; i < preservedColors.length; i++) {
+    assignedColors.push({
       role: baseRoles[i] || ColorRole.ACCENT,
-      color: colors[i],
+      color: preservedColors[i],
     });
   }
   
-  // Assign roles to remaining colors
-  const remaining = colors.slice(preserveCount);
-  for (let i = 0; i < remaining.length; i++) {
-    const color = remaining[i];
-    let role: ColorRole;
-    
-    if (color.l > 0.85) {
-      role = ColorRole.BACKGROUND;
-    } else if (color.l < 0.15) {
-      role = ColorRole.TEXT;
-    } else if (color.c < 0.05) {
-      // Low chroma = neutral-ish, use INFO or WARNING
-      role = ColorRole.INFO;
-    } else {
-      role = ColorRole.WARNING;
-    }
-    
-    assigned.push({ role, color });
+  // Add derived background and text
+  assignedColors.push({
+    role: ColorRole.BACKGROUND,
+    color: derivedBackground,
+  });
+  
+  assignedColors.push({
+    role: ColorRole.TEXT,
+    color: derivedText,
+  });
+  
+  // Add additional harmonious colors with remaining roles
+  const remainingRoles: ColorRole[] = [ColorRole.WARNING, ColorRole.ERROR];
+  for (let i = 0; i < filteredAdditional.length && i < remainingRoles.length; i++) {
+    assignedColors.push({
+      role: remainingRoles[i],
+      color: filteredAdditional[i],
+    });
   }
   
-  return assigned;
+  return {
+    colors: assignedColors,
+    metadata: {
+      generator: 'colors',
+      explanation: `Generated palette from ${baseColors.length} base colors with derived background/text for good contrast.`,
+      timestamp: new Date().toISOString(),
+    },
+  };
 }
 
 /**

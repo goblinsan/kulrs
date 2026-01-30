@@ -65,3 +65,39 @@
   font-size: 0.75rem;
   text-align: center;
 }
+
+/* Editable Swatch Styles */
+.editable-swatch {
+  cursor: pointer;
+  position: relative;
+}
+
+.editable-swatch .swatch-color {
+  cursor: pointer;
+}
+
+.editable-swatch:hover .edit-indicator {
+  opacity: 1;
+}
+
+.edit-indicator {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+.hidden-color-picker {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}

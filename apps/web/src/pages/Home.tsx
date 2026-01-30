@@ -1,7 +1,11 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PaletteGenerator } from '../components/palette/PaletteGenerator';
-import { type GeneratedPalette, generateFromMood } from '@kulrs/shared';
+import {
+  type GeneratedPalette,
+  type AssignedColor,
+  generateFromMood,
+} from '@kulrs/shared';
 import { PaletteDisplay } from '../components/palette/PaletteDisplay';
 import { HeroPalette } from '../components/palette/HeroPalette';
 import { initialPalette, MOODS } from '../components/palette/paletteUtils';
@@ -14,6 +18,18 @@ export function Home() {
   const handlePaletteGenerated = (newPalette: GeneratedPalette) => {
     setPalette(newPalette);
   };
+
+  const handlePaletteChange = useCallback(
+    (updatedColors: AssignedColor[]) => {
+      if (palette) {
+        setPalette({
+          ...palette,
+          colors: updatedColors,
+        });
+      }
+    },
+    [palette]
+  );
 
   const handleRandomGenerate = useCallback(() => {
     const randomMood = MOODS[Math.floor(Math.random() * MOODS.length)];
@@ -62,7 +78,11 @@ export function Home() {
         <div className="palette-result">
           <h2>Generated Palette</h2>
           <p className="palette-explanation">{palette.metadata.explanation}</p>
-          <PaletteDisplay palette={palette} showControls={true} />
+          <PaletteDisplay
+            palette={palette}
+            showControls={true}
+            onPaletteChange={handlePaletteChange}
+          />
           <button onClick={handleViewDetails} className="view-details-button">
             View Details & Share
           </button>
