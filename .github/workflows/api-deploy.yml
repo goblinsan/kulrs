@@ -108,7 +108,7 @@ jobs:
             --trigger-http \
             --allow-unauthenticated \
             --set-secrets="DATABASE_URL=DATABASE_URL:latest" \
-            --set-env-vars="NODE_ENV=production,FIREBASE_PROJECT_ID=${{ secrets.GCP_PROJECT_ID }},CORS_ORIGIN=${{ vars.CORS_ORIGIN || 'https://kulrs.com' }},LOG_LEVEL=info" \
+            --set-env-vars="NODE_ENV=production,FIREBASE_PROJECT_ID=${{ vars.FIREBASE_PROJECT_ID || 'kulrs-auth' }},CORS_ORIGIN=${{ vars.CORS_ORIGIN || 'https://kulrs.com' }},LOG_LEVEL=info" \
             --memory=256MB \
             --timeout=60s \
             --max-instances=10 \
