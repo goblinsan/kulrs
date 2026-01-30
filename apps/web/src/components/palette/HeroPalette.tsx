@@ -20,12 +20,18 @@ const MOODS = [
 const initialMood = MOODS[Math.floor(Math.random() * MOODS.length)];
 const initialPalette = generateFromMood(initialMood);
 
-export function HeroPalette() {
-  // Use the pre-generated palette to avoid effects
-  const palette: GeneratedPalette = useMemo(() => initialPalette, []);
+interface HeroPaletteProps {
+  palette?: GeneratedPalette | null;
+}
+
+export function HeroPalette({ palette: externalPalette }: HeroPaletteProps) {
+  // Use external palette if provided, otherwise use the pre-generated one
+  const displayPalette: GeneratedPalette = useMemo(() => {
+    return externalPalette || initialPalette;
+  }, [externalPalette]);
 
   // Take first 5 colors for the hero display
-  const heroColors = palette.colors.slice(0, 5);
+  const heroColors = displayPalette.colors.slice(0, 5);
 
   return (
     <div className="hero-palette">
