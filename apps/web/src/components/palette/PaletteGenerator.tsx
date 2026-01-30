@@ -25,7 +25,7 @@ export function PaletteGenerator({ onGenerate }: PaletteGeneratorProps) {
     type: 'mood' | 'color' | 'image',
     data: {
       mood?: string;
-      color?: OKLCHColor;
+      colors?: OKLCHColor[];
       pixels?: { r: number; g: number; b: number }[];
     }
   ) => {
@@ -73,7 +73,7 @@ export function PaletteGenerator({ onGenerate }: PaletteGeneratorProps) {
         )}
         {activeTab === 'color' && (
           <ColorGenerator
-            onGenerate={color => handleGenerate('color', { color })}
+            onGenerate={colors => handleGenerate('color', { colors })}
             loading={loading}
           />
         )}

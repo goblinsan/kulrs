@@ -97,6 +97,70 @@ export function generateFromBaseColor(baseColor: OKLCHColor): GeneratedPalette {
 }
 
 /**
+ * Generate palette from multiple base colors
+ * Returns 8-12 colors harmonizing across all provided base colors
+ * 
+ * @param baseColors - Array of OKLCH colors (1-5 colors)
+ * @returns Generated palette with colors and metadata
+ */
+export function generateFromBaseColors(baseColors: OKLCHColor[]): GeneratedPalette {
+  if (baseColors.length === 0) {
+    throw new Error('At least one base color is required');
+  }
+  
+  // If only one color, use the single-color generator
+  if (baseColors.length === 1) {
+    return generateFromBaseColor(baseColors[0]);
+  }
+  
+  const colors: OKLCHColor[] = [];
+  
+  // Add all base colors first
+  colors.push(...baseColors);
+  
+  // For each base color, generate some harmonious variations
+  for (const baseColor of baseColors) {
+    // Add analogous colors for each base (1 per base)
+    const analogous = generateAnalogous(baseColor, 25, 1);
+    colors.push(...analogous);
+  }
+  
+  // Add neutrals based on the first base color
+  const neutrals = generateNeutrals(baseColors[0], 3);
+  colors.push(...neutrals);
+  
+  // If we still have room, add complementary colors
+  if (colors.length < 10) {
+    const complement = generateComplementary(baseColors[0]);
+    colors.push(complement);
+  }
+  
+  // Apply quality gates to filter out duplicates and excessive chroma
+  let finalColors = applyQualityGates(colors, {
+    maxChroma: 0.4,
+    removeDuplicates: true,
+    duplicateThreshold: 0.02,
+  });
+  
+  // Take up to 12 colors
+  if (finalColors.length > 12) {
+    finalColors = finalColors.slice(0, 12);
+  }
+  
+  // Assign roles to colors
+  const assignedColors = assignRoles(finalColors);
+  
+  return {
+    colors: assignedColors,
+    metadata: {
+      generator: 'colors',
+      explanation: `Generated palette from ${baseColors.length} base colors with ${assignedColors.length} harmonious colors blending analogous, complementary, and neutral strategies.`,
+      timestamp: new Date().toISOString(),
+    },
+  };
+}
+
+/**
  * Mood-based palette parameters
  */
 interface MoodParameters {

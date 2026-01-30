@@ -1,6 +1,7 @@
 import { Router, Response, Request } from 'express';
 import {
   generateFromBaseColor,
+  generateFromBaseColors,
   generateFromMood,
   generateFromImage,
   OKLCHColor,
@@ -29,10 +30,21 @@ router.post('/color', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const { color } = validation.data;
+    const { color, colors } = validation.data;
 
-    // Generate palette
-    const palette = generateFromBaseColor(color as OKLCHColor);
+    // Generate palette - support both single color and array
+    let palette;
+    if (colors && colors.length > 0) {
+      palette = generateFromBaseColors(colors as OKLCHColor[]);
+    } else if (color) {
+      palette = generateFromBaseColor(color as OKLCHColor);
+    } else {
+      res.status(400).json({
+        error: 'Validation failed',
+        message: 'Either color or colors must be provided',
+      });
+      return;
+    }
 
     res.status(200).json({
       success: true,

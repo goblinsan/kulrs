@@ -114,6 +114,83 @@
   border-radius: 2px;
 }
 
+.multi-color-input {
+  margin-bottom: 1rem;
+}
+
+.color-pickers-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.color-picker-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.color-picker-item .color-picker {
+  width: 60px;
+  height: 50px;
+}
+
+.remove-color-button {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: #ff4444;
+  color: white;
+  border: 2px solid #000;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background-color 0.2s;
+}
+
+.remove-color-button:hover:not(:disabled) {
+  background-color: #cc3333;
+}
+
+.remove-color-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.add-color-button {
+  width: 50px;
+  height: 50px;
+  border: 2px dashed #444;
+  border-radius: 4px;
+  background-color: transparent;
+  color: #888;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.add-color-button:hover:not(:disabled) {
+  border-color: #646cff;
+  color: #646cff;
+}
+
+.add-color-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .image-upload {
   display: flex;
   flex-direction: column;

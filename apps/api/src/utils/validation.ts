@@ -20,14 +20,22 @@ export const createPaletteSchema = z.object({
 
 export type CreatePaletteInput = z.infer<typeof createPaletteSchema>;
 
+// OKLCH color schema
+const oklchColorSchema = z.object({
+  l: z.number().min(0).max(1),
+  c: z.number().min(0).max(0.4),
+  h: z.number().min(0).max(360, { message: 'Hue must be in range [0, 360)' }),
+});
+
 // Palette generator schemas
 export const generateFromBaseColorSchema = z.object({
-  color: z.object({
-    l: z.number().min(0).max(1),
-    c: z.number().min(0).max(0.4),
-    h: z.number().min(0).max(360, { message: 'Hue must be in range [0, 360)' }),
-  }),
-});
+  // Support both single color (legacy) and array of colors
+  color: oklchColorSchema.optional(),
+  colors: z.array(oklchColorSchema).min(1).max(5).optional(),
+}).refine(
+  data => data.color !== undefined || (data.colors !== undefined && data.colors.length > 0),
+  { message: 'Either color or colors must be provided' }
+);
 
 export const generateFromMoodSchema = z.object({
   mood: z.string().min(1).max(500),
