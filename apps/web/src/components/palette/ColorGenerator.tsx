@@ -1,18 +1,23 @@
-import { useState } from 'react';
 import { type OKLCHColor, rgbToOklch } from '@kulrs/shared';
 import './Generators.css';
 
 interface ColorGeneratorProps {
   onGenerate: (colors: OKLCHColor[]) => void;
   loading: boolean;
+  colors: string[];
+  hexInput: string;
+  onColorsChange: (colors: string[], hexInput: string) => void;
 }
 
 const MAX_COLORS = 5;
 
-export function ColorGenerator({ onGenerate, loading }: ColorGeneratorProps) {
-  const [colors, setColors] = useState<string[]>(['#646cff']);
-  const [hexInput, setHexInput] = useState('');
-
+export function ColorGenerator({
+  onGenerate,
+  loading,
+  colors,
+  hexInput,
+  onColorsChange,
+}: ColorGeneratorProps) {
   const hexToOklch = (hex: string): OKLCHColor | null => {
     // Clean and validate hex format
     const cleanHex = hex.trim();
@@ -42,35 +47,33 @@ export function ColorGenerator({ onGenerate, loading }: ColorGeneratorProps) {
 
   const handleHexInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setHexInput(value);
 
     // Auto-parse if we detect valid colors
     const parsed = parseHexInput(value);
     if (parsed.length > 0) {
-      setColors(parsed);
+      onColorsChange(parsed, value);
+    } else {
+      onColorsChange(colors, value);
     }
   };
 
   const handleColorChange = (index: number, value: string) => {
     const newColors = [...colors];
     newColors[index] = value;
-    setColors(newColors);
-    setHexInput(newColors.join(', '));
+    onColorsChange(newColors, newColors.join(', '));
   };
 
   const addColor = () => {
     if (colors.length < MAX_COLORS) {
       const newColors = [...colors, '#888888'];
-      setColors(newColors);
-      setHexInput(newColors.join(', '));
+      onColorsChange(newColors, newColors.join(', '));
     }
   };
 
   const removeColor = (index: number) => {
     if (colors.length > 1) {
       const newColors = colors.filter((_, i) => i !== index);
-      setColors(newColors);
-      setHexInput(newColors.join(', '));
+      onColorsChange(newColors, newColors.join(', '));
     }
   };
 

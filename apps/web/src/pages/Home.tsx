@@ -36,7 +36,7 @@ export function Home() {
         </div>
       </div>
 
-      <PaletteGenerator onGenerate={handlePaletteGenerated} />
+      <PaletteGenerator onGenerate={handlePaletteGenerated} palette={palette} />
 
       {palette && (
         <div className="palette-result">

@@ -28,14 +28,18 @@ const oklchColorSchema = z.object({
 });
 
 // Palette generator schemas
-export const generateFromBaseColorSchema = z.object({
-  // Support both single color (legacy) and array of colors
-  color: oklchColorSchema.optional(),
-  colors: z.array(oklchColorSchema).min(1).max(5).optional(),
-}).refine(
-  data => data.color !== undefined || (data.colors !== undefined && data.colors.length > 0),
-  { message: 'Either color or colors must be provided' }
-);
+export const generateFromBaseColorSchema = z
+  .object({
+    // Support both single color (legacy) and array of colors
+    color: oklchColorSchema.optional(),
+    colors: z.array(oklchColorSchema).min(1).max(5).optional(),
+  })
+  .refine(
+    data =>
+      data.color !== undefined ||
+      (data.colors !== undefined && data.colors.length > 0),
+    { message: 'Either color or colors must be provided' }
+  );
 
 export const generateFromMoodSchema = z.object({
   mood: z.string().min(1).max(500),
