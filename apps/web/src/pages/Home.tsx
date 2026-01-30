@@ -58,7 +58,7 @@ export function Home() {
     // Toggle local state immediately for responsiveness
     const newLiked = !liked;
     setLiked(newLiked);
-    setLikeCount(prev => newLiked ? prev + 1 : Math.max(0, prev - 1));
+    setLikeCount(prev => (newLiked ? prev + 1 : Math.max(0, prev - 1)));
 
     // If palette is saved and user is logged in, persist to API
     if (paletteId && user) {
@@ -77,7 +77,7 @@ export function Home() {
       } catch (error) {
         // Revert on error
         setLiked(!newLiked);
-        setLikeCount(prev => newLiked ? Math.max(0, prev - 1) : prev + 1);
+        setLikeCount(prev => (newLiked ? Math.max(0, prev - 1) : prev + 1));
         console.error('Failed to update like:', error);
       }
     }
@@ -88,7 +88,10 @@ export function Home() {
 
     setSaving(true);
     try {
-      const result = await apiPost<{ success: boolean; data: { id: string; likesCount: number } }>('/palettes', { palette });
+      const result = await apiPost<{
+        success: boolean;
+        data: { id: string; likesCount: number };
+      }>('/palettes', { palette });
       setSaved(true);
       setPaletteId(result.data.id);
       setLikeCount(result.data.likesCount);
@@ -152,7 +155,8 @@ export function Home() {
               className={`like-button ${liked ? 'liked' : ''}`}
               title={liked ? 'Unlike palette' : 'Like palette'}
             >
-              {liked ? '❤️' : '🤍'} {likeCount > 0 ? likeCount : ''} {liked ? 'Liked' : 'Like'}
+              {liked ? '❤️' : '🤍'} {likeCount > 0 ? likeCount : ''}{' '}
+              {liked ? 'Liked' : 'Like'}
             </button>
             {user && (
               <button

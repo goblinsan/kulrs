@@ -163,7 +163,7 @@ router.delete('/:id/like', async (req: AuthenticatedRequest, res: Response) => {
 router.get('/:id/likes', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const paletteId = String(req.params.id);
-    
+
     // Get user if authenticated
     let userId: string | null = null;
     if (req.user) {

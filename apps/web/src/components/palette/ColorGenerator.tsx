@@ -138,7 +138,11 @@ export function ColorGenerator({
   };
 
   const handleTouchEnd = () => {
-    if (draggedIndex !== null && dragOverIndex !== null && draggedIndex !== dragOverIndex) {
+    if (
+      draggedIndex !== null &&
+      dragOverIndex !== null &&
+      draggedIndex !== dragOverIndex
+    ) {
       const newColors = [...colors];
       const [draggedColor] = newColors.splice(draggedIndex, 1);
       newColors.splice(dragOverIndex, 0, draggedColor);

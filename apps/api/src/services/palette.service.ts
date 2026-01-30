@@ -95,7 +95,10 @@ export class PaletteService {
       // Randomly select 1-5 bots to like
       const numLikes = Math.floor(Math.random() * 5) + 1;
       const shuffledBots = [...botUsers].sort(() => Math.random() - 0.5);
-      const selectedBots = shuffledBots.slice(0, Math.min(numLikes, shuffledBots.length));
+      const selectedBots = shuffledBots.slice(
+        0,
+        Math.min(numLikes, shuffledBots.length)
+      );
 
       // Add likes
       for (const bot of selectedBots) {
