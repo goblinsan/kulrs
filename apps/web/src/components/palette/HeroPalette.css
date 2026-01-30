@@ -1,0 +1,39 @@
+.hero-palette {
+  display: flex;
+  width: 100%;
+  height: 150px;
+  margin-bottom: 3rem;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.hero-palette-loading {
+  background: linear-gradient(
+    90deg,
+    #111 0%,
+    #222 50%,
+    #111 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.hero-color-block {
+  flex: 1;
+  height: 100%;
+  transition: flex 0.3s ease;
+}
+
+.hero-color-block:hover {
+  flex: 1.5;
+}

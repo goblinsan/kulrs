@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { PaletteGenerator } from '../components/palette/PaletteGenerator';
 import { type GeneratedPalette } from '@kulrs/shared';
 import { PaletteDisplay } from '../components/palette/PaletteDisplay';
+import { HeroPalette } from '../components/palette/HeroPalette';
 import './Home.css';
 
 export function Home() {
@@ -23,6 +24,8 @@ export function Home() {
 
   return (
     <div className="home">
+      <HeroPalette />
+      
       <div className="home-header">
         <h1>Generate Your Color Palette</h1>
         <p>

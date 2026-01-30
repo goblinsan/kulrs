@@ -2,11 +2,12 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background-color: #000000;
 }
 
 .layout-header {
-  background-color: #1a1a1a;
-  border-bottom: 1px solid #333;
+  background-color: #000000;
+  border-bottom: 1px solid #222;
   padding: 0;
 }
 
@@ -20,13 +21,15 @@
 }
 
 .nav-brand {
-  font-size: 1.5rem;
-  font-weight: bold;
+  font-size: 2rem;
+  font-weight: normal;
 }
 
 .nav-brand a {
   text-decoration: none;
-  color: #fff;
+  color: var(--brand-color, #AAFFDD);
+  font-family: var(--brand-font, 'Monoton', cursive);
+  letter-spacing: 0.1em;
 }
 
 .nav-links {
