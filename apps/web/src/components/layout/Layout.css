@@ -27,7 +27,7 @@
 
 .nav-brand a {
   text-decoration: none;
-  color: var(--brand-color, #AAFFDD);
+  color: var(--brand-color, #aaffdd);
   font-family: var(--brand-font, 'Monoton', cursive);
   letter-spacing: 0.1em;
 }

@@ -78,3 +78,77 @@ export async function apiGet<T>(endpoint: string): Promise<T> {
     method: 'GET',
   });
 }
+
+// Palette API types
+export interface CreatePaletteRequest {
+  name: string;
+  description?: string;
+  colors: Array<{
+    hexValue: string;
+    position: number;
+    name?: string;
+  }>;
+  isPublic?: boolean;
+  sourceId?: string;
+  tagIds?: string[];
+}
+
+export interface PaletteResponse {
+  success: boolean;
+  data: {
+    id: string;
+    name: string;
+    description: string | null;
+    userId: string;
+    sourceId: string | null;
+    isPublic: boolean;
+    likesCount: number;
+    savesCount: number;
+    createdAt: string;
+    updatedAt: string;
+  };
+}
+
+export interface SaveLikeResponse {
+  success: boolean;
+  data: {
+    alreadySaved?: boolean;
+    alreadyLiked?: boolean;
+  };
+}
+
+/**
+ * Create a new palette
+ */
+export async function createPalette(
+  data: CreatePaletteRequest
+): Promise<PaletteResponse> {
+  return apiPost<PaletteResponse>('/palettes', data);
+}
+
+/**
+ * Save a palette to user's collection
+ */
+export async function savePalette(
+  paletteId: string
+): Promise<SaveLikeResponse> {
+  return apiPost<SaveLikeResponse>(`/palettes/${paletteId}/save`, {});
+}
+
+/**
+ * Like a palette
+ */
+export async function likePalette(
+  paletteId: string
+): Promise<SaveLikeResponse> {
+  return apiPost<SaveLikeResponse>(`/palettes/${paletteId}/like`, {});
+}
+
+/**
+ * Remix a palette (create a derived palette that tracks its relationship to the original)
+ */
+export async function remixPalette(
+  paletteId: string
+): Promise<PaletteResponse> {
+  return apiPost<PaletteResponse>(`/palettes/${paletteId}/remix`, {});
+}

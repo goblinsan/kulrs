@@ -10,12 +10,7 @@
 }
 
 .hero-palette-loading {
-  background: linear-gradient(
-    90deg,
-    #111 0%,
-    #222 50%,
-    #111 100%
-  );
+  background: linear-gradient(90deg, #111 0%, #222 50%, #111 100%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }

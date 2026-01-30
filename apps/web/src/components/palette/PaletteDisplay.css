@@ -48,7 +48,7 @@
   .swatches-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }
-  
+
   .derived-grid {
     grid-template-columns: 1fr 1fr;
   }
