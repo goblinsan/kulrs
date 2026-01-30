@@ -33,7 +33,9 @@ const VALID_ENVIRONMENTS: AppEnvironment[] = [
 export function getEnvConfig(): EnvConfig {
   return {
     // API base URL - required
-    apiUrl: import.meta.env.VITE_API_URL || 'https://api.kulrs.com',
+    apiUrl:
+      import.meta.env.VITE_API_URL ||
+      'https://kulrs-api-jyedwyfhdq-uc.a.run.app',
 
     // Application environment - required
     appEnv: (import.meta.env.VITE_APP_ENV as AppEnvironment) || 'production',
