@@ -60,13 +60,15 @@
 @media (max-width: 768px) {
   .swatches-grid {
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 8rem;
+    padding: 3em;
   }
 
   .swatches-grid .color-swatch {
     flex: 0 0 auto;
     width: 100%;
     max-width: none;
+    min-height: 120px;
   }
 
   .derived-grid .color-swatch {
