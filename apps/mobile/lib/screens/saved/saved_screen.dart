@@ -142,7 +142,7 @@ class _SavedScreenState extends State<SavedScreen> {
                                 children: [
                                   // Color preview
                                   Semantics(
-                                    label: 'Palette preview with ${palette.colors.length} colors',
+                                    label: 'Color preview for ${palette.name ?? 'Palette ${index + 1}'}',
                                     child: SizedBox(
                                       width: 60,
                                       height: 60,

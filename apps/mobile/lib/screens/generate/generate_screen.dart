@@ -86,8 +86,7 @@ class _GenerateScreenState extends State<GenerateScreen> {
       // Read image bytes
       final Uint8List bytes = await image.readAsBytes();
 
-      // Convert to pixel array (simplified - in production you'd use an image library)
-      // For now, we'll sample some pixels from the image
+      // Extract pixels from the image using the image package
       final List<List<int>> pixels = _extractPixelsSample(bytes);
 
       final palette = await _apiService.generateFromImage(pixels: pixels);

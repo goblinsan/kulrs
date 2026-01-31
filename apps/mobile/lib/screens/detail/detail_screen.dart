@@ -235,7 +235,8 @@ class _DetailScreenState extends State<DetailScreen> {
               
               // Like count
               Semantics(
-                label: '${_palette!.likesCount} likes',
+                label: 'This palette has ${_palette!.likesCount} likes',
+                excludeSemantics: true,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
