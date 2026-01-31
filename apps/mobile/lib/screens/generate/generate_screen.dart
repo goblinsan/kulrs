@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image/image.dart' as img;
 import 'dart:typed_data';
 import '../../components/components.dart';
 import '../../providers/auth_provider.dart';
@@ -112,15 +113,43 @@ class _GenerateScreenState extends State<GenerateScreen> {
   }
 
   /// Extract a sample of pixels from image bytes
-  /// Note: This is a simplified version. In production, use a proper image decoding library
+  /// Decodes the image and samples pixels across the image
   List<List<int>> _extractPixelsSample(Uint8List bytes) {
-    // Sample every 100th byte as RGB values
-    final List<List<int>> pixels = [];
-    for (int i = 0; i < bytes.length - 2; i += 100) {
-      pixels.add([bytes[i], bytes[i + 1], bytes[i + 2]]);
-      if (pixels.length >= 1000) break; // Limit sample size
+    try {
+      // Decode the image
+      final image = img.decodeImage(bytes);
+      if (image == null) {
+        // Fallback to a default color if decoding fails
+        return [[255, 0, 0]];
+      }
+
+      final List<List<int>> pixels = [];
+      final width = image.width;
+      final height = image.height;
+
+      // Sample pixels in a grid pattern (e.g., every 10th pixel in each dimension)
+      final step = 10;
+      for (int y = 0; y < height; y += step) {
+        for (int x = 0; x < width; x += step) {
+          final pixel = image.getPixel(x, y);
+          // Extract RGB values from the pixel
+          final r = pixel.r.toInt();
+          final g = pixel.g.toInt();
+          final b = pixel.b.toInt();
+          pixels.add([r, g, b]);
+          
+          // Limit sample size for performance
+          if (pixels.length >= 1000) {
+            return pixels;
+          }
+        }
+      }
+      
+      return pixels.isEmpty ? [[255, 0, 0]] : pixels;
+    } catch (e) {
+      // If there's any error, return a default color
+      return [[255, 0, 0]];
     }
-    return pixels.isEmpty ? [[255, 0, 0]] : pixels;
   }
 
   void _showImageSourceDialog() {

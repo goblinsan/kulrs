@@ -141,18 +141,21 @@ class _SavedScreenState extends State<SavedScreen> {
                               child: Row(
                                 children: [
                                   // Color preview
-                                  SizedBox(
-                                    width: 60,
-                                    height: 60,
-                                    child: Row(
-                                      children: palette.colors
-                                          .take(5)
-                                          .map((color) => Expanded(
-                                                child: Container(
-                                                  color: _hexToColor(color.hex),
-                                                ),
-                                              ))
-                                          .toList(),
+                                  Semantics(
+                                    label: 'Palette preview with ${palette.colors.length} colors',
+                                    child: SizedBox(
+                                      width: 60,
+                                      height: 60,
+                                      child: Row(
+                                        children: palette.colors
+                                            .take(5)
+                                            .map((color) => Expanded(
+                                                  child: Container(
+                                                    color: _hexToColor(color.hex),
+                                                  ),
+                                                ))
+                                            .toList(),
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: 16),

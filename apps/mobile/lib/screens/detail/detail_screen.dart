@@ -234,20 +234,23 @@ class _DetailScreenState extends State<DetailScreen> {
               ],
               
               // Like count
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.favorite,
-                    size: 16,
-                    color: Colors.red.shade400,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${_palette!.likesCount} likes',
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                ],
+              Semantics(
+                label: '${_palette!.likesCount} likes',
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.favorite,
+                      size: 16,
+                      color: Colors.red.shade400,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${_palette!.likesCount} likes',
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ],
+                ),
               ),
               
               const SizedBox(height: 24),
