@@ -63,11 +63,12 @@
   }
 
   .swatches-grid .color-swatch {
-    flex: 0 0 calc(33.333% - 1rem);
+    flex: 0 0 100%;
     max-width: none;
   }
 
   .derived-grid .color-swatch {
-    width: 100px;
+    width: 100%;
+    max-width: none;
   }
 }
