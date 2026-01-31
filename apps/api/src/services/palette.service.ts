@@ -89,7 +89,21 @@ export class PaletteService {
     }
 
     // Add auto-likes from bot users (1-5 initial likes for engagement)
-    await this.addAutoLikes(palette.id);
+    // This is optional and won't break palette creation if it fails
+    try {
+      const likesAdded = await this.addAutoLikes(palette.id);
+      if (likesAdded > 0) {
+        // Refetch the palette to get updated likesCount
+        const [updatedPalette] = await db
+          .select()
+          .from(palettes)
+          .where(eq(palettes.id, palette.id))
+          .limit(1);
+        return updatedPalette || palette;
+      }
+    } catch {
+      // Silently continue if auto-likes fail (e.g., missing migration)
+    }
 
     return palette;
   }

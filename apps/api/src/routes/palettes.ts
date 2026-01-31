@@ -44,9 +44,12 @@ router.post('/', async (req: AuthenticatedRequest, res: Response) => {
     });
   } catch (error) {
     console.error('Error creating palette:', error);
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
     res.status(500).json({
       error: 'Internal Server Error',
       message: 'Failed to create palette',
+      details: process.env.NODE_ENV !== 'production' ? errorMessage : undefined,
     });
   }
 });
