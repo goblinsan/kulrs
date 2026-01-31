@@ -1,31 +1,42 @@
 import { z } from 'zod';
 
+// OKLCH color schema
+const oklchColorSchema = z.object({
+  l: z.number().min(0).max(1),
+  c: z.number().min(0).max(0.5),
+  h: z.number().min(0).max(360),
+});
+
+// Assigned color schema (from generator)
+const assignedColorSchema = z.object({
+  role: z.string(),
+  color: oklchColorSchema,
+});
+
+// Generated palette metadata schema
+const paletteMetadataSchema = z.object({
+  generator: z.string(),
+  explanation: z.string(),
+  timestamp: z.string(),
+});
+
+// Generated palette schema (from frontend generator)
+export const generatedPaletteSchema = z.object({
+  colors: z.array(assignedColorSchema).min(1).max(12),
+  metadata: paletteMetadataSchema,
+});
+
 export const createPaletteSchema = z.object({
-  name: z.string().min(1).max(255),
+  // Accept the generated palette object from the frontend
+  palette: generatedPaletteSchema,
+  // Optional overrides
+  name: z.string().min(1).max(255).optional(),
   description: z.string().max(1000).optional(),
   isPublic: z.boolean().default(true),
-  sourceId: z.string().uuid().optional(),
-  colors: z
-    .array(
-      z.object({
-        hexValue: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
-        position: z.number().int().min(0),
-        name: z.string().max(100).optional(),
-      })
-    )
-    .min(1)
-    .max(10),
   tagIds: z.array(z.string().uuid()).optional(),
 });
 
 export type CreatePaletteInput = z.infer<typeof createPaletteSchema>;
-
-// OKLCH color schema
-const oklchColorSchema = z.object({
-  l: z.number().min(0).max(1),
-  c: z.number().min(0).max(0.4),
-  h: z.number().min(0).max(360, { message: 'Hue must be in range [0, 360)' }),
-});
 
 // Palette generator schemas
 export const generateFromBaseColorSchema = z

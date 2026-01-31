@@ -2,6 +2,19 @@ import { eq, and, sql, asc } from 'drizzle-orm';
 import { db } from '../config/database.js';
 import { users, palettes, colors, paletteTags, likes, saves } from '@kulrs/db';
 import { CreatePaletteInput } from '../utils/validation.js';
+import { oklchToRgb } from '@kulrs/shared';
+
+/**
+ * Convert OKLCH color to hex string
+ */
+function oklchToHex(oklch: { l: number; c: number; h: number }): string {
+  const rgb = oklchToRgb(oklch);
+  const toHex = (n: number) =>
+    Math.round(Math.max(0, Math.min(255, n)))
+      .toString(16)
+      .padStart(2, '0');
+  return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`.toUpperCase();
+}
 
 export class PaletteService {
   /**
@@ -31,31 +44,36 @@ export class PaletteService {
   }
 
   /**
-   * Create a new palette
+   * Create a new palette from a generated palette
    */
   async createPalette(userId: string, input: CreatePaletteInput) {
+    const { palette: generatedPalette } = input;
+
+    // Generate a name from the generator type or use provided name
+    const paletteName =
+      input.name || `${generatedPalette.metadata.generator} palette`;
+
     // Create palette
     const paletteResult = await db
       .insert(palettes)
       .values({
-        name: input.name,
-        description: input.description,
+        name: paletteName,
+        description: input.description || generatedPalette.metadata.explanation,
         userId,
-        sourceId: input.sourceId,
-        isPublic: input.isPublic,
+        isPublic: input.isPublic ?? true,
       })
       .returning();
 
     const palette = paletteResult[0];
 
-    // Create colors
-    if (input.colors && input.colors.length > 0) {
+    // Create colors from the generated palette
+    if (generatedPalette.colors && generatedPalette.colors.length > 0) {
       await db.insert(colors).values(
-        input.colors.map(color => ({
+        generatedPalette.colors.map((assignedColor, index) => ({
           paletteId: palette.id,
-          hexValue: color.hexValue,
-          position: color.position,
-          name: color.name,
+          hexValue: oklchToHex(assignedColor.color),
+          position: index,
+          name: assignedColor.role,
         }))
       );
     }
