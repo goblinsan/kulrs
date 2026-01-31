@@ -59,16 +59,29 @@
 
 @media (max-width: 768px) {
   .swatches-grid {
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 8rem;
+    padding: 3em;
   }
 
   .swatches-grid .color-swatch {
-    flex: 0 0 100%;
+    flex: 0 0 auto;
+    width: 100%;
     max-width: none;
+    min-height: 120px;
   }
 
   .derived-grid .color-swatch {
     width: 100%;
     max-width: none;
+  }
+
+  .section-title {
+    padding-bottom: 20px;
+    margin-bottom: 1rem;
+  }
+
+  .palette-section {
+    margin-bottom: 3rem;
   }
 }

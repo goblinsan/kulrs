@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import './Layout.css';
@@ -9,13 +9,19 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const { user, signOut } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
     try {
       await signOut();
+      setMobileMenuOpen(false);
     } catch (error) {
       console.error('Error signing out:', error);
     }
+  };
+
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
   };
 
   return (
@@ -23,19 +29,34 @@ export function Layout({ children }: LayoutProps) {
       <header className="layout-header">
         <nav className="layout-nav">
           <div className="nav-brand">
-            <Link to="/">Kulrs</Link>
+            <Link to="/" onClick={closeMobileMenu}>
+              Kulrs
+            </Link>
           </div>
-          <div className="nav-links">
-            <Link to="/browse">Browse</Link>
+          <button
+            className="mobile-menu-toggle"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? '✕' : '☰'}
+          </button>
+          <div className={`nav-links ${mobileMenuOpen ? 'mobile-open' : ''}`}>
+            <Link to="/browse" onClick={closeMobileMenu}>
+              Browse
+            </Link>
             {user ? (
               <>
-                <span className="nav-user">{user.email}</span>
+                <span className="nav-user" title={user.email || undefined}>
+                  {user.email}
+                </span>
                 <button onClick={handleSignOut} className="nav-button">
                   Sign Out
                 </button>
               </>
             ) : (
-              <Link to="/login">Sign In</Link>
+              <Link to="/login" onClick={closeMobileMenu}>
+                Sign In
+              </Link>
             )}
           </div>
         </nav>
