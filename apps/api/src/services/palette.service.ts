@@ -469,6 +469,46 @@ export class PaletteService {
 
     return palettesWithColors;
   }
+
+  /**
+   * Get a palette by ID with its colors
+   */
+  async getPaletteById(paletteId: string) {
+    const [palette] = await db
+      .select({
+        id: palettes.id,
+        name: palettes.name,
+        description: palettes.description,
+        userId: palettes.userId,
+        isPublic: palettes.isPublic,
+        likesCount: palettes.likesCount,
+        savesCount: palettes.savesCount,
+        createdAt: palettes.createdAt,
+      })
+      .from(palettes)
+      .where(eq(palettes.id, paletteId))
+      .limit(1);
+
+    if (!palette) {
+      return null;
+    }
+
+    const paletteColors = await db
+      .select({
+        id: colors.id,
+        hexValue: colors.hexValue,
+        position: colors.position,
+        name: colors.name,
+      })
+      .from(colors)
+      .where(eq(colors.paletteId, palette.id))
+      .orderBy(asc(colors.position));
+
+    return {
+      ...palette,
+      colors: paletteColors,
+    };
+  }
 }
 
 export const paletteService = new PaletteService();

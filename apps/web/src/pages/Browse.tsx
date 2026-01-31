@@ -62,30 +62,9 @@ export function Browse() {
   };
 
   const handlePaletteClick = (palette: BrowsePalette) => {
-    // Navigate to palette detail with colors encoded
-    const paletteData = {
-      colors: palette.colors.map((c, i) => ({
-        role: c.name || `color${i}`,
-        color: hexToOklch(c.hexValue),
-      })),
-      metadata: {
-        generator: 'browse',
-        explanation: palette.description || palette.name,
-        timestamp: palette.createdAt,
-      },
-    };
-    const encoded = encodeURIComponent(JSON.stringify(paletteData));
-    navigate(`/palette/${encoded}`);
+    // Navigate to palette detail using the palette ID
+    navigate(`/palette/${palette.id}`);
   };
-
-  // Simple hex to oklch approximation for display
-  function hexToOklch(hex: string): { l: number; c: number; h: number } {
-    const r = parseInt(hex.slice(1, 3), 16) / 255;
-    const g = parseInt(hex.slice(3, 5), 16) / 255;
-    const b = parseInt(hex.slice(5, 7), 16) / 255;
-    const l = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-    return { l, c: 0.15, h: 180 }; // Simplified
-  }
 
   return (
     <div className="browse-page">
@@ -157,7 +136,6 @@ export function Browse() {
                 ))}
               </div>
               <div className="palette-info">
-                <h3 className="palette-name">{palette.name}</h3>
                 <div className="palette-stats">
                   <span className="likes">❤️ {palette.likesCount}</span>
                   <span className="date">

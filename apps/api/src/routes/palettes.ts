@@ -83,6 +83,37 @@ router.get('/my', async (req: AuthenticatedRequest, res: Response) => {
 });
 
 /**
+ * GET /palettes/:id
+ * Get a palette by ID
+ */
+router.get('/:id', async (req: Request, res: Response) => {
+  try {
+    const paletteId = String(req.params.id);
+
+    const palette = await paletteService.getPaletteById(paletteId);
+
+    if (!palette) {
+      res.status(404).json({
+        error: 'Not Found',
+        message: 'Palette not found',
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: palette,
+    });
+  } catch (error) {
+    console.error('Error getting palette:', error);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to get palette',
+    });
+  }
+});
+
+/**
  * POST /palettes
  * Create a new palette
  */

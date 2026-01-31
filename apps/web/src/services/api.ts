@@ -253,3 +253,15 @@ export async function getMyPalettes(
     `/palettes/my${query ? `?${query}` : ''}`
   );
 }
+
+export interface GetPaletteResponse {
+  success: boolean;
+  data: BrowsePalette;
+}
+
+/**
+ * Get a palette by ID
+ */
+export async function getPaletteById(id: string): Promise<GetPaletteResponse> {
+  return apiGet<GetPaletteResponse>(`/palettes/${id}`);
+}
