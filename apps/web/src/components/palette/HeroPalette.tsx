@@ -15,8 +15,16 @@ export function HeroPalette({ palette: externalPalette }: HeroPaletteProps) {
     return externalPalette || initialPalette;
   }, [externalPalette]);
 
-  // Take first 5 colors for the hero display
-  const heroColors = displayPalette.colors.slice(0, 5);
+  // Get main colors (excluding background/text which are "derived" colors)
+  // Main colors are the first colors in the array before any derived ones
+  const heroColors = useMemo(() => {
+    // Filter out background and text roles which are typically at the end
+    const mainColors = displayPalette.colors.filter(
+      c => c.role !== 'background' && c.role !== 'text'
+    );
+    // Take up to 5 main colors for hero display
+    return mainColors.slice(0, 5);
+  }, [displayPalette]);
 
   const handleCopyHex = async (hex: string, index: number) => {
     try {

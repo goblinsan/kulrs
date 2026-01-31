@@ -30,14 +30,14 @@ router.post('/color', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const { color, colors } = validation.data;
+    const { color, colors, colorCount } = validation.data;
 
     // Generate palette - support both single color and array
     let palette;
     if (colors && colors.length > 0) {
-      palette = generateFromBaseColors(colors as OKLCHColor[]);
+      palette = generateFromBaseColors(colors as OKLCHColor[], colorCount);
     } else if (color) {
-      palette = generateFromBaseColor(color as OKLCHColor);
+      palette = generateFromBaseColor(color as OKLCHColor, colorCount);
     } else {
       res.status(400).json({
         error: 'Validation failed',
@@ -75,10 +75,10 @@ router.post('/mood', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const { mood, seed } = validation.data;
+    const { mood, seed, colorCount } = validation.data;
 
-    // Generate palette
-    const palette = generateFromMood(mood, seed);
+    // Generate palette with specified color count
+    const palette = generateFromMood(mood, seed, colorCount);
 
     res.status(200).json({
       success: true,
@@ -109,10 +109,10 @@ router.post('/image', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const { pixels } = validation.data;
+    const { pixels, colorCount } = validation.data;
 
-    // Generate palette
-    const palette = generateFromImage(pixels);
+    // Generate palette with specified color count
+    const palette = generateFromImage(pixels, colorCount);
 
     res.status(200).json({
       success: true,

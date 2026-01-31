@@ -43,9 +43,9 @@ export function Home() {
     [palette]
   );
 
-  const handleRandomGenerate = useCallback(() => {
+  const handleRandomGenerate = useCallback((numColors: number = 5) => {
     const randomMood = MOODS[Math.floor(Math.random() * MOODS.length)];
-    const newPalette = generateFromMood(randomMood);
+    const newPalette = generateFromMood(randomMood, undefined, numColors);
     setPalette(newPalette);
     setPaletteId(null);
     // Reset like/save state for new palette
@@ -117,14 +117,13 @@ export function Home() {
         <div className="home-header">
           <button
             className="hero-title-button"
-            onClick={handleRandomGenerate}
+            onClick={() => handleRandomGenerate()}
             title="Click to generate a random palette"
           >
-            Generate Your Color Palette
+            Generate Palette
           </button>
           <p>
-            Create beautiful, accessible color palettes from moods, colors, or
-            images
+            Create beautiful, accessible color palettes from colors or images
           </p>
         </div>
       </div>

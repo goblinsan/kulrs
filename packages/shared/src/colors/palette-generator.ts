@@ -35,9 +35,13 @@ export interface GeneratedPalette {
  * Returns 8-12 colors with roles and explanation metadata
  * 
  * @param baseColor - Base OKLCH color to generate palette from
+ * @param colorCount - Number of main colors to return (2-5, default 5)
  * @returns Generated palette with colors and metadata
  */
-export function generateFromBaseColor(baseColor: OKLCHColor): GeneratedPalette {
+export function generateFromBaseColor(baseColor: OKLCHColor, colorCount: number = 5): GeneratedPalette {
+  // Clamp colorCount to valid range
+  const numColors = Math.max(2, Math.min(5, colorCount));
+  
   const colors: OKLCHColor[] = [];
   
   // Add base color
@@ -86,11 +90,29 @@ export function generateFromBaseColor(baseColor: OKLCHColor): GeneratedPalette {
   // Assign roles to colors
   const assignedColors = assignRoles(finalColors);
   
+  // Filter to get main colors (not background/text) and slice to requested count
+  const mainColorRoles = [
+    ColorRole.PRIMARY,
+    ColorRole.SECONDARY,
+    ColorRole.ACCENT,
+    ColorRole.INFO,
+    ColorRole.SUCCESS,
+    ColorRole.WARNING,
+    ColorRole.ERROR,
+  ];
+  const mainColors = assignedColors.filter(c => mainColorRoles.includes(c.role as ColorRole));
+  const derivedColors = assignedColors.filter(c => 
+    c.role === ColorRole.BACKGROUND || c.role === ColorRole.TEXT
+  );
+  
+  // Take requested number of main colors + derived colors
+  const resultColors = [...mainColors.slice(0, numColors), ...derivedColors];
+  
   return {
-    colors: assignedColors,
+    colors: resultColors,
     metadata: {
       generator: 'color',
-      explanation: `Generated palette from base color with ${assignedColors.length} harmonious colors using complementary, analogous, and neutral strategies.`,
+      explanation: `Generated palette from base color with ${numColors} harmonious colors using complementary, analogous, and neutral strategies.`,
       timestamp: new Date().toISOString(),
     },
   };
@@ -103,16 +125,20 @@ export function generateFromBaseColor(baseColor: OKLCHColor): GeneratedPalette {
  * Background and text colors are derived from the base colors for good contrast
  * 
  * @param baseColors - Array of OKLCH colors (1-5 colors)
+ * @param colorCount - Number of main colors to return (2-5, default 5)
  * @returns Generated palette with colors and metadata
  */
-export function generateFromBaseColors(baseColors: OKLCHColor[]): GeneratedPalette {
+export function generateFromBaseColors(baseColors: OKLCHColor[], colorCount: number = 5): GeneratedPalette {
+  // Clamp colorCount to valid range
+  const numColors = Math.max(2, Math.min(5, colorCount));
+  
   if (baseColors.length === 0) {
     throw new Error('At least one base color is required');
   }
   
   // If only one color, use the single-color generator
   if (baseColors.length === 1) {
-    return generateFromBaseColor(baseColors[0]);
+    return generateFromBaseColor(baseColors[0], numColors);
   }
   
   // Preserve the user's base colors exactly as-is
@@ -205,11 +231,22 @@ export function generateFromBaseColors(baseColors: OKLCHColor[]): GeneratedPalet
     });
   }
   
+  // Filter to get main colors (not background/text) and slice to requested count
+  const mainColors = assignedColors.filter(c => 
+    c.role !== ColorRole.BACKGROUND && c.role !== ColorRole.TEXT
+  );
+  const derivedColors = assignedColors.filter(c => 
+    c.role === ColorRole.BACKGROUND || c.role === ColorRole.TEXT
+  );
+  
+  // Take requested number of main colors + derived colors
+  const resultColors = [...mainColors.slice(0, numColors), ...derivedColors];
+  
   return {
-    colors: assignedColors,
+    colors: resultColors,
     metadata: {
       generator: 'colors',
-      explanation: `Generated palette from ${baseColors.length} base colors with derived background/text for good contrast.`,
+      explanation: `Generated palette from ${baseColors.length} base colors with ${numColors} harmonious colors.`,
       timestamp: new Date().toISOString(),
     },
   };
@@ -635,9 +672,12 @@ function moodToParameters(mood: string, random: SeededRandom): MoodParameters {
  * 
  * @param mood - Mood text (e.g., "calm ocean sunset")
  * @param seed - Optional seed for deterministic generation (uses mood hash if not provided)
+ * @param colorCount - Number of main colors to generate (2-5, default 5)
  * @returns Generated palette with colors and metadata
  */
-export function generateFromMood(mood: string, seed?: number): GeneratedPalette {
+export function generateFromMood(mood: string, seed?: number, colorCount: number = 5): GeneratedPalette {
+  // Clamp colorCount to valid range
+  const numColors = Math.max(2, Math.min(5, colorCount));
   // Use mood hash as seed if not provided
   const actualSeed = seed ?? hashString(mood);
   const random = new SeededRandom(actualSeed);
@@ -727,8 +767,8 @@ export function generateFromMood(mood: string, seed?: number): GeneratedPalette 
     [mainColors[i], mainColors[j]] = [mainColors[j], mainColors[i]];
   }
   
-  // Take up to 5 main colors (shuffled order) + derived colors at the end
-  const shuffledMain = mainColors.slice(0, 5);
+  // Take the requested number of main colors (shuffled order) + derived colors at the end
+  const shuffledMain = mainColors.slice(0, numColors);
   
   // Reassign roles to shuffled main colors (order now varies)
   const roleOrder = [
@@ -750,7 +790,7 @@ export function generateFromMood(mood: string, seed?: number): GeneratedPalette 
     colors: reorderedColors,
     metadata: {
       generator: 'mood',
-      explanation: `Generated ${params.harmony} palette with ${reorderedColors.length} colors inspired by: "${mood}"`,
+      explanation: `Generated ${params.harmony} palette with ${numColors} colors inspired by: "${mood}"`,
       timestamp: new Date().toISOString(),
     },
   };
@@ -847,11 +887,16 @@ export function extractDominantColors(
  * Upload image → palette output, works on typical phone photos
  * 
  * @param imagePixels - Array of RGB colors from image (sampled pixels)
+ * @param colorCount - Number of main colors to return (2-5, default 5)
  * @returns Generated palette with colors and metadata
  */
 export function generateFromImage(
-  imagePixels: { r: number; g: number; b: number }[]
+  imagePixels: { r: number; g: number; b: number }[],
+  colorCount: number = 5
 ): GeneratedPalette {
+  // Clamp colorCount to valid range
+  const numColors = Math.max(2, Math.min(5, colorCount));
+  
   // Extract 2-4 dominant colors from image
   // For every ~1000 pixels, extract 1 dominant color (up to 4)
   const PIXELS_PER_DOMINANT_COLOR = 1000;
@@ -909,11 +954,29 @@ export function generateFromImage(
   // Assign roles
   const assignedColors = assignRoles(finalColors);
   
+  // Filter to get main colors (not background/text) and slice to requested count
+  const mainColorRoles = [
+    ColorRole.PRIMARY,
+    ColorRole.SECONDARY,
+    ColorRole.ACCENT,
+    ColorRole.INFO,
+    ColorRole.SUCCESS,
+    ColorRole.WARNING,
+    ColorRole.ERROR,
+  ];
+  const mainColors = assignedColors.filter(c => mainColorRoles.includes(c.role as ColorRole));
+  const derivedColors = assignedColors.filter(c => 
+    c.role === ColorRole.BACKGROUND || c.role === ColorRole.TEXT
+  );
+  
+  // Take requested number of main colors + derived colors
+  const resultColors = [...mainColors.slice(0, numColors), ...derivedColors];
+  
   return {
-    colors: assignedColors,
+    colors: resultColors,
     metadata: {
       generator: 'image',
-      explanation: `Generated palette with ${assignedColors.length} colors extracted from ${numDominant} dominant colors in the image.`,
+      explanation: `Generated palette with ${numColors} colors extracted from ${numDominant} dominant colors in the image.`,
       timestamp: new Date().toISOString(),
     },
   };

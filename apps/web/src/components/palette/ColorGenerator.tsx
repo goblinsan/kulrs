@@ -9,9 +9,9 @@ interface ColorGeneratorProps {
   hexInput: string;
   onColorsChange: (colors: string[], hexInput: string) => void;
   onRandomGenerate?: () => void;
+  colorCount: number;
+  onColorCountChange: (count: number) => void;
 }
-
-const MAX_COLORS = 5;
 
 export function ColorGenerator({
   onGenerate,
@@ -20,6 +20,8 @@ export function ColorGenerator({
   hexInput,
   onColorsChange,
   onRandomGenerate,
+  colorCount,
+  onColorCountChange,
 }: ColorGeneratorProps) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -48,7 +50,7 @@ export function ColorGenerator({
       .filter(s => s.length > 0)
       .map(s => (s.startsWith('#') ? s : `#${s}`))
       .filter(s => /^#[0-9A-Fa-f]{6}$/i.test(s))
-      .slice(0, MAX_COLORS);
+      .slice(0, colorCount);
   };
 
   const handleHexInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,7 +72,7 @@ export function ColorGenerator({
   };
 
   const addColor = () => {
-    if (colors.length < MAX_COLORS) {
+    if (colors.length < colorCount) {
       const newColors = [...colors, '#888888'];
       onColorsChange(newColors, newColors.join(', '));
     }
@@ -174,7 +176,7 @@ export function ColorGenerator({
     <div className="generator-form">
       <h3>Generate from Base Colors</h3>
       <p className="generator-description">
-        Pick up to {MAX_COLORS} base colors to generate a harmonious palette
+        Pick up to {colorCount} base colors to generate a harmonious palette
       </p>
 
       <form onSubmit={handleSubmit}>
@@ -232,7 +234,7 @@ export function ColorGenerator({
               )}
             </div>
           ))}
-          {colors.length < MAX_COLORS && (
+          {colors.length < colorCount && (
             <button
               type="button"
               className="add-color-button"
@@ -246,6 +248,18 @@ export function ColorGenerator({
         </div>
 
         <div className="generator-buttons-row">
+          <select
+            className="color-count-dropdown"
+            value={colorCount}
+            onChange={e => onColorCountChange(Number(e.target.value))}
+            disabled={loading}
+            title="Number of colors to generate"
+          >
+            <option value={2}>2 Colors</option>
+            <option value={3}>3 Colors</option>
+            <option value={4}>4 Colors</option>
+            <option value={5}>5 Colors</option>
+          </select>
           <button type="submit" className="generate-button" disabled={loading}>
             {loading ? 'Generating...' : 'Generate Palette'}
           </button>

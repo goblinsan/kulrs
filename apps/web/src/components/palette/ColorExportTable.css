@@ -1,0 +1,148 @@
+.color-export-table-container {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: rgba(30, 30, 30, 0.5);
+  border-radius: 8px;
+}
+
+.export-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.export-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #fff;
+}
+
+.export-csv-button {
+  padding: 0.5rem 1rem;
+  background-color: #646cff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.export-csv-button:hover {
+  background-color: #535bf2;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.color-export-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.color-export-table th {
+  text-align: left;
+  padding: 0.75rem;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  color: #aaa;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.color-export-table td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.swatch-col {
+  width: 120px;
+}
+
+.swatch-cell {
+  padding: 0.25rem !important;
+}
+
+.color-swatch {
+  width: 100px;
+  height: 50px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.swatch-role {
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: capitalize;
+  opacity: 0.9;
+}
+
+.value-cell {
+  vertical-align: middle;
+}
+
+.value-cell.clickable {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.value-cell.clickable:hover {
+  background-color: rgba(100, 108, 255, 0.1);
+}
+
+.value-cell code {
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 0.85rem;
+  color: #e0e0e0;
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.tooltip-icon {
+  margin-left: 0.25rem;
+  cursor: help;
+  font-size: 0.75rem;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .color-export-table-container {
+    padding: 1rem;
+  }
+
+  .export-header {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+
+  .color-export-table {
+    font-size: 0.8rem;
+  }
+
+  .color-export-table th,
+  .color-export-table td {
+    padding: 0.5rem;
+  }
+
+  .color-swatch {
+    width: 60px;
+    height: 40px;
+  }
+
+  .swatch-role {
+    font-size: 0.6rem;
+  }
+
+  .value-cell code {
+    font-size: 0.75rem;
+    padding: 0.15rem 0.25rem;
+  }
+}

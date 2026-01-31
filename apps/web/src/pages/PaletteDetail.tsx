@@ -6,6 +6,7 @@ import {
   type AssignedColor,
 } from '@kulrs/shared';
 import { PaletteDisplay } from '../components/palette/PaletteDisplay';
+import { ColorExportTable } from '../components/palette/ColorExportTable';
 import { usePaletteActions } from '../hooks/usePaletteActions';
 import { getPaletteById, type BrowsePalette } from '../services/api';
 import './PaletteDetail.css';
@@ -98,6 +99,7 @@ export function PaletteDetail() {
   const [palette, setPalette] = useState<GeneratedPalette | null>(null);
   const [paletteId, setPaletteId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
@@ -116,6 +118,7 @@ export function PaletteDetail() {
   useEffect(() => {
     if (!id) {
       setError('No palette data provided');
+      setIsLoading(false);
       return;
     }
 
@@ -123,6 +126,7 @@ export function PaletteDetail() {
     if (isUuid(id)) {
       // Fetch existing palette from API
       setPaletteId(id);
+      setIsLoading(true);
 
       getPaletteById(id)
         .then(response => {
@@ -135,6 +139,9 @@ export function PaletteDetail() {
         .catch(err => {
           console.error('Error fetching palette:', err);
           setError('Failed to load palette');
+        })
+        .finally(() => {
+          setIsLoading(false);
         });
     } else {
       // Parse encoded palette from URL (new palette)
@@ -142,6 +149,7 @@ export function PaletteDetail() {
         const decoded = decodeURIComponent(id);
         const parsedPalette = JSON.parse(decoded);
         setPalette(parsedPalette);
+        setIsLoading(false);
 
         // Create palette in database (not saved to user's collection yet)
         createPaletteInDb(parsedPalette)
@@ -162,6 +170,7 @@ export function PaletteDetail() {
           });
       } catch (e) {
         setError('Invalid palette data');
+        setIsLoading(false);
         console.error('Error parsing palette data:', e);
       }
     }
@@ -179,6 +188,15 @@ export function PaletteDetail() {
       timeoutRef.current = null;
     }, duration);
   };
+
+  if (isLoading) {
+    return (
+      <div className="palette-detail-loading">
+        <div className="loading-spinner"></div>
+        <p>Loading palette...</p>
+      </div>
+    );
+  }
 
   if (error || !palette) {
     return (
@@ -310,6 +328,8 @@ export function PaletteDetail() {
       </div>
 
       <PaletteDisplay palette={palette} showControls={true} />
+
+      <ColorExportTable palette={palette} />
     </div>
   );
 }

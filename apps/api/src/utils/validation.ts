@@ -44,6 +44,7 @@ export const generateFromBaseColorSchema = z
     // Support both single color (legacy) and array of colors
     color: oklchColorSchema.optional(),
     colors: z.array(oklchColorSchema).min(1).max(5).optional(),
+    colorCount: z.number().int().min(2).max(5).optional().default(5),
   })
   .refine(
     data =>
@@ -55,6 +56,7 @@ export const generateFromBaseColorSchema = z
 export const generateFromMoodSchema = z.object({
   mood: z.string().min(1).max(500),
   seed: z.number().int().optional(),
+  colorCount: z.number().int().min(2).max(5).optional().default(5),
 });
 
 export const generateFromImageSchema = z.object({
@@ -68,6 +70,7 @@ export const generateFromImageSchema = z.object({
     )
     .min(1)
     .max(10000), // Limit to 10k pixels for performance
+  colorCount: z.number().int().min(2).max(5).optional().default(5),
 });
 
 export type GenerateFromBaseColorInput = z.infer<

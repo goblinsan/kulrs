@@ -12,7 +12,7 @@ type GeneratorTab = 'color' | 'mood' | 'image';
 interface PaletteGeneratorProps {
   onGenerate: (palette: GeneratedPalette) => void;
   palette?: GeneratedPalette | null;
-  onRandomGenerate?: () => void;
+  onRandomGenerate?: (colorCount: number) => void;
 }
 
 interface GenerateResponse {
@@ -20,13 +20,13 @@ interface GenerateResponse {
   data: GeneratedPalette;
 }
 
-const MAX_COLORS = 5;
-
 export function PaletteGenerator({
   onGenerate,
   palette,
   onRandomGenerate,
 }: PaletteGeneratorProps) {
+  const [colorCount, setColorCount] = useState(5);
+  const maxColors = colorCount;
   const [activeTab, setActiveTab] = useState<GeneratorTab>('color');
   const [loading, setLoading] = useState(false);
 
@@ -35,8 +35,8 @@ export function PaletteGenerator({
     if (!palette || palette.colors.length === 0) {
       return ['#646cff'];
     }
-    return palette.colors.slice(0, MAX_COLORS).map(c => oklchToHex(c.color));
-  }, [palette]);
+    return palette.colors.slice(0, maxColors).map(c => oklchToHex(c.color));
+  }, [palette, maxColors]);
 
   // Track the last palette timestamp to detect changes
   const [lastPaletteTimestamp, setLastPaletteTimestamp] = useState<
@@ -48,14 +48,14 @@ export function PaletteGenerator({
     if (!palette || palette.colors.length === 0) {
       return ['#646cff'];
     }
-    return palette.colors.slice(0, MAX_COLORS).map(c => oklchToHex(c.color));
+    return palette.colors.slice(0, colorCount).map(c => oklchToHex(c.color));
   });
   const [colorPickerHexInput, setColorPickerHexInput] = useState(() => {
     if (!palette || palette.colors.length === 0) {
       return '#646cff';
     }
     return palette.colors
-      .slice(0, MAX_COLORS)
+      .slice(0, colorCount)
       .map(c => oklchToHex(c.color))
       .join(', ');
   });
@@ -83,7 +83,12 @@ export function PaletteGenerator({
   ) => {
     setLoading(true);
     try {
-      const result = await apiPost<GenerateResponse>(`/generate/${type}`, data);
+      // Include colorCount in the API request
+      const requestData = { ...data, colorCount: maxColors };
+      const result = await apiPost<GenerateResponse>(
+        `/generate/${type}`,
+        requestData
+      );
       onGenerate(result.data);
     } catch (error) {
       console.error('Error generating palette:', error);
@@ -102,12 +107,14 @@ export function PaletteGenerator({
         >
           Color
         </button>
+        {/* Mood tab hidden for now - needs improvement
         <button
           className={`tab ${activeTab === 'mood' ? 'active' : ''}`}
           onClick={() => setActiveTab('mood')}
         >
           Mood
         </button>
+        */}
         <button
           className={`tab ${activeTab === 'image' ? 'active' : ''}`}
           onClick={() => setActiveTab('image')}
@@ -130,7 +137,9 @@ export function PaletteGenerator({
             colors={colorPickerColors}
             hexInput={colorPickerHexInput}
             onColorsChange={handleColorsChange}
-            onRandomGenerate={onRandomGenerate}
+            onRandomGenerate={() => onRandomGenerate?.(colorCount)}
+            colorCount={colorCount}
+            onColorCountChange={setColorCount}
           />
         )}
         {activeTab === 'image' && (
