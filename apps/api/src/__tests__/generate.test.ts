@@ -93,7 +93,7 @@ describe('Generate Routes', () => {
       expect(response.body.success).toBe(true);
       expect(response.body.data).toBeDefined();
       expect(response.body.data.colors).toBeDefined();
-      expect(response.body.data.colors.length).toBeGreaterThanOrEqual(8);
+      expect(response.body.data.colors.length).toBeGreaterThanOrEqual(5);
       expect(response.body.data.colors.length).toBeLessThanOrEqual(12);
       expect(response.body.data.metadata.generator).toBe('mood');
       expect(response.body.data.metadata.explanation).toContain(

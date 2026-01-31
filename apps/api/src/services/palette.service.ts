@@ -21,8 +21,17 @@ export class PaletteService {
    * Get or create user by Firebase UID
    */
   async getOrCreateUser(firebaseUid: string, email?: string) {
+    // Select only the columns we need (avoids issues if is_bot column doesn't exist yet)
     const [existingUser] = await db
-      .select()
+      .select({
+        id: users.id,
+        firebaseUid: users.firebaseUid,
+        email: users.email,
+        displayName: users.displayName,
+        photoUrl: users.photoUrl,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      })
       .from(users)
       .where(eq(users.firebaseUid, firebaseUid))
       .limit(1);
@@ -31,14 +40,22 @@ export class PaletteService {
       return existingUser;
     }
 
-    // Create new user
+    // Create new user - only insert required fields
     const result = await db
       .insert(users)
       .values({
         firebaseUid,
         email: email || '',
       })
-      .returning();
+      .returning({
+        id: users.id,
+        firebaseUid: users.firebaseUid,
+        email: users.email,
+        displayName: users.displayName,
+        photoUrl: users.photoUrl,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      });
 
     return result[0];
   }
