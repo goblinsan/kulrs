@@ -1,4 +1,4 @@
-import { eq, and, sql, asc } from 'drizzle-orm';
+import { eq, and, sql, asc, desc } from 'drizzle-orm';
 import { db } from '../config/database.js';
 import { users, palettes, colors, paletteTags, likes, saves } from '@kulrs/db';
 import { CreatePaletteInput } from '../utils/validation.js';
@@ -353,6 +353,121 @@ export class PaletteService {
     }
 
     return newPalette;
+  }
+
+  /**
+   * Browse public palettes with sorting and filtering
+   */
+  async browsePalettes(options: {
+    sort: 'recent' | 'popular';
+    userId?: string;
+    limit: number;
+    offset: number;
+  }) {
+    const { sort, userId, limit, offset } = options;
+
+    // Build query conditions
+    const conditions = [eq(palettes.isPublic, true)];
+    if (userId) {
+      conditions.push(eq(palettes.userId, userId));
+    }
+
+    // Build order by
+    const orderBy =
+      sort === 'popular'
+        ? [desc(palettes.likesCount), desc(palettes.createdAt)]
+        : [desc(palettes.createdAt)];
+
+    // Get palettes with colors
+    const paletteResults = await db
+      .select({
+        id: palettes.id,
+        name: palettes.name,
+        description: palettes.description,
+        userId: palettes.userId,
+        isPublic: palettes.isPublic,
+        likesCount: palettes.likesCount,
+        savesCount: palettes.savesCount,
+        createdAt: palettes.createdAt,
+      })
+      .from(palettes)
+      .where(and(...conditions))
+      .orderBy(...orderBy)
+      .limit(limit)
+      .offset(offset);
+
+    // Get colors for each palette
+    const palettesWithColors = await Promise.all(
+      paletteResults.map(async palette => {
+        const paletteColors = await db
+          .select({
+            id: colors.id,
+            hexValue: colors.hexValue,
+            position: colors.position,
+            name: colors.name,
+          })
+          .from(colors)
+          .where(eq(colors.paletteId, palette.id))
+          .orderBy(asc(colors.position));
+
+        return {
+          ...palette,
+          colors: paletteColors,
+        };
+      })
+    );
+
+    return palettesWithColors;
+  }
+
+  /**
+   * Get palettes for a specific user
+   */
+  async getUserPalettes(
+    userId: string,
+    options: { limit: number; offset: number }
+  ) {
+    const { limit, offset } = options;
+
+    const paletteResults = await db
+      .select({
+        id: palettes.id,
+        name: palettes.name,
+        description: palettes.description,
+        userId: palettes.userId,
+        isPublic: palettes.isPublic,
+        likesCount: palettes.likesCount,
+        savesCount: palettes.savesCount,
+        createdAt: palettes.createdAt,
+      })
+      .from(palettes)
+      .where(eq(palettes.userId, userId))
+      .orderBy(desc(palettes.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    // Get colors for each palette
+    const palettesWithColors = await Promise.all(
+      paletteResults.map(async palette => {
+        const paletteColors = await db
+          .select({
+            id: colors.id,
+            hexValue: colors.hexValue,
+            position: colors.position,
+            name: colors.name,
+          })
+          .from(colors)
+          .where(eq(colors.paletteId, palette.id))
+          .orderBy(asc(colors.position));
+
+        return {
+          ...palette,
+          colors: paletteColors,
+        };
+      })
+    );
+
+    return palettesWithColors;
   }
 }
 

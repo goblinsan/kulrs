@@ -1,0 +1,142 @@
+.browse-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.browse-header {
+  margin-bottom: 2rem;
+}
+
+.browse-header h1 {
+  margin: 0 0 1.5rem 0;
+  font-size: 2rem;
+  color: #fff;
+}
+
+.browse-filters {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.filter-button {
+  padding: 0.5rem 1rem;
+  border: 1px solid #333;
+  border-radius: 6px;
+  background: transparent;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.filter-button:hover {
+  border-color: #555;
+  color: #fff;
+}
+
+.filter-button.active {
+  background: #fff;
+  color: #000;
+  border-color: #fff;
+}
+
+.browse-loading,
+.browse-error,
+.browse-empty {
+  text-align: center;
+  padding: 3rem;
+  color: #888;
+}
+
+.browse-error button {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background: #333;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+}
+
+.palette-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.palette-card {
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.palette-card:hover {
+  transform: translateY(-4px);
+  border-color: #444;
+}
+
+.palette-colors {
+  display: flex;
+  height: 120px;
+}
+
+.palette-color-strip {
+  flex: 1;
+  height: 100%;
+  transition: flex 0.2s ease;
+}
+
+.palette-card:hover .palette-color-strip:hover {
+  flex: 1.5;
+}
+
+.palette-info {
+  padding: 1rem;
+}
+
+.palette-name {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.palette-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.palette-stats .likes {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+@media (max-width: 600px) {
+  .browse-page {
+    padding: 1rem;
+  }
+
+  .browse-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .palette-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .palette-colors {
+    height: 100px;
+  }
+}

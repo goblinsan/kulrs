@@ -189,3 +189,67 @@ export async function remixPalette(
 ): Promise<PaletteResponse> {
   return apiPost<PaletteResponse>(`/palettes/${paletteId}/remix`, {});
 }
+
+// Browse palette types
+export interface PaletteColor {
+  id: string;
+  hexValue: string;
+  position: number;
+  name: string | null;
+}
+
+export interface BrowsePalette {
+  id: string;
+  name: string;
+  description: string | null;
+  userId: string;
+  isPublic: boolean;
+  likesCount: number;
+  savesCount: number;
+  createdAt: string;
+  colors: PaletteColor[];
+}
+
+export interface BrowsePalettesResponse {
+  success: boolean;
+  data: BrowsePalette[];
+}
+
+export interface BrowsePalettesOptions {
+  sort?: 'recent' | 'popular';
+  userId?: string;
+  limit?: number;
+  offset?: number;
+}
+
+/**
+ * Browse public palettes with sorting and filtering
+ */
+export async function browsePalettes(
+  options: BrowsePalettesOptions = {}
+): Promise<BrowsePalettesResponse> {
+  const params = new URLSearchParams();
+  if (options.sort) params.set('sort', options.sort);
+  if (options.userId) params.set('userId', options.userId);
+  if (options.limit) params.set('limit', String(options.limit));
+  if (options.offset) params.set('offset', String(options.offset));
+
+  const query = params.toString();
+  return apiGet<BrowsePalettesResponse>(`/palettes${query ? `?${query}` : ''}`);
+}
+
+/**
+ * Get palettes created by the current user
+ */
+export async function getMyPalettes(
+  options: { limit?: number; offset?: number } = {}
+): Promise<BrowsePalettesResponse> {
+  const params = new URLSearchParams();
+  if (options.limit) params.set('limit', String(options.limit));
+  if (options.offset) params.set('offset', String(options.offset));
+
+  const query = params.toString();
+  return apiGet<BrowsePalettesResponse>(
+    `/palettes/my${query ? `?${query}` : ''}`
+  );
+}

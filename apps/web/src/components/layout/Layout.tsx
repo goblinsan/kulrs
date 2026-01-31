@@ -26,7 +26,7 @@ export function Layout({ children }: LayoutProps) {
             <Link to="/">Kulrs</Link>
           </div>
           <div className="nav-links">
-            <Link to="/">Home</Link>
+            <Link to="/browse">Browse</Link>
             {user ? (
               <>
                 <span className="nav-user">{user.email}</span>

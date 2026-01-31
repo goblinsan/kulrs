@@ -1,9 +1,86 @@
-import { Router, Response } from 'express';
+import { Router, Response, Request } from 'express';
 import { AuthenticatedRequest } from '../middleware/auth.js';
 import { paletteService } from '../services/palette.service.js';
 import { createPaletteSchema } from '../utils/validation.js';
 
 const router = Router();
+
+/**
+ * GET /palettes
+ * Browse public palettes with filtering and sorting
+ */
+router.get('/', async (req: Request, res: Response) => {
+  try {
+    const {
+      sort = 'recent',
+      userId,
+      limit = '20',
+      offset = '0',
+    } = req.query as {
+      sort?: 'recent' | 'popular';
+      userId?: string;
+      limit?: string;
+      offset?: string;
+    };
+
+    const palettes = await paletteService.browsePalettes({
+      sort: sort as 'recent' | 'popular',
+      userId,
+      limit: parseInt(limit, 10),
+      offset: parseInt(offset, 10),
+    });
+
+    res.status(200).json({
+      success: true,
+      data: palettes,
+    });
+  } catch (error) {
+    console.error('Error browsing palettes:', error);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to browse palettes',
+    });
+  }
+});
+
+/**
+ * GET /palettes/my
+ * Get palettes created by the authenticated user
+ */
+router.get('/my', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const { limit = '20', offset = '0' } = req.query as {
+      limit?: string;
+      offset?: string;
+    };
+
+    const user = await paletteService.getOrCreateUser(
+      req.user.uid,
+      req.user.email
+    );
+
+    const palettes = await paletteService.getUserPalettes(user.id, {
+      limit: parseInt(limit, 10),
+      offset: parseInt(offset, 10),
+    });
+
+    res.status(200).json({
+      success: true,
+      data: palettes,
+    });
+  } catch (error) {
+    console.error('Error fetching user palettes:', error);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to fetch palettes',
+    });
+  }
+});
 
 /**
  * POST /palettes
