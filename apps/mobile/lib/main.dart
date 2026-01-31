@@ -4,6 +4,9 @@ import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
+import 'screens/generate/generate_screen.dart';
+import 'screens/detail/detail_screen.dart';
+import 'screens/saved/saved_screen.dart';
 import 'screens/home_screen.dart';
 
 void main() async {
@@ -30,6 +33,19 @@ class MyApp extends StatelessWidget {
           '/login': (context) => const LoginScreen(),
           '/signup': (context) => const SignupScreen(),
           '/home': (context) => const HomeScreen(),
+          '/generate': (context) => const GenerateScreen(),
+          '/saved': (context) => const SavedScreen(),
+        },
+        onGenerateRoute: (settings) {
+          if (settings.name == '/detail') {
+            final args = settings.arguments as Map<String, dynamic>?;
+            return MaterialPageRoute(
+              builder: (context) => DetailScreen(
+                paletteId: args?['paletteId'] as String?,
+              ),
+            );
+          }
+          return null;
         },
       ),
     );
@@ -53,7 +69,7 @@ class AuthWrapper extends StatelessWidget {
     }
 
     if (authProvider.isAuthenticated) {
-      return const HomeScreen();
+      return const GenerateScreen();
     }
 
     return const LoginScreen();
