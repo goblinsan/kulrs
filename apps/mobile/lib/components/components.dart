@@ -1,7 +1,6 @@
 /// Shared UI components for the mobile app
 ///
 /// This library exports all reusable UI components.
-library components;
 
 export 'loading_indicator.dart';
 export 'error_message.dart';
