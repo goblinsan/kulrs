@@ -9,7 +9,6 @@ import './PaletteDisplay.css';
 
 interface PaletteDisplayProps {
   palette: GeneratedPalette;
-  showControls?: boolean;
   onPaletteChange?: (colors: AssignedColor[]) => void;
 }
 
@@ -18,7 +17,6 @@ const DERIVED_ROLES = [ColorRole.BACKGROUND, ColorRole.TEXT];
 
 export function PaletteDisplay({
   palette,
-  showControls = false,
   onPaletteChange,
 }: PaletteDisplayProps) {
   // Separate main colors from derived colors
@@ -53,11 +51,7 @@ export function PaletteDisplay({
         <h4 className="section-title">Main Colors</h4>
         <div className="swatches-grid">
           {mainColors.map((color, index) => (
-            <ColorSwatch
-              key={index}
-              color={color}
-              showControls={showControls}
-            />
+            <ColorSwatch key={index} color={color} />
           ))}
         </div>
       </div>
@@ -76,17 +70,12 @@ export function PaletteDisplay({
                 <EditableColorSwatch
                   key={index}
                   color={color}
-                  showControls={showControls}
                   onColorChange={updated =>
                     handleDerivedColorChange(index, updated)
                   }
                 />
               ) : (
-                <ColorSwatch
-                  key={index}
-                  color={color}
-                  showControls={showControls}
-                />
+                <ColorSwatch key={index} color={color} />
               )
             )}
           </div>

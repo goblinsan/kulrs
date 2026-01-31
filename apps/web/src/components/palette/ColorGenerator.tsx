@@ -261,6 +261,7 @@ export function ColorGenerator({
             <option value={5}>5 Colors</option>
           </select>
           <button type="submit" className="generate-button" disabled={loading}>
+            <i className="fa-solid fa-palette"></i>
             {loading ? 'Generating...' : 'Generate Palette'}
           </button>
           {onRandomGenerate && (
@@ -271,7 +272,8 @@ export function ColorGenerator({
               disabled={loading}
               title="Generate a random palette"
             >
-              🎲 Random
+              <i className="fa-solid fa-shuffle"></i>
+              Random
             </button>
           )}
         </div>

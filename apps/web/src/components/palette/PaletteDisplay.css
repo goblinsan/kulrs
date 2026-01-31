@@ -3,7 +3,7 @@
 }
 
 .palette-section {
-  margin-bottom: 1.5rem;
+  margin-bottom: 4.5rem;
 }
 
 .palette-section:last-child {
@@ -13,7 +13,8 @@
 .section-title {
   font-size: 0.875rem;
   color: #888;
-  margin: 0 0 0.75rem 0;
+  margin: 0 0 1.5rem 0;
+  padding-bottom: 50px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 600;
@@ -29,27 +30,44 @@
 }
 
 .swatches-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  display: flex;
   gap: 1rem;
+  justify-content: center;
+  padding: 0.5rem;
+}
+
+.swatches-grid .color-swatch {
+  flex: 1;
+  min-width: 80px;
+  max-width: 140px;
 }
 
 .derived-grid {
-  grid-template-columns: repeat(2, 1fr);
-  max-width: 450px;
+  justify-content: center;
+}
+
+.derived-grid .color-swatch {
+  flex: 0 0 auto;
+  width: 120px;
 }
 
 .derived-section {
-  padding-top: 1rem;
+  padding-top: 1.5rem;
+  padding-bottom: 3rem;
   border-top: 1px solid #333;
 }
 
 @media (max-width: 768px) {
   .swatches-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    flex-wrap: wrap;
   }
 
-  .derived-grid {
-    grid-template-columns: 1fr 1fr;
+  .swatches-grid .color-swatch {
+    flex: 0 0 calc(33.333% - 1rem);
+    max-width: none;
+  }
+
+  .derived-grid .color-swatch {
+    width: 100px;
   }
 }

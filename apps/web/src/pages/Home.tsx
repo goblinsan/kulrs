@@ -139,30 +139,34 @@ export function Home() {
         <p className="palette-explanation">{palette.metadata.explanation}</p>
         <PaletteDisplay
           palette={palette}
-          showControls={true}
           onPaletteChange={handlePaletteChange}
         />
         <div className="palette-actions">
           <button
             onClick={handleLike}
-            className={`like-button ${liked ? 'liked' : ''}`}
+            className={`action-button like-button ${liked ? 'liked' : ''}`}
             title={liked ? 'Unlike palette' : 'Like palette'}
           >
-            {liked ? '❤️' : '🤍'} {likeCount > 0 ? likeCount : ''}{' '}
-            {liked ? 'Liked' : 'Like'}
+            <i className={`fa-${liked ? 'solid' : 'regular'} fa-heart`}></i>
+            {liked ? 'Liked' : 'Like'} {likeCount > 0 ? `(${likeCount})` : ''}
           </button>
           {user && (
             <button
               onClick={handleSave}
-              className={`save-button ${saved ? 'saved' : ''}`}
+              className={`action-button save-button ${saved ? 'saved' : ''}`}
               disabled={saving || saved}
               title={saved ? 'Palette saved' : 'Save palette to your account'}
             >
-              {saving ? '💾 Saving...' : saved ? '✓ Saved' : '💾 Save'}
+              <i className="fa-regular fa-bookmark"></i>
+              {saving ? 'Saving...' : saved ? 'Saved' : 'Save'}
             </button>
           )}
-          <button onClick={handleViewDetails} className="view-details-button">
-            View Details & Share
+          <button
+            onClick={handleViewDetails}
+            className="action-button view-details-button"
+          >
+            <i className="fa-solid fa-arrow-up-right-from-square"></i>
+            Details
           </button>
         </div>
       </div>

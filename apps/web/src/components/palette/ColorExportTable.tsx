@@ -135,7 +135,7 @@ export function ColorExportTable({ palette }: ColorExportTableProps) {
       <div className="export-header">
         <h3>Color Values</h3>
         <button onClick={handleExportCSV} className="export-csv-button">
-          📥 Export CSV
+          Export CSV
         </button>
       </div>
       <div className="table-wrapper">
@@ -149,10 +149,10 @@ export function ColorExportTable({ palette }: ColorExportTableProps) {
               <th>
                 Blender Hex
                 <span
-                  className="tooltip-icon"
+                  className="info-icon"
                   title="Gamma-corrected for sRGB color space in Blender"
                 >
-                  ℹ️
+                  i
                 </span>
               </th>
             </tr>

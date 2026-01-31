@@ -93,7 +93,6 @@ export function PaletteDetail() {
     createPaletteInDb,
     saveExistingPalette,
     likePalette: likePaletteAction,
-    remixPalette: remixPaletteAction,
   } = usePaletteActions();
 
   const [palette, setPalette] = useState<GeneratedPalette | null>(null);
@@ -259,20 +258,6 @@ export function PaletteDetail() {
     }
   };
 
-  const handleRemix = async () => {
-    if (!paletteId) {
-      showFeedback('Please wait a moment and try again');
-      return;
-    }
-
-    const newPaletteId = await remixPaletteAction(paletteId);
-    if (newPaletteId) {
-      showFeedback('Remix created successfully!');
-    } else {
-      showFeedback('Failed to remix palette. Please try again.');
-    }
-  };
-
   return (
     <div className="palette-detail">
       <div className="palette-detail-header">
@@ -291,7 +276,8 @@ export function PaletteDetail() {
             aria-label="Save palette to your collection"
             title="Save to your collection"
           >
-            {isSaved ? '✓ Saved' : '💾 Save'}
+            <i className="fa-regular fa-bookmark"></i>
+            {isSaved ? 'Saved' : 'Save'}
           </button>
           <button
             onClick={handleLike}
@@ -300,16 +286,8 @@ export function PaletteDetail() {
             aria-label="Like this palette"
             title="Like this palette"
           >
-            {isLiked ? '❤️ Liked' : '🤍 Like'}
-          </button>
-          <button
-            onClick={handleRemix}
-            className="action-button remix-button"
-            disabled={loading || !paletteId}
-            aria-label="Create a remix based on this palette"
-            title="Create a remix of this palette"
-          >
-            🎨 Remix
+            <i className={`fa-${isLiked ? 'solid' : 'regular'} fa-heart`}></i>
+            {isLiked ? 'Liked' : 'Like'}
           </button>
           <button
             onClick={handleCopyShareLink}
@@ -317,7 +295,8 @@ export function PaletteDetail() {
             aria-label="Copy share link to clipboard"
             title="Copy share link"
           >
-            📋 Share
+            <i className="fa-solid fa-link"></i>
+            Share
           </button>
         </div>
 
@@ -327,7 +306,7 @@ export function PaletteDetail() {
         {apiError && <div className="action-error">{apiError}</div>}
       </div>
 
-      <PaletteDisplay palette={palette} showControls={true} />
+      <PaletteDisplay palette={palette} />
 
       <ColorExportTable palette={palette} />
     </div>

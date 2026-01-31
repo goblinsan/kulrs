@@ -4,7 +4,6 @@ import './ColorSwatch.css';
 
 interface EditableColorSwatchProps {
   color: AssignedColor;
-  showControls?: boolean;
   onColorChange: (color: AssignedColor) => void;
 }
 
@@ -29,7 +28,6 @@ function getTextColor(hex: string): string {
 
 export function EditableColorSwatch({
   color,
-  showControls = false,
   onColorChange,
 }: EditableColorSwatchProps) {
   const [copied, setCopied] = useState(false);
@@ -42,7 +40,7 @@ export function EditableColorSwatch({
       .writeText(hex)
       .then(() => {
         setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        setTimeout(() => setCopied(false), 1500);
       })
       .catch(error => {
         console.error('Failed to copy to clipboard:', error);
@@ -68,13 +66,13 @@ export function EditableColorSwatch({
       <div
         className="swatch-color"
         style={{ backgroundColor: hex, color: textColor }}
+        onClick={handleCopy}
       >
-        <div className="swatch-info">
-          <div className="swatch-role">{color.role}</div>
-          <div className="swatch-hex">{hex}</div>
-        </div>
-        <label className="edit-color-label">
-          <span className="edit-indicator-visible">✏️ Edit</span>
+        <span className={`swatch-hex ${copied ? 'copied' : ''}`}>
+          {copied ? '✓ Copied' : hex}
+        </span>
+        <label className="edit-color-label" onClick={e => e.stopPropagation()}>
+          <span className="edit-indicator-visible">Edit</span>
           <input
             type="color"
             value={hex}
@@ -83,14 +81,7 @@ export function EditableColorSwatch({
           />
         </label>
       </div>
-
-      {showControls && (
-        <div className="swatch-controls">
-          <button onClick={handleCopy} className="copy-button">
-            {copied ? '✓ Copied!' : '📋 Copy'}
-          </button>
-        </div>
-      )}
+      <div className="swatch-label">{color.role}</div>
     </div>
   );
 }

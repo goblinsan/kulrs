@@ -4,7 +4,6 @@ import './ColorSwatch.css';
 
 interface ColorSwatchProps {
   color: AssignedColor;
-  showControls?: boolean;
 }
 
 // Convert OKLCH to hex for display
@@ -28,7 +27,7 @@ function getTextColor(hex: string): string {
   return luminance > 0.5 ? '#000' : '#fff';
 }
 
-export function ColorSwatch({ color, showControls = false }: ColorSwatchProps) {
+export function ColorSwatch({ color }: ColorSwatchProps) {
   const [copied, setCopied] = useState(false);
   const hex = oklchToHex(color);
   const textColor = getTextColor(hex);
@@ -38,7 +37,7 @@ export function ColorSwatch({ color, showControls = false }: ColorSwatchProps) {
       .writeText(hex)
       .then(() => {
         setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        setTimeout(() => setCopied(false), 1500);
       })
       .catch(error => {
         console.error('Failed to copy to clipboard:', error);
@@ -50,20 +49,13 @@ export function ColorSwatch({ color, showControls = false }: ColorSwatchProps) {
       <div
         className="swatch-color"
         style={{ backgroundColor: hex, color: textColor }}
+        onClick={handleCopy}
       >
-        <div className="swatch-info">
-          <div className="swatch-role">{color.role}</div>
-          <div className="swatch-hex">{hex}</div>
-        </div>
+        <span className={`swatch-hex ${copied ? 'copied' : ''}`}>
+          {copied ? '✓ Copied' : hex}
+        </span>
       </div>
-
-      {showControls && (
-        <div className="swatch-controls">
-          <button onClick={handleCopy} className="copy-button">
-            {copied ? '✓ Copied!' : '📋 Copy'}
-          </button>
-        </div>
-      )}
+      <div className="swatch-label">{color.role}</div>
     </div>
   );
 }

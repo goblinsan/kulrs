@@ -10,6 +10,7 @@
 
 .palette-detail-header h1 {
   margin-bottom: 0.5rem;
+  color: var(--brand-color, #aaffdd);
 }
 
 .palette-metadata {
@@ -33,36 +34,47 @@
 }
 
 .action-button {
-  padding: 0.75rem 1.5rem;
-  background-color: #646cff;
-  color: white;
-  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  background-color: transparent;
+  color: #888;
+  border: 1px solid #444;
   border-radius: 4px;
-  font-size: 1rem;
+  font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.2s;
 }
 
+.action-button i {
+  font-size: 0.85rem;
+}
+
 .action-button:hover:not(:disabled) {
-  background-color: #535bf2;
-  transform: translateY(-1px);
+  color: #fff;
+  border-color: #666;
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .action-button:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .action-button.active {
-  background-color: #4caf50;
+  color: #fff;
+  border-color: #666;
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .action-button.active:hover:not(:disabled) {
-  background-color: #45a049;
+  background-color: rgba(255, 255, 255, 0.15);
 }
 
 .like-button.active {
-  background-color: #e91e63;
+  color: #e91e63;
+  border-color: #e91e63;
 }
 
 .action-feedback {
@@ -83,19 +95,9 @@
   font-size: 0.9rem;
 }
 
-.share-button {
-  padding: 0.75rem 1.5rem;
-  background-color: #646cff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.share-button:hover {
-  background-color: #535bf2;
+.save-button.active {
+  color: #4caf50;
+  border-color: #4caf50;
 }
 
 .palette-detail-error {
