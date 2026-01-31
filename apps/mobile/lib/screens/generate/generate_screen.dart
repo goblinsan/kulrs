@@ -6,7 +6,6 @@ import 'dart:typed_data';
 import '../../components/components.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
-import '../../models/palette.dart';
 
 /// Screen for generating color palettes
 class GenerateScreen extends StatefulWidget {
