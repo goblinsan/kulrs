@@ -7,7 +7,6 @@ import {
   remixPalette as remixPaletteApi,
   type CreatePaletteRequest,
 } from '../services/api';
-import { oklchToHex } from '../components/palette/paletteUtils';
 
 export function usePaletteActions() {
   const [loading, setLoading] = useState(false);
@@ -20,13 +19,19 @@ export function usePaletteActions() {
     palette: GeneratedPalette
   ): CreatePaletteRequest => {
     return {
+      palette: {
+        colors: palette.colors.map(c => ({
+          role: c.role,
+          color: c.color,
+        })),
+        metadata: {
+          generator: palette.metadata.generator,
+          explanation: palette.metadata.explanation,
+          timestamp: palette.metadata.timestamp,
+        },
+      },
       name: `${palette.metadata.generator} palette`,
       description: palette.metadata.explanation,
-      colors: palette.colors.map((color, index) => ({
-        hexValue: oklchToHex(color.color),
-        position: index,
-        name: color.role,
-      })),
       isPublic: true,
     };
   };

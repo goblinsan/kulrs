@@ -90,15 +90,20 @@ export async function apiDelete<T>(endpoint: string): Promise<T> {
 
 // Palette API types
 export interface CreatePaletteRequest {
-  name: string;
+  palette: {
+    colors: Array<{
+      role: string;
+      color: { l: number; c: number; h: number };
+    }>;
+    metadata: {
+      generator: string;
+      explanation: string;
+      timestamp: string;
+    };
+  };
+  name?: string;
   description?: string;
-  colors: Array<{
-    hexValue: string;
-    position: number;
-    name?: string;
-  }>;
   isPublic?: boolean;
-  sourceId?: string;
   tagIds?: string[];
 }
 
