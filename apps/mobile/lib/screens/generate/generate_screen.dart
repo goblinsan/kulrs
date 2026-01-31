@@ -23,6 +23,9 @@ class _GenerateScreenState extends State<GenerateScreen> {
   bool _isGenerating = false;
   String? _errorMessage;
 
+  // Default fallback pixel color (red) used when image decoding fails
+  static const List<int> _defaultFallbackPixel = [255, 0, 0];
+
   @override
   void dispose() {
     _moodController.dispose();
@@ -119,7 +122,7 @@ class _GenerateScreenState extends State<GenerateScreen> {
       final image = img.decodeImage(bytes);
       if (image == null) {
         // Fallback to a default color if decoding fails
-        return [[255, 0, 0]];
+        return [_defaultFallbackPixel];
       }
 
       final List<List<int>> pixels = [];
@@ -144,10 +147,10 @@ class _GenerateScreenState extends State<GenerateScreen> {
         }
       }
       
-      return pixels.isEmpty ? [[255, 0, 0]] : pixels;
+      return pixels.isEmpty ? [_defaultFallbackPixel] : pixels;
     } catch (e) {
       // If there's any error, return a default color
-      return [[255, 0, 0]];
+      return [_defaultFallbackPixel];
     }
   }
 
