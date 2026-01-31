@@ -53,6 +53,14 @@
   text-align: center;
 }
 
+/* Mobile spacing improvements */
+@media (max-width: 768px) {
+  .swatch-label {
+    margin-top: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+}
+
 /* Editable Swatch Styles */
 .editable-swatch {
   position: relative;
