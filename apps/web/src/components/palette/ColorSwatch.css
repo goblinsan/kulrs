@@ -57,7 +57,7 @@
 @media (max-width: 768px) {
   .swatch-color {
     aspect-ratio: auto;
-    height: 250px;
+    height: 300px;
   }
 
   .swatch-label {
