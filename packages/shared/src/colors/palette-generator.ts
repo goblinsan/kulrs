@@ -283,37 +283,322 @@ function hashString(str: string): number {
 function moodToParameters(mood: string, random: SeededRandom): MoodParameters {
   const moodLower = mood.toLowerCase();
   
-  // Common mood keywords and their parameters
+  // Comprehensive mood keywords and their parameters
   const moodMappings: Record<string, Partial<MoodParameters>> = {
-    // Warm moods
+    // === WARM MOODS ===
     'warm': { baseHue: 30, chromaRange: [0.15, 0.25], harmony: 'analogous' },
-    'happy': { baseHue: 50, chromaRange: [0.2, 0.3], lightnessRange: [0.6, 0.8] },
-    'energetic': { baseHue: 15, chromaRange: [0.25, 0.35], harmony: 'triadic' },
-    'passionate': { baseHue: 0, chromaRange: [0.2, 0.3], harmony: 'complementary' },
+    'hot': { baseHue: 15, chromaRange: [0.25, 0.35], harmony: 'triadic' },
+    'cozy': { baseHue: 35, chromaRange: [0.12, 0.2], lightnessRange: [0.5, 0.7] },
+    'toasty': { baseHue: 28, chromaRange: [0.15, 0.22], lightnessRange: [0.55, 0.7] },
+    'fireplace': { baseHue: 20, chromaRange: [0.2, 0.28], lightnessRange: [0.4, 0.6] },
     
-    // Cool moods
+    // === HAPPY/POSITIVE MOODS ===
+    'happy': { baseHue: 50, chromaRange: [0.2, 0.3], lightnessRange: [0.6, 0.8] },
+    'joyful': { baseHue: 55, chromaRange: [0.22, 0.32], lightnessRange: [0.65, 0.85] },
+    'cheerful': { baseHue: 45, chromaRange: [0.2, 0.28], lightnessRange: [0.6, 0.8] },
+    'uplifting': { baseHue: 60, chromaRange: [0.18, 0.26], lightnessRange: [0.65, 0.8] },
+    'optimistic': { baseHue: 52, chromaRange: [0.2, 0.28], lightnessRange: [0.6, 0.75] },
+    'bright': { baseHue: 48, chromaRange: [0.25, 0.35], lightnessRange: [0.7, 0.85] },
+    'sunny': { baseHue: 55, chromaRange: [0.22, 0.3], lightnessRange: [0.7, 0.85] },
+    'radiant': { baseHue: 50, chromaRange: [0.25, 0.35], lightnessRange: [0.65, 0.8] },
+    
+    // === ENERGETIC MOODS ===
+    'energetic': { baseHue: 15, chromaRange: [0.25, 0.35], harmony: 'triadic' },
+    'vibrant': { baseHue: random.range(0, 360), chromaRange: [0.28, 0.38], harmony: 'triadic' },
+    'dynamic': { baseHue: 25, chromaRange: [0.25, 0.32], harmony: 'split-complementary' },
+    'electric': { baseHue: 280, chromaRange: [0.3, 0.4], harmony: 'complementary' },
+    'exciting': { baseHue: 10, chromaRange: [0.28, 0.36], harmony: 'triadic' },
+    'lively': { baseHue: 35, chromaRange: [0.22, 0.3], harmony: 'triadic' },
+    'powerful': { baseHue: 5, chromaRange: [0.25, 0.35], harmony: 'complementary' },
+    'intense': { baseHue: 0, chromaRange: [0.28, 0.38], harmony: 'complementary' },
+    
+    // === PASSIONATE/ROMANTIC ===
+    'passionate': { baseHue: 0, chromaRange: [0.2, 0.3], harmony: 'complementary' },
+    'romantic': { baseHue: 330, chromaRange: [0.15, 0.25], lightnessRange: [0.6, 0.8] },
+    'love': { baseHue: 350, chromaRange: [0.2, 0.28], lightnessRange: [0.55, 0.75] },
+    'sensual': { baseHue: 340, chromaRange: [0.18, 0.26], lightnessRange: [0.45, 0.65] },
+    'intimate': { baseHue: 335, chromaRange: [0.15, 0.22], lightnessRange: [0.5, 0.7] },
+    'desire': { baseHue: 355, chromaRange: [0.22, 0.3], lightnessRange: [0.4, 0.6] },
+    
+    // === COOL/CALM MOODS ===
     'cool': { baseHue: 210, chromaRange: [0.15, 0.25], harmony: 'analogous' },
     'calm': { baseHue: 200, chromaRange: [0.1, 0.2], lightnessRange: [0.5, 0.7] },
     'peaceful': { baseHue: 180, chromaRange: [0.08, 0.15], lightnessRange: [0.6, 0.8] },
     'serene': { baseHue: 190, chromaRange: [0.1, 0.18], harmony: 'analogous' },
+    'tranquil': { baseHue: 195, chromaRange: [0.1, 0.18], lightnessRange: [0.55, 0.75] },
+    'relaxed': { baseHue: 185, chromaRange: [0.1, 0.18], lightnessRange: [0.5, 0.7] },
+    'soothing': { baseHue: 175, chromaRange: [0.08, 0.16], lightnessRange: [0.55, 0.75] },
+    'gentle': { baseHue: 170, chromaRange: [0.08, 0.14], lightnessRange: [0.6, 0.8] },
+    'soft': { baseHue: 180, chromaRange: [0.08, 0.15], lightnessRange: [0.65, 0.85] },
+    'mellow': { baseHue: 175, chromaRange: [0.1, 0.16], lightnessRange: [0.5, 0.7] },
+    'zen': { baseHue: 165, chromaRange: [0.06, 0.12], lightnessRange: [0.55, 0.75] },
+    'meditative': { baseHue: 260, chromaRange: [0.08, 0.14], lightnessRange: [0.5, 0.7] },
     
-    // Nature moods
+    // === NATURE - OCEAN/WATER ===
+    'ocean': { baseHue: 200, chromaRange: [0.15, 0.25], harmony: 'analogous' },
+    'sea': { baseHue: 195, chromaRange: [0.15, 0.24], harmony: 'analogous' },
+    'beach': { baseHue: 45, chromaRange: [0.12, 0.2], lightnessRange: [0.6, 0.8] },
+    'coastal': { baseHue: 190, chromaRange: [0.12, 0.22], harmony: 'analogous' },
+    'nautical': { baseHue: 215, chromaRange: [0.18, 0.26], harmony: 'complementary' },
+    'aqua': { baseHue: 180, chromaRange: [0.18, 0.28], harmony: 'analogous' },
+    'marine': { baseHue: 205, chromaRange: [0.14, 0.22], harmony: 'analogous' },
+    'tidal': { baseHue: 195, chromaRange: [0.12, 0.2], lightnessRange: [0.45, 0.65] },
+    'underwater': { baseHue: 200, chromaRange: [0.15, 0.22], lightnessRange: [0.35, 0.55] },
+    'lagoon': { baseHue: 175, chromaRange: [0.18, 0.26], lightnessRange: [0.5, 0.7] },
+    'coral': { baseHue: 15, chromaRange: [0.2, 0.28], lightnessRange: [0.55, 0.75] },
+    'reef': { baseHue: 180, chromaRange: [0.2, 0.3], harmony: 'triadic' },
+    
+    // === NATURE - FOREST/EARTH ===
     'natural': { baseHue: 120, chromaRange: [0.12, 0.22], harmony: 'split-complementary' },
     'earthy': { baseHue: 40, chromaRange: [0.1, 0.18], lightnessRange: [0.4, 0.6] },
-    'ocean': { baseHue: 200, chromaRange: [0.15, 0.25], harmony: 'analogous' },
     'forest': { baseHue: 130, chromaRange: [0.15, 0.2], lightnessRange: [0.35, 0.55] },
+    'woodland': { baseHue: 125, chromaRange: [0.12, 0.2], lightnessRange: [0.4, 0.6] },
+    'jungle': { baseHue: 135, chromaRange: [0.18, 0.26], lightnessRange: [0.35, 0.55] },
+    'rainforest': { baseHue: 140, chromaRange: [0.2, 0.28], lightnessRange: [0.35, 0.5] },
+    'botanical': { baseHue: 115, chromaRange: [0.15, 0.25], harmony: 'analogous' },
+    'garden': { baseHue: 110, chromaRange: [0.18, 0.26], lightnessRange: [0.5, 0.7] },
+    'meadow': { baseHue: 105, chromaRange: [0.15, 0.22], lightnessRange: [0.55, 0.75] },
+    'moss': { baseHue: 125, chromaRange: [0.12, 0.18], lightnessRange: [0.4, 0.55] },
+    'fern': { baseHue: 135, chromaRange: [0.14, 0.2], lightnessRange: [0.45, 0.6] },
+    'leafy': { baseHue: 120, chromaRange: [0.16, 0.24], lightnessRange: [0.5, 0.7] },
+    'organic': { baseHue: 95, chromaRange: [0.1, 0.18], lightnessRange: [0.45, 0.65] },
+    'rustic': { baseHue: 35, chromaRange: [0.1, 0.16], lightnessRange: [0.4, 0.55] },
+    'country': { baseHue: 40, chromaRange: [0.12, 0.18], lightnessRange: [0.45, 0.65] },
+    'farmhouse': { baseHue: 38, chromaRange: [0.08, 0.14], lightnessRange: [0.5, 0.7] },
     
-    // Emotional moods
-    'romantic': { baseHue: 330, chromaRange: [0.15, 0.25], lightnessRange: [0.6, 0.8] },
+    // === NATURE - MOUNTAINS/DESERT ===
+    'mountain': { baseHue: 220, chromaRange: [0.08, 0.15], lightnessRange: [0.4, 0.65] },
+    'alpine': { baseHue: 215, chromaRange: [0.1, 0.18], lightnessRange: [0.5, 0.75] },
+    'rocky': { baseHue: 30, chromaRange: [0.06, 0.12], lightnessRange: [0.35, 0.55] },
+    'stone': { baseHue: 35, chromaRange: [0.04, 0.1], lightnessRange: [0.4, 0.6] },
+    'desert': { baseHue: 35, chromaRange: [0.12, 0.2], lightnessRange: [0.55, 0.75] },
+    'sand': { baseHue: 42, chromaRange: [0.1, 0.16], lightnessRange: [0.65, 0.8] },
+    'sahara': { baseHue: 38, chromaRange: [0.14, 0.22], lightnessRange: [0.6, 0.75] },
+    'canyon': { baseHue: 25, chromaRange: [0.15, 0.22], lightnessRange: [0.45, 0.6] },
+    'terracotta': { baseHue: 20, chromaRange: [0.15, 0.22], lightnessRange: [0.45, 0.6] },
+    
+    // === NATURE - SKY/CELESTIAL ===
+    'sky': { baseHue: 210, chromaRange: [0.1, 0.2], lightnessRange: [0.6, 0.85] },
+    'cloud': { baseHue: 220, chromaRange: [0.02, 0.08], lightnessRange: [0.75, 0.95] },
+    'cloudy': { baseHue: 215, chromaRange: [0.04, 0.1], lightnessRange: [0.6, 0.8] },
+    'stormy': { baseHue: 230, chromaRange: [0.08, 0.15], lightnessRange: [0.3, 0.5] },
+    'thunder': { baseHue: 250, chromaRange: [0.12, 0.2], lightnessRange: [0.25, 0.45] },
+    'rainbow': { baseHue: random.range(0, 360), chromaRange: [0.25, 0.35], harmony: 'triadic' },
+    
+    // === SUNSET/SUNRISE ===
+    'sunset': { baseHue: 25, chromaRange: [0.2, 0.3], harmony: 'analogous' },
+    'sunrise': { baseHue: 35, chromaRange: [0.18, 0.28], lightnessRange: [0.6, 0.8] },
+    'dusk': { baseHue: 280, chromaRange: [0.12, 0.2], lightnessRange: [0.4, 0.6] },
+    'dawn': { baseHue: 45, chromaRange: [0.12, 0.2], lightnessRange: [0.6, 0.8] },
+    'twilight': { baseHue: 270, chromaRange: [0.15, 0.22], lightnessRange: [0.35, 0.55] },
+    'golden': { baseHue: 45, chromaRange: [0.2, 0.3], lightnessRange: [0.6, 0.75] },
+    'amber': { baseHue: 40, chromaRange: [0.22, 0.3], lightnessRange: [0.55, 0.7] },
+    
+    // === SEASONS ===
+    'spring': { baseHue: 120, chromaRange: [0.18, 0.26], lightnessRange: [0.6, 0.8] },
+    'summer': { baseHue: 55, chromaRange: [0.2, 0.3], lightnessRange: [0.65, 0.85] },
+    'autumn': { baseHue: 30, chromaRange: [0.18, 0.26], lightnessRange: [0.45, 0.65] },
+    'fall': { baseHue: 28, chromaRange: [0.18, 0.26], lightnessRange: [0.45, 0.65] },
+    'winter': { baseHue: 210, chromaRange: [0.08, 0.15], lightnessRange: [0.5, 0.8] },
+    'seasonal': { baseHue: random.range(0, 360), chromaRange: [0.15, 0.25], harmony: 'analogous' },
+    
+    // === FLOWERS/PLANTS ===
+    'floral': { baseHue: 330, chromaRange: [0.18, 0.26], lightnessRange: [0.6, 0.8] },
+    'bloom': { baseHue: 340, chromaRange: [0.2, 0.28], lightnessRange: [0.6, 0.8] },
+    'rose': { baseHue: 350, chromaRange: [0.2, 0.28], lightnessRange: [0.5, 0.7] },
+    'lavender': { baseHue: 270, chromaRange: [0.15, 0.22], lightnessRange: [0.6, 0.8] },
+    'lilac': { baseHue: 280, chromaRange: [0.14, 0.2], lightnessRange: [0.65, 0.8] },
+    'peony': { baseHue: 345, chromaRange: [0.18, 0.25], lightnessRange: [0.6, 0.75] },
+    'orchid': { baseHue: 290, chromaRange: [0.2, 0.28], lightnessRange: [0.55, 0.75] },
+    'tulip': { baseHue: 0, chromaRange: [0.22, 0.3], lightnessRange: [0.55, 0.7] },
+    'daisy': { baseHue: 55, chromaRange: [0.18, 0.25], lightnessRange: [0.7, 0.85] },
+    'sunflower': { baseHue: 50, chromaRange: [0.25, 0.32], lightnessRange: [0.6, 0.75] },
+    'cherry': { baseHue: 340, chromaRange: [0.2, 0.28], lightnessRange: [0.55, 0.75] },
+    'blossom': { baseHue: 335, chromaRange: [0.16, 0.24], lightnessRange: [0.7, 0.85] },
+    
+    // === FRUITS ===
+    'citrus': { baseHue: 50, chromaRange: [0.25, 0.35], lightnessRange: [0.6, 0.8] },
+    'lemon': { baseHue: 55, chromaRange: [0.28, 0.36], lightnessRange: [0.7, 0.85] },
+    'orange': { baseHue: 30, chromaRange: [0.25, 0.33], lightnessRange: [0.6, 0.75] },
+    'lime': { baseHue: 100, chromaRange: [0.25, 0.33], lightnessRange: [0.55, 0.7] },
+    'berry': { baseHue: 320, chromaRange: [0.2, 0.28], lightnessRange: [0.35, 0.55] },
+    'grape': { baseHue: 280, chromaRange: [0.2, 0.28], lightnessRange: [0.35, 0.5] },
+    'peach': { baseHue: 25, chromaRange: [0.15, 0.22], lightnessRange: [0.7, 0.85] },
+    'mint': { baseHue: 160, chromaRange: [0.15, 0.22], lightnessRange: [0.6, 0.8] },
+    
+    // === SPACE/COSMIC ===
+    'cosmic': { baseHue: 270, chromaRange: [0.2, 0.3], harmony: 'triadic' },
+    'galaxy': { baseHue: 280, chromaRange: [0.18, 0.28], lightnessRange: [0.25, 0.5] },
+    'stellar': { baseHue: 260, chromaRange: [0.15, 0.25], lightnessRange: [0.3, 0.6] },
+    'nebula': { baseHue: 290, chromaRange: [0.2, 0.3], lightnessRange: [0.3, 0.55] },
+    'aurora': { baseHue: 140, chromaRange: [0.2, 0.3], harmony: 'triadic' },
+    'celestial': { baseHue: 240, chromaRange: [0.15, 0.25], lightnessRange: [0.3, 0.6] },
+    'starry': { baseHue: 250, chromaRange: [0.12, 0.2], lightnessRange: [0.2, 0.4] },
+    'lunar': { baseHue: 220, chromaRange: [0.04, 0.1], lightnessRange: [0.5, 0.8] },
+    'solar': { baseHue: 50, chromaRange: [0.25, 0.35], lightnessRange: [0.65, 0.85] },
+    'space': { baseHue: 260, chromaRange: [0.15, 0.25], lightnessRange: [0.15, 0.35] },
+    'midnight': { baseHue: 240, chromaRange: [0.1, 0.18], lightnessRange: [0.15, 0.3] },
+    
+    // === DARK/MOODY ===
+    'dark': { baseHue: 260, chromaRange: [0.1, 0.18], lightnessRange: [0.15, 0.35] },
+    'night': { baseHue: 240, chromaRange: [0.08, 0.15], lightnessRange: [0.15, 0.3] },
     'mysterious': { baseHue: 270, chromaRange: [0.15, 0.25], lightnessRange: [0.3, 0.5] },
-    'professional': { baseHue: 210, chromaRange: [0.1, 0.15], lightnessRange: [0.4, 0.7] },
-    'playful': { baseHue: random.range(0, 360), chromaRange: [0.2, 0.3], harmony: 'triadic' },
+    'moody': { baseHue: 255, chromaRange: [0.1, 0.2], lightnessRange: [0.3, 0.5] },
+    'gothic': { baseHue: 280, chromaRange: [0.12, 0.2], lightnessRange: [0.15, 0.35] },
+    'noir': { baseHue: 0, chromaRange: [0.02, 0.08], lightnessRange: [0.1, 0.25] },
+    'dramatic': { baseHue: 0, chromaRange: [0.2, 0.3], harmony: 'complementary' },
+    'brooding': { baseHue: 260, chromaRange: [0.08, 0.15], lightnessRange: [0.2, 0.4] },
+    'shadowy': { baseHue: 250, chromaRange: [0.06, 0.12], lightnessRange: [0.2, 0.35] },
     
-    // Other moods
+    // === LIGHT/AIRY ===
+    'light': { baseHue: 200, chromaRange: [0.06, 0.12], lightnessRange: [0.8, 0.95] },
+    'airy': { baseHue: 210, chromaRange: [0.04, 0.1], lightnessRange: [0.8, 0.95] },
+    'ethereal': { baseHue: 260, chromaRange: [0.08, 0.15], lightnessRange: [0.75, 0.9] },
+    'dreamy': { baseHue: 280, chromaRange: [0.1, 0.18], lightnessRange: [0.65, 0.85] },
+    'fairy': { baseHue: 300, chromaRange: [0.12, 0.2], lightnessRange: [0.7, 0.88] },
+    'magical': { baseHue: 285, chromaRange: [0.15, 0.25], harmony: 'triadic' },
+    'whimsical': { baseHue: 290, chromaRange: [0.18, 0.26], harmony: 'triadic' },
+    'fantasy': { baseHue: 275, chromaRange: [0.18, 0.28], harmony: 'split-complementary' },
+    
+    // === PASTEL ===
+    'pastel': { baseHue: random.range(0, 360), chromaRange: [0.08, 0.15], lightnessRange: [0.75, 0.9] },
+    'candy': { baseHue: 330, chromaRange: [0.15, 0.22], lightnessRange: [0.7, 0.85] },
+    'cotton': { baseHue: 340, chromaRange: [0.1, 0.16], lightnessRange: [0.8, 0.92] },
+    'bubblegum': { baseHue: 335, chromaRange: [0.18, 0.25], lightnessRange: [0.65, 0.8] },
+    'sherbet': { baseHue: 30, chromaRange: [0.15, 0.22], lightnessRange: [0.75, 0.88] },
+    'ice cream': { baseHue: random.range(0, 360), chromaRange: [0.12, 0.18], lightnessRange: [0.75, 0.9] },
+    
+    // === NEON/CYBER ===
+    'neon': { baseHue: random.range(0, 360), chromaRange: [0.32, 0.42], harmony: 'complementary' },
+    'cyber': { baseHue: 280, chromaRange: [0.28, 0.38], harmony: 'split-complementary' },
+    'synthwave': { baseHue: 300, chromaRange: [0.25, 0.35], harmony: 'complementary' },
+    'retro': { baseHue: 180, chromaRange: [0.2, 0.3], harmony: 'triadic' },
+    'vaporwave': { baseHue: 290, chromaRange: [0.2, 0.3], harmony: 'analogous' },
+    'futuristic': { baseHue: 195, chromaRange: [0.22, 0.32], harmony: 'split-complementary' },
+    'tech': { baseHue: 200, chromaRange: [0.18, 0.28], harmony: 'analogous' },
+    'digital': { baseHue: 210, chromaRange: [0.2, 0.3], harmony: 'triadic' },
+    
+    // === URBAN/INDUSTRIAL ===
+    'urban': { baseHue: 220, chromaRange: [0.08, 0.15], lightnessRange: [0.35, 0.55] },
+    'city': { baseHue: 210, chromaRange: [0.1, 0.18], lightnessRange: [0.4, 0.6] },
+    'industrial': { baseHue: 35, chromaRange: [0.06, 0.12], lightnessRange: [0.35, 0.55] },
+    'concrete': { baseHue: 40, chromaRange: [0.02, 0.06], lightnessRange: [0.4, 0.6] },
+    'metropolitan': { baseHue: 215, chromaRange: [0.1, 0.18], lightnessRange: [0.35, 0.55] },
+    'street': { baseHue: 30, chromaRange: [0.08, 0.14], lightnessRange: [0.3, 0.5] },
+    
+    // === PROFESSIONAL/BUSINESS ===
+    'professional': { baseHue: 210, chromaRange: [0.1, 0.15], lightnessRange: [0.4, 0.7] },
+    'corporate': { baseHue: 215, chromaRange: [0.12, 0.18], lightnessRange: [0.4, 0.65] },
+    'business': { baseHue: 220, chromaRange: [0.1, 0.16], lightnessRange: [0.4, 0.6] },
+    'executive': { baseHue: 230, chromaRange: [0.1, 0.16], lightnessRange: [0.35, 0.55] },
+    'formal': { baseHue: 0, chromaRange: [0.02, 0.06], lightnessRange: [0.2, 0.4] },
+    'sophisticated': { baseHue: 270, chromaRange: [0.1, 0.18], lightnessRange: [0.35, 0.55] },
+    
+    // === MINIMAL/MODERN ===
     'minimal': { baseHue: 0, chromaRange: [0.02, 0.08], lightnessRange: [0.3, 0.9] },
-    'vintage': { baseHue: 30, chromaRange: [0.12, 0.18], lightnessRange: [0.45, 0.65] },
+    'minimalist': { baseHue: 0, chromaRange: [0.01, 0.05], lightnessRange: [0.25, 0.85] },
+    'clean': { baseHue: 210, chromaRange: [0.04, 0.1], lightnessRange: [0.7, 0.95] },
     'modern': { baseHue: random.range(0, 360), chromaRange: [0.15, 0.25], harmony: 'split-complementary' },
+    'contemporary': { baseHue: random.range(0, 360), chromaRange: [0.12, 0.22], harmony: 'analogous' },
+    'sleek': { baseHue: 220, chromaRange: [0.1, 0.18], lightnessRange: [0.35, 0.6] },
+    'crisp': { baseHue: 200, chromaRange: [0.08, 0.15], lightnessRange: [0.7, 0.9] },
+    
+    // === VINTAGE/RETRO ===
+    'vintage': { baseHue: 30, chromaRange: [0.12, 0.18], lightnessRange: [0.45, 0.65] },
+    'antique': { baseHue: 35, chromaRange: [0.1, 0.16], lightnessRange: [0.4, 0.6] },
+    'nostalgic': { baseHue: 40, chromaRange: [0.1, 0.18], lightnessRange: [0.5, 0.7] },
+    'classic': { baseHue: 220, chromaRange: [0.12, 0.2], lightnessRange: [0.4, 0.6] },
+    'timeless': { baseHue: 30, chromaRange: [0.08, 0.14], lightnessRange: [0.45, 0.65] },
+    'heritage': { baseHue: 25, chromaRange: [0.12, 0.2], lightnessRange: [0.4, 0.55] },
+    'sepia': { baseHue: 35, chromaRange: [0.1, 0.16], lightnessRange: [0.45, 0.6] },
+    '70s': { baseHue: 35, chromaRange: [0.18, 0.26], lightnessRange: [0.45, 0.65] },
+    '80s': { baseHue: 300, chromaRange: [0.22, 0.32], harmony: 'triadic' },
+    '90s': { baseHue: 180, chromaRange: [0.2, 0.28], harmony: 'split-complementary' },
+    
+    // === BOLD/STATEMENT ===
     'bold': { baseHue: random.range(0, 360), chromaRange: [0.25, 0.35], harmony: 'complementary' },
+    'statement': { baseHue: random.range(0, 360), chromaRange: [0.28, 0.38], harmony: 'split-complementary' },
+    'striking': { baseHue: 0, chromaRange: [0.25, 0.35], harmony: 'complementary' },
+    'impactful': { baseHue: 350, chromaRange: [0.25, 0.35], harmony: 'triadic' },
+    'attention': { baseHue: 55, chromaRange: [0.28, 0.36], harmony: 'complementary' },
+    
+    // === FUN/PLAYFUL ===
+    'playful': { baseHue: random.range(0, 360), chromaRange: [0.2, 0.3], harmony: 'triadic' },
+    'fun': { baseHue: random.range(0, 360), chromaRange: [0.22, 0.32], harmony: 'triadic' },
+    'quirky': { baseHue: random.range(0, 360), chromaRange: [0.2, 0.3], harmony: 'split-complementary' },
+    'creative': { baseHue: random.range(0, 360), chromaRange: [0.2, 0.28], harmony: 'triadic' },
+    'artistic': { baseHue: random.range(0, 360), chromaRange: [0.18, 0.28], harmony: 'split-complementary' },
+    'eclectic': { baseHue: random.range(0, 360), chromaRange: [0.2, 0.3], harmony: 'triadic' },
+    'festive': { baseHue: 0, chromaRange: [0.25, 0.33], harmony: 'triadic' },
+    'party': { baseHue: random.range(0, 360), chromaRange: [0.28, 0.38], harmony: 'triadic' },
+    'carnival': { baseHue: random.range(0, 360), chromaRange: [0.3, 0.4], harmony: 'triadic' },
+    
+    // === ELEGANT/LUXURY ===
+    'elegant': { baseHue: 45, chromaRange: [0.1, 0.18], lightnessRange: [0.5, 0.75] },
+    'luxury': { baseHue: 50, chromaRange: [0.15, 0.22], lightnessRange: [0.45, 0.65] },
+    'luxurious': { baseHue: 45, chromaRange: [0.18, 0.25], lightnessRange: [0.4, 0.6] },
+    'opulent': { baseHue: 40, chromaRange: [0.2, 0.28], lightnessRange: [0.45, 0.6] },
+    'regal': { baseHue: 280, chromaRange: [0.15, 0.25], lightnessRange: [0.35, 0.55] },
+    'royal': { baseHue: 275, chromaRange: [0.18, 0.26], lightnessRange: [0.35, 0.5] },
+    'majestic': { baseHue: 270, chromaRange: [0.2, 0.28], lightnessRange: [0.35, 0.55] },
+    'glamorous': { baseHue: 320, chromaRange: [0.18, 0.26], lightnessRange: [0.5, 0.7] },
+    'chic': { baseHue: 340, chromaRange: [0.12, 0.2], lightnessRange: [0.55, 0.75] },
+    
+    // === TROPICAL ===
+    'tropical': { baseHue: 160, chromaRange: [0.22, 0.32], harmony: 'triadic' },
+    'paradise': { baseHue: 180, chromaRange: [0.2, 0.3], harmony: 'analogous' },
+    'island': { baseHue: 170, chromaRange: [0.18, 0.28], harmony: 'analogous' },
+    'exotic': { baseHue: random.range(0, 360), chromaRange: [0.22, 0.32], harmony: 'triadic' },
+    'caribbean': { baseHue: 180, chromaRange: [0.22, 0.3], harmony: 'triadic' },
+    'hawaiian': { baseHue: 165, chromaRange: [0.2, 0.3], harmony: 'triadic' },
+    
+    // === COLD/ICY ===
+    'arctic': { baseHue: 200, chromaRange: [0.1, 0.18], lightnessRange: [0.7, 0.9] },
+    'icy': { baseHue: 195, chromaRange: [0.08, 0.15], lightnessRange: [0.75, 0.92] },
+    'frozen': { baseHue: 200, chromaRange: [0.12, 0.2], lightnessRange: [0.7, 0.88] },
+    'frost': { baseHue: 205, chromaRange: [0.08, 0.14], lightnessRange: [0.78, 0.92] },
+    'glacier': { baseHue: 195, chromaRange: [0.1, 0.18], lightnessRange: [0.65, 0.85] },
+    'polar': { baseHue: 210, chromaRange: [0.06, 0.12], lightnessRange: [0.75, 0.92] },
+    'snow': { baseHue: 215, chromaRange: [0.02, 0.08], lightnessRange: [0.85, 0.97] },
+    
+    // === METALS ===
+    'gold': { baseHue: 45, chromaRange: [0.18, 0.26], lightnessRange: [0.55, 0.7] },
+    'silver': { baseHue: 220, chromaRange: [0.02, 0.06], lightnessRange: [0.6, 0.8] },
+    'bronze': { baseHue: 30, chromaRange: [0.15, 0.22], lightnessRange: [0.45, 0.6] },
+    'copper': { baseHue: 25, chromaRange: [0.18, 0.25], lightnessRange: [0.5, 0.65] },
+    'metallic': { baseHue: 40, chromaRange: [0.1, 0.18], lightnessRange: [0.5, 0.7] },
+    'chrome': { baseHue: 220, chromaRange: [0.02, 0.06], lightnessRange: [0.55, 0.75] },
+    
+    // === FOOD/DRINK ===
+    'coffee': { baseHue: 25, chromaRange: [0.12, 0.2], lightnessRange: [0.25, 0.45] },
+    'chocolate': { baseHue: 20, chromaRange: [0.12, 0.2], lightnessRange: [0.2, 0.4] },
+    'caramel': { baseHue: 35, chromaRange: [0.18, 0.25], lightnessRange: [0.45, 0.6] },
+    'vanilla': { baseHue: 45, chromaRange: [0.08, 0.14], lightnessRange: [0.8, 0.92] },
+    'cinnamon': { baseHue: 22, chromaRange: [0.15, 0.22], lightnessRange: [0.4, 0.55] },
+    'espresso': { baseHue: 20, chromaRange: [0.1, 0.16], lightnessRange: [0.15, 0.3] },
+    'mocha': { baseHue: 25, chromaRange: [0.12, 0.18], lightnessRange: [0.3, 0.45] },
+    'wine': { baseHue: 345, chromaRange: [0.15, 0.22], lightnessRange: [0.25, 0.4] },
+    'champagne': { baseHue: 50, chromaRange: [0.1, 0.16], lightnessRange: [0.75, 0.88] },
+    
+    // === EMOTIONS ===
+    'sad': { baseHue: 220, chromaRange: [0.08, 0.15], lightnessRange: [0.35, 0.5] },
+    'melancholy': { baseHue: 230, chromaRange: [0.1, 0.18], lightnessRange: [0.35, 0.55] },
+    'hopeful': { baseHue: 170, chromaRange: [0.15, 0.22], lightnessRange: [0.55, 0.75] },
+    'anxious': { baseHue: 40, chromaRange: [0.15, 0.22], lightnessRange: [0.45, 0.6] },
+    'angry': { baseHue: 0, chromaRange: [0.25, 0.35], lightnessRange: [0.35, 0.5] },
+    'excited': { baseHue: 45, chromaRange: [0.25, 0.35], harmony: 'triadic' },
+    'confident': { baseHue: 220, chromaRange: [0.18, 0.26], lightnessRange: [0.4, 0.6] },
+    'inspired': { baseHue: random.range(0, 360), chromaRange: [0.2, 0.3], harmony: 'triadic' },
+    
+    // === CULTURAL ===
+    'japanese': { baseHue: 350, chromaRange: [0.15, 0.22], lightnessRange: [0.6, 0.8] },
+    'scandinavian': { baseHue: 30, chromaRange: [0.04, 0.1], lightnessRange: [0.7, 0.9] },
+    'mediterranean': { baseHue: 200, chromaRange: [0.18, 0.26], harmony: 'analogous' },
+    'bohemian': { baseHue: 25, chromaRange: [0.2, 0.28], harmony: 'triadic' },
+    'moroccan': { baseHue: 30, chromaRange: [0.22, 0.3], harmony: 'split-complementary' },
+    'indian': { baseHue: 35, chromaRange: [0.25, 0.33], harmony: 'triadic' },
+    'african': { baseHue: 30, chromaRange: [0.2, 0.3], harmony: 'triadic' },
+    'nordic': { baseHue: 210, chromaRange: [0.06, 0.12], lightnessRange: [0.6, 0.85] },
   };
   
   // Find matching mood keyword
