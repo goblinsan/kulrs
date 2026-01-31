@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../components/components.dart';
+import '../../services/api_service.dart';
+import '../../models/palette.dart';
 
 /// Screen for displaying saved palettes
 class SavedScreen extends StatefulWidget {
@@ -10,8 +12,10 @@ class SavedScreen extends StatefulWidget {
 }
 
 class _SavedScreenState extends State<SavedScreen> {
+  final ApiService _apiService = ApiService();
   bool _isLoading = false;
-  final List<String> _savedPalettes = [];
+  List<Palette> _savedPalettes = [];
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -22,27 +26,41 @@ class _SavedScreenState extends State<SavedScreen> {
   Future<void> _loadSavedPalettes() async {
     setState(() {
       _isLoading = true;
+      _errorMessage = null;
     });
 
-    // TODO: Implement actual loading logic from backend
-    await Future.delayed(const Duration(seconds: 1));
-
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
+    try {
+      final palettes = await _apiService.getMyPalettes();
+      if (mounted) {
+        setState(() {
+          _savedPalettes = palettes;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Failed to load palettes: ${e.toString()}';
+          _isLoading = false;
+        });
+      }
     }
   }
 
-  void _navigateToDetail(String paletteId) {
+  void _navigateToDetail(Palette palette) {
     Navigator.of(context).pushNamed(
       '/detail',
-      arguments: {'paletteId': paletteId},
+      arguments: palette,
     );
   }
 
   void _navigateToGenerate() {
     Navigator.of(context).pushNamed('/generate');
+  }
+
+  Color _hexToColor(String hex) {
+    final hexCode = hex.replaceAll('#', '');
+    return Color(int.parse('FF$hexCode', radix: 16));
   }
 
   @override
@@ -54,82 +72,118 @@ class _SavedScreenState extends State<SavedScreen> {
       ),
       body: _isLoading
           ? const LoadingIndicator(message: 'Loading saved palettes...')
-          : _savedPalettes.isEmpty
+          : _errorMessage != null
               ? Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24.0),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.bookmark_border,
-                          size: 80,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(height: 32),
-                        const Text(
-                          'No Saved Palettes',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'Start generating palettes and save your favorites',
-                          style: TextStyle(fontSize: 16),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 48),
+                        ErrorMessage(message: _errorMessage!),
+                        const SizedBox(height: 24),
                         CustomButton(
-                          text: 'Generate Palette',
-                          icon: Icons.add,
-                          onPressed: _navigateToGenerate,
+                          text: 'Retry',
+                          icon: Icons.refresh,
+                          onPressed: _loadSavedPalettes,
                         ),
                       ],
                     ),
                   ),
                 )
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _savedPalettes.length,
-                  itemBuilder: (context, index) {
-                    final paletteId = _savedPalettes[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: CustomCard(
-                        onTap: () => _navigateToDetail(paletteId),
-                        child: Row(
+              : _savedPalettes.isEmpty
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.palette, size: 40),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Palette $paletteId',
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  const Text(
-                                    '5 colors • Saved today',
-                                    style: TextStyle(fontSize: 14),
-                                  ),
-                                ],
-                              ),
+                            Icon(
+                              Icons.bookmark_border,
+                              size: 80,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
-                            const Icon(Icons.chevron_right),
+                            const SizedBox(height: 32),
+                            const Text(
+                              'No Saved Palettes',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Start generating palettes and save your favorites',
+                              style: TextStyle(fontSize: 16),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 48),
+                            CustomButton(
+                              text: 'Generate Palette',
+                              icon: Icons.add,
+                              onPressed: _navigateToGenerate,
+                            ),
                           ],
                         ),
                       ),
-                    );
-                  },
-                ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _loadSavedPalettes,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: _savedPalettes.length,
+                        itemBuilder: (context, index) {
+                          final palette = _savedPalettes[index];
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: CustomCard(
+                              onTap: () => _navigateToDetail(palette),
+                              child: Row(
+                                children: [
+                                  // Color preview
+                                  SizedBox(
+                                    width: 60,
+                                    height: 60,
+                                    child: Row(
+                                      children: palette.colors
+                                          .take(5)
+                                          .map((color) => Expanded(
+                                                child: Container(
+                                                  color: _hexToColor(color.hex),
+                                                ),
+                                              ))
+                                          .toList(),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          palette.name ?? 'Palette ${index + 1}',
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          '${palette.colors.length} colors${palette.likesCount > 0 ? ' • ${palette.likesCount} likes' : ''}',
+                                          style: const TextStyle(fontSize: 14),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const Icon(Icons.chevron_right),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
       floatingActionButton: _savedPalettes.isNotEmpty
           ? FloatingActionButton(
               onPressed: _navigateToGenerate,
