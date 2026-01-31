@@ -56,8 +56,8 @@
 /* Mobile spacing improvements */
 @media (max-width: 768px) {
   .swatch-color {
-    aspect-ratio: auto;
-    height: 450px;
+    aspect-ratio: auto !important;
+    height: 450px !important;
   }
 
   .swatch-label {
