@@ -143,7 +143,9 @@ export function Home() {
                 disabled={saving || saved}
                 title={saved ? 'Palette saved' : 'Save palette to your account'}
               >
-                <i className={`fa-${saved ? 'solid' : 'regular'} fa-bookmark`}></i>
+                <i
+                  className={`fa-${saved ? 'solid' : 'regular'} fa-bookmark`}
+                ></i>
                 {saving ? 'Saving...' : saved ? 'Saved' : 'Save'}
               </button>
             ) : (

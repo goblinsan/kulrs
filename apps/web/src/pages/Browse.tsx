@@ -108,18 +108,21 @@ export function Browse() {
         </div>
       )}
 
-      {!loading && !error && palettes.length === 0 && (filter !== 'my' || user) && (
-        <div className="browse-empty">
-          {filter === 'my' ? (
-            <p>
-              You haven't created any palettes yet. Go to the home page to
-              create one!
-            </p>
-          ) : (
-            <p>No palettes found.</p>
-          )}
-        </div>
-      )}
+      {!loading &&
+        !error &&
+        palettes.length === 0 &&
+        (filter !== 'my' || user) && (
+          <div className="browse-empty">
+            {filter === 'my' ? (
+              <p>
+                You haven't created any palettes yet. Go to the home page to
+                create one!
+              </p>
+            ) : (
+              <p>No palettes found.</p>
+            )}
+          </div>
+        )}
 
       {!loading && !error && palettes.length > 0 && (
         <div className="palette-grid">

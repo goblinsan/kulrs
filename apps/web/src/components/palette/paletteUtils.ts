@@ -75,4 +75,7 @@ export const MOODS = [
 // Generate a palette once at module load time for consistent SSR
 const initialMood = MOODS[Math.floor(Math.random() * MOODS.length)];
 const initialSeed = Math.floor(Math.random() * 2147483647);
-export const initialPalette: GeneratedPalette = generateFromMood(initialMood, initialSeed);
+export const initialPalette: GeneratedPalette = generateFromMood(
+  initialMood,
+  initialSeed
+);

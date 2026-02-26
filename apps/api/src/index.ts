@@ -1,7 +1,10 @@
 import express from 'express';
 import { HttpFunction } from '@google-cloud/functions-framework';
 import { initializeFirebase } from './config/firebase.js';
-import { verifyFirebaseToken, optionalFirebaseToken } from './middleware/auth.js';
+import {
+  verifyFirebaseToken,
+  optionalFirebaseToken,
+} from './middleware/auth.js';
 import palettesRouter from './routes/palettes.js';
 import generateRouter from './routes/generate.js';
 
