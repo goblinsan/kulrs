@@ -4,11 +4,11 @@ import { PaletteGenerator } from '../components/palette/PaletteGenerator';
 import {
   type GeneratedPalette,
   type AssignedColor,
-  generateFromMood,
+  generateRandom,
 } from '@kulrs/shared';
 import { PaletteDisplay } from '../components/palette/PaletteDisplay';
 import { HeroPalette } from '../components/palette/HeroPalette';
-import { initialPalette, MOODS } from '../components/palette/paletteUtils';
+import { initialPalette } from '../components/palette/paletteUtils';
 import { useAuth } from '../contexts/AuthContext';
 import { apiPost, likePalette, unlikePalette } from '../services/api';
 import './Home.css';
@@ -43,11 +43,8 @@ export function Home() {
     [palette]
   );
 
-  const handleRandomGenerate = useCallback((numColors: number = 5) => {
-    const randomMood = MOODS[Math.floor(Math.random() * MOODS.length)];
-    // Use a unique seed each time so the same mood produces different palettes
-    const randomSeed = Math.floor(Math.random() * 2147483647);
-    const newPalette = generateFromMood(randomMood, randomSeed, numColors);
+  const handleRandomGenerate = useCallback((colorCount?: number) => {
+    const newPalette = generateRandom(colorCount);
     setPalette(newPalette);
     setPaletteId(null);
     // Reset like/save state for new palette

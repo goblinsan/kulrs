@@ -995,3 +995,157 @@ export function generateFromImage(
     },
   };
 }
+
+/**
+ * Generate a truly random palette with high visual diversity.
+ * No mood mapping — picks random hue, chroma, lightness, harmony strategy,
+ * and color count on every call.
+ *
+ * @param colorCount - Number of main colors (3-5). If omitted, randomly chosen.
+ * @returns Generated palette with colors and metadata
+ */
+export function generateRandom(colorCount?: number): GeneratedPalette {
+  // Random color count between 3 and 5 if not specified
+  const numColors =
+    colorCount != null
+      ? Math.max(3, Math.min(5, colorCount))
+      : 3 + Math.floor(Math.random() * 3); // 3, 4, or 5
+
+  // Fully random base parameters
+  const baseHue = Math.random() * 360;
+  const baseLightness = 0.35 + Math.random() * 0.45; // 0.35–0.80
+  const baseChroma = 0.08 + Math.random() * 0.28; // 0.08–0.36
+
+  const baseColor: OKLCHColor = {
+    l: baseLightness,
+    c: baseChroma,
+    h: baseHue,
+  };
+
+  // Pick a random harmony strategy
+  const strategies = [
+    'analogous',
+    'complementary',
+    'triadic',
+    'split-complementary',
+    'random-hues',
+  ] as const;
+  const strategy = strategies[Math.floor(Math.random() * strategies.length)];
+
+  // Randomize harmony angles so palettes aren't formulaic
+  const analogousAngle = 15 + Math.random() * 40; // 15°–55°
+  const splitAngle = 20 + Math.random() * 35; // 20°–55°
+
+  const colors: OKLCHColor[] = [baseColor];
+
+  switch (strategy) {
+    case 'analogous':
+      colors.push(...generateAnalogous(baseColor, analogousAngle, 4));
+      break;
+    case 'complementary':
+      colors.push(generateComplementary(baseColor));
+      colors.push(...generateAnalogous(baseColor, analogousAngle * 0.6, 2));
+      break;
+    case 'triadic':
+      colors.push(...generateTriadic(baseColor));
+      colors.push(...generateAnalogous(baseColor, analogousAngle * 0.4, 1));
+      break;
+    case 'split-complementary':
+      colors.push(...generateSplitComplementary(baseColor, splitAngle));
+      colors.push(...generateAnalogous(baseColor, analogousAngle * 0.6, 1));
+      break;
+    case 'random-hues': {
+      // Completely independent random hues for maximum diversity
+      for (let i = 0; i < 4; i++) {
+        colors.push({
+          l: 0.35 + Math.random() * 0.45,
+          c: 0.08 + Math.random() * 0.28,
+          h: Math.random() * 360,
+        });
+      }
+      break;
+    }
+  }
+
+  // Perturb each generated color for extra variation (skip the base)
+  for (let i = 1; i < colors.length; i++) {
+    colors[i] = {
+      l: Math.max(0.05, Math.min(0.95, colors[i].l + (Math.random() - 0.5) * 0.16)),
+      c: Math.max(0, Math.min(0.4, colors[i].c + (Math.random() - 0.5) * 0.08)),
+      h: (colors[i].h + (Math.random() - 0.5) * 20 + 360) % 360,
+    };
+  }
+
+  // Add neutrals
+  const neutrals = generateNeutrals(baseColor, 4);
+  colors.push(...neutrals);
+
+  // Quality gates
+  const filtered = applyQualityGates(colors, {
+    maxChroma: 0.4,
+    removeDuplicates: true,
+    duplicateThreshold: 0.02,
+  });
+
+  let finalColors = filtered;
+  if (filtered.length < 8) {
+    const extra = generateAnalogous(baseColor, 25, 4);
+    finalColors = applyQualityGates([...filtered, ...extra], {
+      maxChroma: 0.4,
+      removeDuplicates: true,
+      duplicateThreshold: 0.02,
+    });
+  }
+  if (finalColors.length > 12) {
+    finalColors = finalColors.slice(0, 12);
+  }
+
+  // Assign roles
+  const assignedColors = assignRoles(finalColors);
+
+  const mainColorRoles = [
+    ColorRole.PRIMARY,
+    ColorRole.SECONDARY,
+    ColorRole.ACCENT,
+    ColorRole.INFO,
+    ColorRole.SUCCESS,
+    ColorRole.WARNING,
+    ColorRole.ERROR,
+  ];
+
+  const mainColors = assignedColors.filter((c) =>
+    mainColorRoles.includes(c.role as ColorRole)
+  );
+  const derivedColors = assignedColors.filter(
+    (c) => c.role === ColorRole.BACKGROUND || c.role === ColorRole.TEXT
+  );
+
+  // Shuffle main colors so role assignment varies each time
+  for (let i = mainColors.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [mainColors[i], mainColors[j]] = [mainColors[j], mainColors[i]];
+  }
+
+  const shuffledMain = mainColors.slice(0, numColors);
+  const roleOrder = [
+    ColorRole.PRIMARY,
+    ColorRole.SECONDARY,
+    ColorRole.ACCENT,
+    ColorRole.INFO,
+    ColorRole.SUCCESS,
+  ];
+  const reorderedColors: AssignedColor[] = shuffledMain.map((color, i) => ({
+    role: roleOrder[i] || ColorRole.ACCENT,
+    color: color.color,
+  }));
+  reorderedColors.push(...derivedColors);
+
+  return {
+    colors: reorderedColors,
+    metadata: {
+      generator: 'random',
+      explanation: `Randomly generated ${strategy} palette with ${numColors} colors.`,
+      timestamp: new Date().toISOString(),
+    },
+  };
+}

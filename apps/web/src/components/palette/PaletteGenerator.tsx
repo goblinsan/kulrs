@@ -12,7 +12,7 @@ type GeneratorTab = 'color' | 'mood' | 'image';
 interface PaletteGeneratorProps {
   onGenerate: (palette: GeneratedPalette) => void;
   palette?: GeneratedPalette | null;
-  onRandomGenerate?: (colorCount: number) => void;
+  onRandomGenerate?: (colorCount?: number) => void;
 }
 
 interface GenerateResponse {
