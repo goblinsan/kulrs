@@ -685,32 +685,46 @@ export function generateFromMood(mood: string, seed?: number, colorCount: number
   // Map mood to parameters
   const params = moodToParameters(mood, random);
   
-  // Create base color from parameters
+  // Create base color from parameters with wider variation for more distinct palettes
+  const hueSpread = 40; // ±40° hue variation from the mood's base
   const baseColor: OKLCHColor = {
     l: random.range(params.lightnessRange[0], params.lightnessRange[1]),
     c: random.range(params.chromaRange[0], params.chromaRange[1]),
-    h: params.baseHue + random.range(-15, 15), // Add slight variation
+    h: (params.baseHue + random.range(-hueSpread, hueSpread) + 360) % 360,
   };
   
   const colors: OKLCHColor[] = [baseColor];
   
+  // Randomize the harmony angle for more variation between runs
+  const analogousAngle = random.range(18, 45);
+  const splitAngle = random.range(20, 40);
+  
   // Generate colors based on harmony strategy
   switch (params.harmony) {
     case 'analogous':
-      colors.push(...generateAnalogous(baseColor, 30, 4));
+      colors.push(...generateAnalogous(baseColor, analogousAngle, 4));
       break;
     case 'complementary':
       colors.push(generateComplementary(baseColor));
-      colors.push(...generateAnalogous(baseColor, 20, 2));
+      colors.push(...generateAnalogous(baseColor, analogousAngle * 0.7, 2));
       break;
     case 'triadic':
       colors.push(...generateTriadic(baseColor));
-      colors.push(...generateAnalogous(baseColor, 15, 1));
+      colors.push(...generateAnalogous(baseColor, analogousAngle * 0.5, 1));
       break;
     case 'split-complementary':
-      colors.push(...generateSplitComplementary(baseColor, 30));
-      colors.push(...generateAnalogous(baseColor, 20, 1));
+      colors.push(...generateSplitComplementary(baseColor, splitAngle));
+      colors.push(...generateAnalogous(baseColor, analogousAngle * 0.7, 1));
       break;
+  }
+  
+  // Add slight random lightness/chroma perturbation to each generated color
+  for (let i = 1; i < colors.length; i++) {
+    colors[i] = {
+      l: Math.max(0, Math.min(1, colors[i].l + random.range(-0.08, 0.08))),
+      c: Math.max(0, colors[i].c + random.range(-0.03, 0.03)),
+      h: (colors[i].h + random.range(-10, 10) + 360) % 360,
+    };
   }
   
   // Add neutrals

@@ -54,10 +54,6 @@ export function Browse() {
 
   const handleFilterChange = (newFilter: FilterType) => {
     if (newFilter === filter) return;
-    if (newFilter === 'my' && !user) {
-      navigate('/login');
-      return;
-    }
     setSearchParams({ filter: newFilter });
   };
 
@@ -105,7 +101,14 @@ export function Browse() {
         </div>
       )}
 
-      {!loading && !error && palettes.length === 0 && (
+      {!loading && !error && filter === 'my' && !user && (
+        <div className="browse-empty">
+          <p>Log in to see your palettes.</p>
+          <button onClick={() => navigate('/login')}>Log In</button>
+        </div>
+      )}
+
+      {!loading && !error && palettes.length === 0 && (filter !== 'my' || user) && (
         <div className="browse-empty">
           {filter === 'my' ? (
             <p>

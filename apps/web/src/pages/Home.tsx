@@ -45,7 +45,9 @@ export function Home() {
 
   const handleRandomGenerate = useCallback((numColors: number = 5) => {
     const randomMood = MOODS[Math.floor(Math.random() * MOODS.length)];
-    const newPalette = generateFromMood(randomMood, undefined, numColors);
+    // Use a unique seed each time so the same mood produces different palettes
+    const randomSeed = Math.floor(Math.random() * 2147483647);
+    const newPalette = generateFromMood(randomMood, randomSeed, numColors);
     setPalette(newPalette);
     setPaletteId(null);
     // Reset like/save state for new palette
@@ -125,6 +127,36 @@ export function Home() {
           <p>
             Create beautiful, accessible color palettes from colors or images
           </p>
+          <div className="hero-actions">
+            <button
+              onClick={handleLike}
+              className={`hero-action-button hero-like-button ${liked ? 'liked' : ''}`}
+              title={liked ? 'Unlike palette' : 'Like palette'}
+            >
+              <i className={`fa-${liked ? 'solid' : 'regular'} fa-heart`}></i>
+              {liked ? 'Liked' : 'Like'} {likeCount > 0 ? `(${likeCount})` : ''}
+            </button>
+            {user ? (
+              <button
+                onClick={handleSave}
+                className={`hero-action-button hero-save-button ${saved ? 'saved' : ''}`}
+                disabled={saving || saved}
+                title={saved ? 'Palette saved' : 'Save palette to your account'}
+              >
+                <i className={`fa-${saved ? 'solid' : 'regular'} fa-bookmark`}></i>
+                {saving ? 'Saving...' : saved ? 'Saved' : 'Save'}
+              </button>
+            ) : (
+              <button
+                onClick={() => navigate('/login')}
+                className="hero-action-button hero-save-button"
+                title="Log in to save palettes"
+              >
+                <i className="fa-regular fa-bookmark"></i>
+                Save
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

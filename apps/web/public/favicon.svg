@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <style>
+      @font-face {
+        font-family: 'Monoton';
+        font-style: normal;
+        font-weight: 400;
+        src: url(data:font/woff2;base64,d09GMgABAAAAAAIwAA8AAAAABKAAAAHbAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGhYbDBwYBmAAPBEICoEogTULCAABNgIkAwwEIAWCZAcgDAcbowPIBB6e/dXfxwXFLycoFCvP2ZA/mMA28OlP1czzCHwAz9gvEycl3TTpW7u9FMFuXSATvVeqguyOQC9pFAEwR3EEEWKotsCU+eSOIx0XxnvmJzEeeVlSZoWzKKDEyQeydzHeRjwgVurGWTMqfTQ5sDRPNt6UmWRqNWCSKSVu0UG5oS7zxBuRqT4rOfYyBFmSCWZV9ZA9b8oMhpEKqwwfDI9xzckEgwHzCVlVPbSK+k39oTzyS2NZlmVVVVUr0zWzZd9ZUetXTFeF/oZi1OViE2mq2Z/2Kd11Lr2aquqm/nsl5gK7hz1qvoFm3flzs9+ryyr9v7HZYzc189P3Y0r/UquxuGKSeaJABPS7PGvxXf9S/8biyk3oTlfiLaileoSOHlriG858xgHX3xzZt67KqRGtNJZNaDHNpZwIWHKSFcVNIlFI8qrcTxRc8UxUPBldwRSTTDEfPxJBLQMMscA4PczSyICUzTHSM+xNDJFEuyisYT7uzDLEAOdjZVqXiveSev13MaQQQTIRxBJNDDEbTRj/eh5TTLPCLCMMMcw83gTTR8gmOtrxppcVjsUj+pPSf3vop4cJ5ojEmxzGGcd7CcyVsgHmABUr+on8lztheEgszuATwXDojnwKAAA=) format('woff2');
+      }
+    </style>
+  </defs>
+  <rect width="64" height="64" rx="8" fill="#aaffdd"/>
+  <text x="32" y="48" font-family="Monoton" font-size="46" fill="black" text-anchor="middle">K</text>
+</svg>

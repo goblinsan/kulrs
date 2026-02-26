@@ -60,6 +60,60 @@
   margin-top: 0;
 }
 
+/* Hero action buttons (Like / Save) */
+.hero-actions {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  margin-top: 0.75rem;
+}
+
+.hero-action-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 1rem;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+  color: #f0f0f0;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-shadow: none;
+}
+
+.hero-action-button i {
+  font-size: 0.8rem;
+}
+
+.hero-action-button:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.6);
+  border-color: rgba(255, 255, 255, 0.45);
+  color: #fff;
+}
+
+.hero-action-button:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.hero-action-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.hero-like-button.liked {
+  color: #e91e63;
+  border-color: rgba(233, 30, 99, 0.5);
+}
+
+.hero-save-button.saved {
+  color: #4caf50;
+  border-color: rgba(76, 175, 80, 0.5);
+}
+
 .palette-result {
   margin-top: 3rem;
   padding: 2rem;

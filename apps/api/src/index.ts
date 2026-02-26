@@ -1,7 +1,7 @@
 import express from 'express';
 import { HttpFunction } from '@google-cloud/functions-framework';
 import { initializeFirebase } from './config/firebase.js';
-import { verifyFirebaseToken } from './middleware/auth.js';
+import { verifyFirebaseToken, optionalFirebaseToken } from './middleware/auth.js';
 import palettesRouter from './routes/palettes.js';
 import generateRouter from './routes/generate.js';
 
@@ -54,11 +54,14 @@ app.get('/hello', (_req, res) => {
   });
 });
 
+// Palette routes - uses optional auth for public endpoints (browse, view)
+// Individual routes that need auth check req.user themselves
+app.use('/palettes', optionalFirebaseToken, palettesRouter);
+
 // Protected routes - require authentication
 // Note: Rate limiting is handled by Google Cloud Functions and can be
 // configured via quotas and API Gateway if needed. For additional protection,
 // consider implementing express-rate-limit middleware in production.
-app.use('/palettes', verifyFirebaseToken, palettesRouter);
 app.use('/generate', verifyFirebaseToken, generateRouter);
 
 // 404 handler
