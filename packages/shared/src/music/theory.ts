@@ -487,3 +487,86 @@ function oklchToHexString(l: number, c: number, h: number): string {
 
 // ── Needed type re-export ────────────────────────────────────────────────
 import type { MusicNote } from './mappings.js';
+
+// ── Apply preset to existing palette ─────────────────────────────────────
+
+/**
+ * Apply a chord progression preset to an existing set of palette colours.
+ *
+ * Instead of replacing all colours, this:
+ *  1. Determines the target key from the first colour's root note + the chosen scale.
+ *  2. Builds the diatonic chords for each degree in the preset.
+ *  3. For each preset degree, finds the closest existing palette colour
+ *     (by semitone distance between the colour's natural root and the
+ *     target chord root). If a colour has already been used, the next-closest
+ *     is chosen. Any remaining preset slots that can't be matched get a
+ *     generated colour from chordToHex.
+ *  4. Returns a new Composition whose step order follows the preset but
+ *     whose colours come from the original palette wherever possible.
+ */
+export function applyPresetToPalette(
+  hexColors: string[],
+  preset: ProgressionPreset,
+  scale: ScaleType,
+  tempo = 100
+): Composition & { detectedKey: KeySignature } {
+  // Derive root key from first colour
+  const firstOklch = hexToOklchApprox(hexColors[0]);
+  const firstChord = colorToChord(firstOklch);
+  const keyRoot = firstChord.root.name;
+
+  const diatonic = getChordsInKey(keyRoot, scale);
+  const targetChords = preset.degrees.map(degree => diatonic[(degree - 1) % 7]);
+
+  // Build a pool of { hex, rootSemitone } from the original palette
+  const pool = hexColors.map(hex => {
+    const oklch = hexToOklchApprox(hex);
+    const chord = colorToChord(oklch);
+    const rootSemitone = NOTE_NAMES.indexOf(chord.root.name);
+    return { hex, oklch, rootSemitone };
+  });
+
+  const used = new Set<number>(); // indices into pool
+  const steps: ColorMusicMapping[] = targetChords.map(target => {
+    const targetSemitone = NOTE_NAMES.indexOf(target.root);
+
+    // Find closest unused pool entry by semitone distance
+    let bestIdx = -1;
+    let bestDist = 999;
+    for (let i = 0; i < pool.length; i++) {
+      if (used.has(i)) continue;
+      const dist = Math.min(
+        Math.abs(pool[i].rootSemitone - targetSemitone),
+        12 - Math.abs(pool[i].rootSemitone - targetSemitone)
+      );
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestIdx = i;
+      }
+    }
+
+    let hex: string;
+    let oklch: { l: number; c: number; h: number };
+
+    if (bestIdx >= 0) {
+      used.add(bestIdx);
+      hex = pool[bestIdx].hex;
+      oklch = pool[bestIdx].oklch;
+    } else {
+      // All pool entries used — generate colour from chord
+      hex = chordToHex(target.root, target.quality);
+      oklch = hexToOklchApprox(hex);
+    }
+
+    const chord = buildChordStep(target.root, 4, target.quality);
+    return { hex, oklch, chord };
+  });
+
+  const key: KeySignature = {
+    root: keyRoot,
+    scale,
+    label: `${keyRoot} ${scale}`,
+  };
+
+  return { tempo, steps, timeSignatureTop: 4, detectedKey: key };
+}

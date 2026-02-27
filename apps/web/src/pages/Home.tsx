@@ -41,6 +41,24 @@ export function Home() {
     }
   }, [location.state]);
 
+  // Keep current palette hex colours in sessionStorage so the Compose tab
+  // nav link can pick them up even without explicit URL params.
+  useEffect(() => {
+    try {
+      const hexColors = palette.colors.map(c => {
+        const rgb = oklchToRgb(c.color);
+        const toHex = (n: number) =>
+          Math.round(Math.max(0, Math.min(255, n)))
+            .toString(16)
+            .padStart(2, '0');
+        return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
+      });
+      sessionStorage.setItem('kulrs_palette_colors', JSON.stringify(hexColors));
+    } catch {
+      /* ignore */
+    }
+  }, [palette]);
+
   const handlePaletteGenerated = (newPalette: GeneratedPalette) => {
     setPalette(newPalette);
     setPaletteId(null);

@@ -18,6 +18,7 @@ import {
   detectKey,
   suggestAlternatives,
   chordToHex,
+  applyPresetToPalette,
 } from '@kulrs/shared';
 import { playComposition, stopPlayback } from '../audio/playback';
 import { downloadMidi } from '../audio/midi-export';
@@ -54,6 +55,8 @@ const DEFAULT_COLORS = ['#E63946', '#457B9D', '#2A9D8F', '#E9C46A', '#F4A261'];
 /**
  * Parse palette hex colours from the URL search params.
  * Accepts `?colors=FF5733,457B9D,...` (no # prefix) or `?palette=<json>`.
+ * Falls back to sessionStorage (set by Home page) so the nav-bar
+ * "Compose" link carries the current palette even without URL params.
  */
 function parseColorsFromParams(searchParams: URLSearchParams): string[] | null {
   const raw = searchParams.get('colors');
@@ -76,6 +79,19 @@ function parseColorsFromParams(searchParams: URLSearchParams): string[] | null {
     }
   }
 
+  // Fallback: read from sessionStorage (written by Home page)
+  try {
+    const stored = sessionStorage.getItem('kulrs_palette_colors');
+    if (stored) {
+      const colors = JSON.parse(stored) as string[];
+      if (Array.isArray(colors) && colors.length > 0) {
+        return colors.filter(c => /^#[0-9a-fA-F]{6}$/i.test(c));
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+
   return null;
 }
 
@@ -94,6 +110,7 @@ export function Compose() {
   const [selectedScale, setSelectedScale] = useState<ScaleType>('major');
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
+  const [originalColors, setOriginalColors] = useState<string[]>([]);
   const stepsRef = useRef<(HTMLDivElement | null)[]>([]);
 
   // Initialise from URL or defaults
@@ -101,9 +118,15 @@ export function Compose() {
     const fromUrl = parseColorsFromParams(searchParams);
     const colors = fromUrl && fromUrl.length > 0 ? fromUrl : DEFAULT_COLORS;
     setHexColors(colors);
+    setOriginalColors(colors);
     const result = paletteToHarmonicComposition(colors, tempo);
     setComposition(result);
     setDetectedKey(result.detectedKey);
+    // Sync key/scale selectors with detected key
+    if (result.detectedKey) {
+      setSelectedKey(result.detectedKey.root);
+      setSelectedScale(result.detectedKey.scale);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -128,28 +151,47 @@ export function Compose() {
     [hexColors, tempo]
   );
 
-  // ── Progression presets (chords mode) ──────────────────────────────────
+  // ── Progression presets ─────────────────────────────────────────────────
 
   const loadPreset = useCallback(
     (presetIndex: number) => {
       const preset = PROGRESSION_PRESETS[presetIndex];
       if (!preset) return;
-      const comp = progressionToComposition(
-        selectedKey,
-        selectedScale,
-        preset,
-        4,
-        tempo
-      );
-      setComposition(comp);
-      setHexColors(comp.steps.map(s => s.hex));
-      setDetectedKey({
-        root: selectedKey,
-        scale: selectedScale,
-        label: `${selectedKey} ${selectedScale}`,
-      });
+
+      if (mode === 'palette') {
+        // In palette mode, map the preset onto existing palette colours
+        const sourceColors =
+          originalColors.length > 0 ? originalColors : hexColors;
+        const result = applyPresetToPalette(
+          sourceColors,
+          preset,
+          selectedScale,
+          tempo
+        );
+        setComposition(result);
+        setHexColors(result.steps.map(s => s.hex));
+        setDetectedKey(result.detectedKey);
+        setSelectedKey(result.detectedKey.root);
+        setSelectedScale(result.detectedKey.scale);
+      } else {
+        // In chords mode, replace everything with chord-derived colours
+        const comp = progressionToComposition(
+          selectedKey,
+          selectedScale,
+          preset,
+          4,
+          tempo
+        );
+        setComposition(comp);
+        setHexColors(comp.steps.map(s => s.hex));
+        setDetectedKey({
+          root: selectedKey,
+          scale: selectedScale,
+          label: `${selectedKey} ${selectedScale}`,
+        });
+      }
     },
-    [selectedKey, selectedScale, tempo]
+    [mode, selectedKey, selectedScale, tempo, hexColors, originalColors]
   );
 
   // ── Colour editing ─────────────────────────────────────────────────────
@@ -434,7 +476,7 @@ export function Compose() {
 
         <p className="compose-subtitle">
           {mode === 'palette'
-            ? 'Colours are snapped to the nearest key so the progression sounds harmonious. Tweak colours or chords, then play or export.'
+            ? 'Colours are snapped to the nearest key so the progression sounds harmonious. Pick a preset to re-arrange your palette, or tweak colours and chords manually.'
             : 'Pick a key, choose a chord progression preset, and generate a colour palette from the music.'}
         </p>
 
@@ -453,52 +495,50 @@ export function Compose() {
         )}
       </div>
 
-      {/* ── Chord progression presets (chords mode) ───────────────── */}
-      {mode === 'chords' && (
-        <div className="preset-panel">
-          <div className="preset-key-select">
-            <label className="step-field">
-              <span>Key</span>
-              <select
-                value={selectedKey}
-                onChange={e => setSelectedKey(e.target.value as NoteName)}
-              >
-                {NOTE_NAMES.map(n => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="step-field">
-              <span>Scale</span>
-              <select
-                value={selectedScale}
-                onChange={e => setSelectedScale(e.target.value as ScaleType)}
-              >
-                {SCALE_TYPES.map(s => (
-                  <option key={s.value} value={s.value}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <div className="preset-grid">
-            {PROGRESSION_PRESETS.map((p, i) => (
-              <button
-                key={p.name}
-                className="preset-btn"
-                onClick={() => loadPreset(i)}
-                title={p.description}
-              >
-                <span className="preset-name">{p.name}</span>
-                <span className="preset-desc">{p.description}</span>
-              </button>
-            ))}
-          </div>
+      {/* ── Key / Scale selectors & Chord progression presets ───── */}
+      <div className="preset-panel">
+        <div className="preset-key-select">
+          <label className="step-field">
+            <span>Key</span>
+            <select
+              value={selectedKey}
+              onChange={e => setSelectedKey(e.target.value as NoteName)}
+            >
+              {NOTE_NAMES.map(n => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="step-field">
+            <span>Scale</span>
+            <select
+              value={selectedScale}
+              onChange={e => setSelectedScale(e.target.value as ScaleType)}
+            >
+              {SCALE_TYPES.map(s => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
-      )}
+        <div className="preset-grid">
+          {PROGRESSION_PRESETS.map((p, i) => (
+            <button
+              key={p.name}
+              className="preset-btn"
+              onClick={() => loadPreset(i)}
+              title={p.description}
+            >
+              <span className="preset-name">{p.name}</span>
+              <span className="preset-desc">{p.description}</span>
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* ── Toolbar ───────────────────────────────────────────────── */}
       <div className="compose-toolbar">
