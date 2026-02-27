@@ -2,7 +2,7 @@
  * Music Theory Engine
  *
  * Provides key/scale awareness, common chord progressions,
- * chord suggestion/alternatives, and chord-to-colour reverse mapping.
+ * chord suggestion/alternatives, and chord-to-color reverse mapping.
  */
 
 import {
@@ -355,7 +355,7 @@ export function suggestAlternatives(
 // ── Key-aware palette → music ────────────────────────────────────────────
 
 /**
- * Improved palette-to-composition: snaps raw colour-derived chords
+ * Improved palette-to-composition: snaps raw color-derived chords
  * to the nearest diatonic chord in the best-matching key.
  */
 export function paletteToHarmonicComposition(
@@ -412,14 +412,14 @@ function snapToDiatonic(
   );
 }
 
-// ── Chord → Colour (reverse mapping) ────────────────────────────────────
+// ── Chord → Color (reverse mapping) ────────────────────────────────────
 
 /**
- * Map a chord root + quality back to a hex colour.
+ * Map a chord root + quality back to a hex color.
  *
  *   Root note → Hue (semitone × 30°)
  *   Quality   → Chroma (major=high, minor=mid, dim=low)
- *   Fixed lightness 0.65 for vibrant palette colours.
+ *   Fixed lightness 0.65 for vibrant palette colors.
  */
 export function chordToHex(
   root: NoteName,
@@ -491,18 +491,18 @@ import type { MusicNote } from './mappings.js';
 // ── Apply preset to existing palette ─────────────────────────────────────
 
 /**
- * Apply a chord progression preset to an existing set of palette colours.
+ * Apply a chord progression preset to an existing set of palette colors.
  *
- * Instead of replacing all colours, this:
- *  1. Determines the target key from the first colour's root note + the chosen scale.
+ * Instead of replacing all colors, this:
+ *  1. Determines the target key from the first color's root note + the chosen scale.
  *  2. Builds the diatonic chords for each degree in the preset.
- *  3. For each preset degree, finds the closest existing palette colour
- *     (by semitone distance between the colour's natural root and the
- *     target chord root). If a colour has already been used, the next-closest
+ *  3. For each preset degree, finds the closest existing palette color
+ *     (by semitone distance between the color's natural root and the
+ *     target chord root). If a color has already been used, the next-closest
  *     is chosen. Any remaining preset slots that can't be matched get a
- *     generated colour from chordToHex.
+ *     generated color from chordToHex.
  *  4. Returns a new Composition whose step order follows the preset but
- *     whose colours come from the original palette wherever possible.
+ *     whose colors come from the original palette wherever possible.
  */
 export function applyPresetToPalette(
   hexColors: string[],
@@ -510,7 +510,7 @@ export function applyPresetToPalette(
   scale: ScaleType,
   tempo = 100
 ): Composition & { detectedKey: KeySignature } {
-  // Derive root key from first colour
+  // Derive root key from first color
   const firstOklch = hexToOklchApprox(hexColors[0]);
   const firstChord = colorToChord(firstOklch);
   const keyRoot = firstChord.root.name;
@@ -553,7 +553,7 @@ export function applyPresetToPalette(
       hex = pool[bestIdx].hex;
       oklch = pool[bestIdx].oklch;
     } else {
-      // All pool entries used — generate colour from chord
+      // All pool entries used — generate color from chord
       hex = chordToHex(target.root, target.quality);
       oklch = hexToOklchApprox(hex);
     }

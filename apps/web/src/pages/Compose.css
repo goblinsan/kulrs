@@ -91,7 +91,7 @@
   text-transform: capitalize;
 }
 
-.harmonise-btn {
+.harmonize-btn {
   margin-left: 0.5rem;
   padding: 0.2rem 0.6rem;
   border: 1px solid rgba(170, 255, 221, 0.3);
@@ -103,7 +103,7 @@
   transition: all 0.15s;
 }
 
-.harmonise-btn:hover {
+.harmonize-btn:hover {
   background: rgba(170, 255, 221, 0.1);
 }
 
@@ -229,9 +229,9 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ── Colour bar (overview strip) ───────────────────────────────────────── */
+/* ── Color bar (overview strip) ───────────────────────────────────────── */
 
-.colour-bar {
+.color-bar {
   display: flex;
   height: 40px;
   border-radius: 8px;
@@ -240,19 +240,19 @@
   border: 1px solid #222;
 }
 
-.colour-bar-swatch {
+.color-bar-swatch {
   flex: 1;
   transition: flex 0.3s, outline 0.3s, filter 0.15s;
   cursor: pointer;
 }
 
-.colour-bar-swatch:hover {
+.color-bar-swatch:hover {
   filter: brightness(1.2);
   outline: 2px solid rgba(255, 255, 255, 0.5);
   outline-offset: -2px;
 }
 
-.colour-bar-swatch.active {
+.color-bar-swatch.active {
   flex: 2;
   outline: 2px solid #fff;
   outline-offset: -2px;
@@ -280,8 +280,8 @@
   box-shadow: 0 0 16px rgba(170, 255, 221, 0.15);
 }
 
-/* Colour column */
-.step-colour {
+/* Color column */
+.step-color {
   width: 80px;
   min-height: 110px;
   display: flex;
@@ -295,11 +295,11 @@
   transition: filter 0.15s;
 }
 
-.step-colour:hover {
+.step-color:hover {
   filter: brightness(1.15);
 }
 
-.step-colour:hover .step-play-icon {
+.step-color:hover .step-play-icon {
   opacity: 1;
 }
 
@@ -318,7 +318,7 @@
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
 }
 
-.colour-picker-input {
+.color-picker-input {
   width: 32px;
   height: 24px;
   border: none;
@@ -327,11 +327,11 @@
   padding: 0;
 }
 
-.colour-picker-input::-webkit-color-swatch-wrapper {
+.color-picker-input::-webkit-color-swatch-wrapper {
   padding: 0;
 }
 
-.colour-picker-input::-webkit-color-swatch {
+.color-picker-input::-webkit-color-swatch {
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 4px;
 }
@@ -563,7 +563,7 @@
     grid-template-columns: 1fr;
   }
 
-  .step-colour {
+  .step-color {
     width: 60px;
   }
 

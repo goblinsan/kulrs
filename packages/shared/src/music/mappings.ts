@@ -1,16 +1,16 @@
 /**
  * Color-to-Music Mapping Engine
  *
- * Maps OKLCH colour properties to musical primitives:
+ * Maps OKLCH color properties to musical primitives:
  *
  *   Hue (0-360°)       → Root note  (12 semitones, 30° each)
  *   Lightness (0-1)     → Octave    (darker = lower, lighter = higher)
  *   Chroma   (0-0.4)    → Chord quality (high = major, mid = minor,
  *                                        low = diminished/suspended)
  *
- * A palette of N colours produces an N-step chord progression.
+ * A palette of N colors produces an N-step chord progression.
  * Each step also receives a single-note melody pitch derived from
- * the same colour, offset by the chord's third/fifth for interest.
+ * the same color, offset by the chord's third/fifth for interest.
  */
 
 // ── Note & chord vocabulary ──────────────────────────────────────────────
@@ -70,7 +70,7 @@ export interface ChordStep {
 }
 
 export interface ColorMusicMapping {
-  /** Original hex colour */
+  /** Original hex color */
   hex: string;
   /** OKLCH components used for the mapping */
   oklch: { l: number; c: number; h: number };
@@ -91,8 +91,8 @@ export interface Composition {
 
 /** Map hue (0-360) to a semitone index (0-11). */
 export function hueToSemitone(hue: number): number {
-  const normalised = ((hue % 360) + 360) % 360;
-  return Math.round((normalised / 360) * 12) % 12;
+  const normalized = ((hue % 360) + 360) % 360;
+  return Math.round((normalized / 360) * 12) % 12;
 }
 
 /** Map lightness (0-1) to an octave (2-6). */
@@ -159,7 +159,7 @@ function noteToMidi(name: NoteName, octave: number): number {
 // ── Public API ───────────────────────────────────────────────────────────
 
 /**
- * Derive a chord step from a single OKLCH colour.
+ * Derive a chord step from a single OKLCH color.
  */
 export function colorToChord(oklch: {
   l: number;
@@ -196,7 +196,7 @@ export function colorToChord(oklch: {
 
 /**
  * Convert hex → approximate OKLCH.
- * (Simplified — good enough for the mapping, not colour-accurate.)
+ * (Simplified — good enough for the mapping, not color-accurate.)
  */
 export function hexToOklchApprox(hex: string): {
   l: number;
@@ -230,7 +230,7 @@ export function hexToOklchApprox(hex: string): {
 }
 
 /**
- * Derive a full composition from an array of hex colours.
+ * Derive a full composition from an array of hex colors.
  */
 export function paletteToComposition(
   hexColors: string[],

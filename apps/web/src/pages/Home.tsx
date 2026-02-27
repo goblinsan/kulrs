@@ -41,7 +41,7 @@ export function Home() {
     }
   }, [location.state]);
 
-  // Keep current palette hex colours in sessionStorage so the Compose tab
+  // Keep current palette hex colors in sessionStorage so the Compose tab
   // nav link can pick them up even without explicit URL params.
   useEffect(() => {
     try {
