@@ -105,69 +105,7 @@ export class PaletteService {
       );
     }
 
-    // Add auto-likes from bot users (1-5 initial likes for engagement)
-    // This is optional and won't break palette creation if it fails
-    try {
-      const likesAdded = await this.addAutoLikes(palette.id);
-      if (likesAdded > 0) {
-        // Refetch the palette to get updated likesCount
-        const [updatedPalette] = await db
-          .select()
-          .from(palettes)
-          .where(eq(palettes.id, palette.id))
-          .limit(1);
-        return updatedPalette || palette;
-      }
-    } catch {
-      // Silently continue if auto-likes fail (e.g., missing migration)
-    }
-
     return palette;
-  }
-
-  /**
-   * Add auto-likes from bot users to a palette
-   * This creates initial engagement for site-generated content
-   */
-  async addAutoLikes(paletteId: string) {
-    try {
-      // Get bot users
-      const botUsers = await db
-        .select({ id: users.id })
-        .from(users)
-        .where(eq(users.isBot, true));
-
-      if (botUsers.length === 0) {
-        return 0;
-      }
-
-      // Randomly select 1-5 bots to like
-      const numLikes = Math.floor(Math.random() * 5) + 1;
-      const shuffledBots = [...botUsers].sort(() => Math.random() - 0.5);
-      const selectedBots = shuffledBots.slice(
-        0,
-        Math.min(numLikes, shuffledBots.length)
-      );
-
-      // Add likes
-      for (const bot of selectedBots) {
-        await db.insert(likes).values({
-          userId: bot.id,
-          paletteId,
-        });
-      }
-
-      // Update likes count
-      await db
-        .update(palettes)
-        .set({ likesCount: selectedBots.length })
-        .where(eq(palettes.id, paletteId));
-
-      return selectedBots.length;
-    } catch (error) {
-      console.error('Error adding auto-likes:', error);
-      return 0;
-    }
   }
 
   /**
@@ -391,7 +329,6 @@ export class PaletteService {
    * Browse public palettes with sorting and filtering.
    * Deduplicates palettes that share the same colors in the same order,
    * keeping only the earliest-created instance.
-   * When sorting by popular, excludes palettes with zero likes.
    */
   async browsePalettes(options: {
     sort: 'recent' | 'popular';
@@ -405,11 +342,6 @@ export class PaletteService {
     const conditions = [eq(palettes.isPublic, true)];
     if (userId) {
       conditions.push(eq(palettes.userId, userId));
-    }
-
-    // Exclude zero-like palettes from the "popular" list
-    if (sort === 'popular') {
-      conditions.push(sql`${palettes.likesCount} > 0`);
     }
 
     // Build order by
