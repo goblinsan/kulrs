@@ -171,6 +171,83 @@
 
 /* ── Colors ────────────────────────────────────────────────────────────── */
 
+/* ── Color Widths (weight bar) ─────────────────────────────────────────── */
+
+.pattern-weights {
+  padding: 1rem;
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+}
+
+.weights-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.weights-head h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #ddd;
+}
+
+.reset-weights-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.7rem;
+  background: transparent;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #aaa;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.reset-weights-btn:hover {
+  color: #aaffdd;
+  border-color: #aaffdd;
+}
+
+.weight-bar {
+  display: flex;
+  height: 36px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #333;
+  cursor: default;
+  touch-action: none;
+  user-select: none;
+}
+
+.weight-segment {
+  height: 100%;
+  min-width: 2px;
+}
+
+.weight-handle {
+  width: 6px;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  cursor: col-resize;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  transition: background 0.15s;
+}
+
+.weight-handle:hover,
+.weight-handle:active {
+  background: rgba(170, 255, 221, 0.7);
+}
+
+/* ── Colors (swatches) ─────────────────────────────────────────────────── */
+
 .pattern-colors {
   padding: 1rem;
   background: #111;

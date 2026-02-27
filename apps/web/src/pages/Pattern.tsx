@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, Fragment } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import './Pattern.css';
 
@@ -18,7 +18,8 @@ type PatternType =
   | 'stars'
   | 'woven'
   | 'waves'
-  | 'dots';
+  | 'dots'
+  | 'crochet';
 
 type TransitionMode = 'distinct' | 'gradient';
 
@@ -45,6 +46,7 @@ const PATTERN_OPTIONS: { type: PatternType; label: string; icon: string }[] = [
   { type: 'woven', label: 'Woven', icon: 'fa-solid fa-table-cells' },
   { type: 'waves', label: 'Waves', icon: 'fa-solid fa-water' },
   { type: 'dots', label: 'Dots', icon: 'fa-solid fa-braille' },
+  { type: 'crochet', label: 'Crochet', icon: 'fa-solid fa-link' },
 ];
 
 /** Pattern types that support gradient transitions. */
@@ -54,6 +56,15 @@ const GRADIENT_OK = new Set<PatternType>([
   'stripes-d',
   'concentric',
   'radial',
+]);
+
+/** Pattern types where per-color width weights apply. */
+const WEIGHTS_OK = new Set<PatternType>([
+  'stripes-v',
+  'stripes-h',
+  'stripes-d',
+  'waves',
+  'crochet',
 ]);
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -125,19 +136,34 @@ function vStripes(
   h: number,
   colors: string[],
   sp: number,
-  grad: boolean
+  grad: boolean,
+  weights?: number[]
 ) {
+  const n = colors.length;
+  const cycleW = sp * n;
+  const wts = weights ?? colors.map(() => 1 / n);
+
   if (grad) {
     const g = ctx.createLinearGradient(0, 0, w, 0);
-    const n = Math.ceil(w / sp) + 1;
-    for (let i = 0; i <= n; i++)
-      g.addColorStop(Math.min((i * sp) / w, 1), cc(colors, i));
+    let pos = 0;
+    let ci = 0;
+    while (pos <= w) {
+      g.addColorStop(Math.min(pos / w, 1), cc(colors, ci));
+      pos += cycleW * wts[ci % n];
+      ci++;
+    }
+    g.addColorStop(1, cc(colors, ci % n));
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, w, h);
   } else {
-    for (let x = 0, i = 0; x < w; x += sp, i++) {
-      ctx.fillStyle = cc(colors, i);
-      ctx.fillRect(x, 0, sp, h);
+    let x = 0;
+    let ci = 0;
+    while (x < w) {
+      const cw = cycleW * wts[ci % n];
+      ctx.fillStyle = cc(colors, ci);
+      ctx.fillRect(x, 0, cw + 0.5, h);
+      x += cw;
+      ci++;
     }
   }
 }
@@ -148,19 +174,34 @@ function hStripes(
   h: number,
   colors: string[],
   sp: number,
-  grad: boolean
+  grad: boolean,
+  weights?: number[]
 ) {
+  const n = colors.length;
+  const cycleH = sp * n;
+  const wts = weights ?? colors.map(() => 1 / n);
+
   if (grad) {
     const g = ctx.createLinearGradient(0, 0, 0, h);
-    const n = Math.ceil(h / sp) + 1;
-    for (let i = 0; i <= n; i++)
-      g.addColorStop(Math.min((i * sp) / h, 1), cc(colors, i));
+    let pos = 0;
+    let ci = 0;
+    while (pos <= h) {
+      g.addColorStop(Math.min(pos / h, 1), cc(colors, ci));
+      pos += cycleH * wts[ci % n];
+      ci++;
+    }
+    g.addColorStop(1, cc(colors, ci % n));
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, w, h);
   } else {
-    for (let y = 0, i = 0; y < h; y += sp, i++) {
-      ctx.fillStyle = cc(colors, i);
-      ctx.fillRect(0, y, w, sp);
+    let y = 0;
+    let ci = 0;
+    while (y < h) {
+      const ch = cycleH * wts[ci % n];
+      ctx.fillStyle = cc(colors, ci);
+      ctx.fillRect(0, y, w, ch + 0.5);
+      y += ch;
+      ci++;
     }
   }
 }
@@ -171,23 +212,38 @@ function dStripes(
   h: number,
   colors: string[],
   sp: number,
-  grad: boolean
+  grad: boolean,
+  weights?: number[]
 ) {
+  const n = colors.length;
+  const cycleW = sp * n;
+  const wts = weights ?? colors.map(() => 1 / n);
+
   ctx.save();
   ctx.translate(w / 2, h / 2);
   ctx.rotate(-Math.PI / 4);
   const d = Math.sqrt(w * w + h * h) * 1.5;
   if (grad) {
     const g = ctx.createLinearGradient(-d / 2, 0, d / 2, 0);
-    const n = Math.ceil(d / sp) + 1;
-    for (let i = 0; i <= n; i++)
-      g.addColorStop(Math.min((i * sp) / d, 1), cc(colors, i));
+    let pos = 0;
+    let ci = 0;
+    while (pos <= d) {
+      g.addColorStop(Math.min(pos / d, 1), cc(colors, ci));
+      pos += cycleW * wts[ci % n];
+      ci++;
+    }
+    g.addColorStop(1, cc(colors, ci % n));
     ctx.fillStyle = g;
     ctx.fillRect(-d / 2, -d / 2, d, d);
   } else {
-    for (let x = -d / 2, i = 0; x < d / 2; x += sp, i++) {
-      ctx.fillStyle = cc(colors, i);
-      ctx.fillRect(x, -d / 2, sp, d);
+    let x = -d / 2;
+    let ci = 0;
+    while (x < d / 2) {
+      const cw = cycleW * wts[ci % n];
+      ctx.fillStyle = cc(colors, ci);
+      ctx.fillRect(x, -d / 2, cw + 0.5, d);
+      x += cw;
+      ci++;
     }
   }
   ctx.restore();
@@ -432,15 +488,30 @@ function wavesDraw(
   w: number,
   h: number,
   colors: string[],
-  sp: number
+  sp: number,
+  _grad: boolean,
+  weights?: number[]
 ) {
+  const n = colors.length;
+  const cycleH = sp * n;
+  const wts = weights ?? colors.map(() => 1 / n);
   const amp = sp * 0.35;
   const waveLen = sp * 3;
-  const totalBands = Math.ceil(h / sp) + colors.length + 4;
-  // Draw bottom-up so upper waves cover lower
-  for (let i = totalBands; i >= 0; i--) {
-    const baseY = i * sp - sp * 3;
-    ctx.fillStyle = cc(colors, i);
+
+  // Build band positions using weights
+  const bands: { y: number; color: string }[] = [];
+  let y = -sp * 3;
+  let ci = 0;
+  while (y < h + sp * 4) {
+    bands.push({ y, color: cc(colors, ci) });
+    y += cycleH * wts[ci % n];
+    ci++;
+  }
+
+  // Draw top-to-bottom so lower bands cover upper ones
+  for (let i = 0; i < bands.length; i++) {
+    const baseY = bands[i].y;
+    ctx.fillStyle = bands[i].color;
     ctx.beginPath();
     ctx.moveTo(0, h + 10);
     for (let x = 0; x <= w; x += 2) {
@@ -478,6 +549,122 @@ function dotsDraw(
   }
 }
 
+/* ── Crochet (cable braid) ────────────────────────────────────────────── */
+
+function crochetDraw(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  colors: string[],
+  sp: number,
+  _grad: boolean,
+  weights?: number[]
+) {
+  const n = colors.length;
+  const cycleW = sp * n;
+  const wts = weights ?? colors.map(() => 1 / n);
+
+  ctx.fillStyle = '#0a0a0a';
+  ctx.fillRect(0, 0, w, h);
+
+  const braidH = sp * 1.2;
+  const halfBraid = braidH / 2;
+  const rw = sp * 0.22;
+  const amp = sp * 0.16;
+
+  let colX = 0;
+  let ci = 0;
+
+  while (colX < w + sp) {
+    const colW = cycleW * wts[ci % n];
+    const color = colors[ci % n];
+    const [r, g, b] = hexToRgb(color);
+    const cx = colX + colW / 2;
+
+    // Column background
+    ctx.fillStyle = `rgb(${Math.max(0, r - 65)},${Math.max(0, g - 65)},${Math.max(0, b - 65)})`;
+    ctx.fillRect(colX, 0, colW + 0.5, h);
+
+    // Helper: draw strand path within a y range
+    const strandSeg = (phase: number, yMin: number, yMax: number) => {
+      ctx.beginPath();
+      const pad = rw;
+      for (let sy = yMin - pad; sy <= yMax + pad; sy += 1) {
+        const angle = (sy / braidH) * Math.PI * 2 + phase;
+        const px = cx + Math.sin(angle) * amp;
+        if (sy <= yMin - pad + 1) ctx.moveTo(px, sy);
+        else ctx.lineTo(px, sy);
+      }
+    };
+
+    // Full strand path for shadow passes
+    const fullStrand = (phase: number) => {
+      ctx.beginPath();
+      for (let sy = -braidH; sy <= h + braidH; sy += 2) {
+        const angle = (sy / braidH) * Math.PI * 2 + phase;
+        const px = cx + Math.sin(angle) * amp;
+        if (sy <= -braidH + 2) ctx.moveTo(px, sy);
+        else ctx.lineTo(px, sy);
+      }
+    };
+
+    // Shadow pass: both strands in dark color
+    const shadow = `rgb(${Math.max(0, r - 35)},${Math.max(0, g - 35)},${Math.max(0, b - 35)})`;
+    ctx.strokeStyle = shadow;
+    ctx.lineWidth = rw;
+    ctx.lineCap = 'round';
+    fullStrand(0);
+    ctx.stroke();
+    fullStrand(Math.PI);
+    ctx.stroke();
+
+    // Over-strand segments with clipping for proper crossover
+    const segCount = Math.ceil((h + braidH * 4) / halfBraid);
+    for (let seg = 0; seg < segCount; seg++) {
+      const yStart = seg * halfBraid - braidH * 2;
+      const overPhase = seg % 2 === 0 ? 0 : Math.PI;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(colX - 1, yStart, colW + 2, halfBraid);
+      ctx.clip();
+
+      // Main color
+      ctx.strokeStyle = color;
+      ctx.lineWidth = rw;
+      ctx.lineCap = 'round';
+      strandSeg(overPhase, yStart, yStart + halfBraid);
+      ctx.stroke();
+
+      // Highlight
+      ctx.strokeStyle = `rgba(${Math.min(255, r + 50)},${Math.min(255, g + 50)},${Math.min(255, b + 50)},0.45)`;
+      ctx.lineWidth = rw * 0.25;
+      ctx.beginPath();
+      const pad = rw;
+      for (let sy = yStart - pad; sy <= yStart + halfBraid + pad; sy += 1) {
+        const angle = (sy / braidH) * Math.PI * 2 + overPhase;
+        const px = cx + Math.sin(angle) * amp - rw * 0.17;
+        if (sy <= yStart - pad + 1) ctx.moveTo(px, sy);
+        else ctx.lineTo(px, sy);
+      }
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    // Column separator
+    ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(colX, 0);
+    ctx.lineTo(colX, h);
+    ctx.stroke();
+
+    colX += colW;
+    ci++;
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    Render dispatcher
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -488,7 +675,8 @@ type DrawFn = (
   h: number,
   colors: string[],
   spacing: number,
-  grad: boolean
+  grad: boolean,
+  weights?: number[]
 ) => void;
 
 const DRAW: Record<PatternType, DrawFn> = {
@@ -504,6 +692,7 @@ const DRAW: Record<PatternType, DrawFn> = {
   woven: wovenDraw,
   waves: wavesDraw,
   dots: dotsDraw,
+  crochet: crochetDraw,
 };
 
 function renderPattern(
@@ -513,11 +702,12 @@ function renderPattern(
   colors: string[],
   pattern: PatternType,
   spacing: number,
-  grad: boolean
+  grad: boolean,
+  weights?: number[]
 ) {
   if (colors.length === 0) return;
   ctx.clearRect(0, 0, w, h);
-  DRAW[pattern](ctx, w, h, colors, spacing, grad);
+  DRAW[pattern](ctx, w, h, colors, spacing, grad, weights);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -528,13 +718,19 @@ export function Pattern() {
   const [searchParams] = useSearchParams();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const weightBarRef = useRef<HTMLDivElement>(null);
   const [colors, setColors] = useState<string[]>(
     () => parseColorsFromParams(searchParams) ?? DEFAULT_COLORS
   );
+  const [weights, setWeights] = useState<number[]>(() => {
+    const n = (parseColorsFromParams(searchParams) ?? DEFAULT_COLORS).length;
+    return Array(n).fill(1 / n) as number[];
+  });
   const [patternType, setPatternType] = useState<PatternType>('stripes-v');
-  const [spacing, setSpacing] = useState(40);
+  const [spacing, setSpacing] = useState(80);
   const [transition, setTransition] = useState<TransitionMode>('distinct');
   const [canvasW, setCanvasW] = useState(600);
+  const [draggingHandle, setDraggingHandle] = useState<number | null>(null);
 
   /* Keep sessionStorage in sync so other pages pick up the palette */
   useEffect(() => {
@@ -581,11 +777,12 @@ export function Pattern() {
         colors,
         patternType,
         spacing,
-        transition === 'gradient'
+        transition === 'gradient',
+        weights
       );
     });
     return () => cancelAnimationFrame(id);
-  }, [colors, patternType, spacing, transition, canvasW]);
+  }, [colors, patternType, spacing, transition, canvasW, weights]);
 
   /* ── Handlers ─────────────────────────────────────────────────────── */
 
@@ -597,11 +794,54 @@ export function Pattern() {
     setColors(prev =>
       prev.length <= 2 ? prev : prev.filter((_, i) => i !== idx)
     );
+    setWeights(prev => {
+      if (prev.length <= 2) return prev;
+      const next = prev.filter((_, i) => i !== idx);
+      const sum = next.reduce((a, b) => a + b, 0);
+      return next.map(v => v / sum);
+    });
   }, []);
 
   const addColor = useCallback(() => {
     setColors(prev => [...prev, randomHex()]);
+    setWeights(prev => {
+      const share = 1 / (prev.length + 1);
+      const scale = 1 - share;
+      return [...prev.map(v => v * scale), share];
+    });
   }, []);
+
+  const resetWeights = useCallback(() => {
+    setWeights(Array(colors.length).fill(1 / colors.length) as number[]);
+  }, [colors.length]);
+
+  const handleWeightDrag = useCallback(
+    (e: React.PointerEvent) => {
+      if (draggingHandle == null) return;
+      const bar = weightBarRef.current;
+      if (!bar) return;
+      const rect = bar.getBoundingClientRect();
+      const relX = Math.max(
+        0,
+        Math.min(1, (e.clientX - rect.left) / rect.width)
+      );
+      setWeights(prev => {
+        const next = [...prev];
+        let before = 0;
+        for (let i = 0; i < draggingHandle; i++) before += next[i];
+        let after = 0;
+        for (let i = draggingHandle + 2; i < next.length; i++) after += next[i];
+        const minW = 0.03;
+        const available = Math.max(0, 1 - before - after);
+        const leftW = Math.max(minW, Math.min(available - minW, relX - before));
+        const rightW = available - leftW;
+        next[draggingHandle] = leftW;
+        next[draggingHandle + 1] = rightW;
+        return next;
+      });
+    },
+    [draggingHandle]
+  );
 
   const handleDownload = useCallback(() => {
     const size = 2048;
@@ -618,7 +858,8 @@ export function Pattern() {
       colors,
       patternType,
       spacing * scale,
-      transition === 'gradient'
+      transition === 'gradient',
+      weights
     );
     offscreen.toBlob(blob => {
       if (!blob) return;
@@ -629,9 +870,10 @@ export function Pattern() {
       a.click();
       URL.revokeObjectURL(url);
     }, 'image/png');
-  }, [colors, patternType, spacing, transition, canvasW]);
+  }, [colors, patternType, spacing, transition, canvasW, weights]);
 
   const gradientEnabled = GRADIENT_OK.has(patternType);
+  const weightsEnabled = WEIGHTS_OK.has(patternType);
 
   /* ── JSX ──────────────────────────────────────────────────────────── */
 
@@ -676,7 +918,7 @@ export function Pattern() {
           <input
             type="range"
             min={10}
-            max={120}
+            max={150}
             value={spacing}
             onChange={e => setSpacing(Number(e.target.value))}
           />
@@ -707,6 +949,44 @@ export function Pattern() {
           </div>
         </div>
       </div>
+
+      {/* Color Widths */}
+      {weightsEnabled && (
+        <div className="pattern-weights">
+          <div className="weights-head">
+            <h3>Color Widths</h3>
+            <button className="reset-weights-btn" onClick={resetWeights}>
+              <i className="fa-solid fa-rotate-left" /> Reset
+            </button>
+          </div>
+          <div
+            className="weight-bar"
+            ref={weightBarRef}
+            onPointerMove={handleWeightDrag}
+            onPointerUp={() => setDraggingHandle(null)}
+            onLostPointerCapture={() => setDraggingHandle(null)}
+          >
+            {colors.map((hex, i) => (
+              <Fragment key={i}>
+                <div
+                  className="weight-segment"
+                  style={{ flex: weights[i], backgroundColor: hex }}
+                />
+                {i < colors.length - 1 && (
+                  <div
+                    className="weight-handle"
+                    onPointerDown={e => {
+                      e.preventDefault();
+                      weightBarRef.current?.setPointerCapture(e.pointerId);
+                      setDraggingHandle(i);
+                    }}
+                  />
+                )}
+              </Fragment>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Colors */}
       <div className="pattern-colors">
