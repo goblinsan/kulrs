@@ -96,6 +96,12 @@ function parseColorsFromParams(searchParams: URLSearchParams): string[] | null {
   return null;
 }
 
+const BRIDGE_DEGREES: ProgressionPreset = {
+  name: 'Bridge',
+  degrees: [6, 4, 1, 5],
+  description: 'Classic bridge: vi–IV–I–V',
+};
+
 export function Compose() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -246,14 +252,16 @@ export function Compose() {
     if (!composition) return;
 
     // Determine the base pattern length
-    const baseLen = selectedPreset !== null
-      ? PROGRESSION_PRESETS[selectedPreset].degrees.length
-      : (originalColors.length || composition.steps.length);
+    const baseLen =
+      selectedPreset !== null
+        ? PROGRESSION_PRESETS[selectedPreset].degrees.length
+        : originalColors.length || composition.steps.length;
 
     // Clone the step at the cycling position in the base pattern
     const currentLen = composition.steps.length;
     const sourceIdx = currentLen % baseLen;
-    const sourceStep = composition.steps[Math.min(sourceIdx, composition.steps.length - 1)];
+    const sourceStep =
+      composition.steps[Math.min(sourceIdx, composition.steps.length - 1)];
 
     const newHex = sourceStep.hex;
     setHexColors(prev => [...prev, newHex]);
@@ -345,12 +353,6 @@ export function Compose() {
 
   // ── Section builders (Chorus / Bridge / Key Change) ────────────────────
 
-  const BRIDGE_DEGREES: ProgressionPreset = {
-    name: 'Bridge',
-    degrees: [6, 4, 1, 5],
-    description: 'Classic bridge: vi–IV–I–V',
-  };
-
   const addSection = useCallback(
     (sectionSteps: ColorMusicMapping[]) => {
       const newHexes = sectionSteps.map(s => s.hex);
@@ -368,9 +370,10 @@ export function Compose() {
   const handleAddChorus = useCallback(() => {
     if (!composition) return;
     // Repeat the base pattern (the core progression)
-    const baseLen = selectedPreset !== null
-      ? PROGRESSION_PRESETS[selectedPreset].degrees.length
-      : (originalColors.length || composition.steps.length);
+    const baseLen =
+      selectedPreset !== null
+        ? PROGRESSION_PRESETS[selectedPreset].degrees.length
+        : originalColors.length || composition.steps.length;
     const baseSteps = composition.steps.slice(0, baseLen);
     addSection(baseSteps);
   }, [composition, selectedPreset, originalColors.length, addSection]);
@@ -394,9 +397,10 @@ export function Compose() {
     const newRoot = NOTE_NAMES[newRootIdx];
 
     // Transpose the base pattern into the new key
-    const baseLen = selectedPreset !== null
-      ? PROGRESSION_PRESETS[selectedPreset].degrees.length
-      : (originalColors.length || composition.steps.length);
+    const baseLen =
+      selectedPreset !== null
+        ? PROGRESSION_PRESETS[selectedPreset].degrees.length
+        : originalColors.length || composition.steps.length;
     const baseSteps = composition.steps.slice(0, baseLen);
 
     const transposed: ColorMusicMapping[] = baseSteps.map(step => {
@@ -429,7 +433,7 @@ export function Compose() {
     };
     setDetectedKey(newKey);
     setSelectedKey(newRoot as NoteName);
-  }, [composition, detectedKey, selectedPreset, originalColors.length, tempo]);
+  }, [composition, detectedKey, selectedPreset, originalColors.length]);
 
   // ── Harmonize all ──────────────────────────────────────────────────────
 
@@ -724,13 +728,25 @@ export function Compose() {
 
         <div className="toolbar-group section-group">
           <span className="section-label">Sections:</span>
-          <button className="toolbar-btn section-btn" onClick={handleAddChorus} title="Repeat the core progression as a chorus">
+          <button
+            className="toolbar-btn section-btn"
+            onClick={handleAddChorus}
+            title="Repeat the core progression as a chorus"
+          >
             <i className="fa-solid fa-repeat" /> Chorus
           </button>
-          <button className="toolbar-btn section-btn" onClick={handleAddBridge} title="Add a contrasting bridge section (vi–IV–I–V)">
+          <button
+            className="toolbar-btn section-btn"
+            onClick={handleAddBridge}
+            title="Add a contrasting bridge section (vi–IV–I–V)"
+          >
             <i className="fa-solid fa-bridge" /> Bridge
           </button>
-          <button className="toolbar-btn section-btn" onClick={handleKeyChange} title="Transpose the pattern up a whole step">
+          <button
+            className="toolbar-btn section-btn"
+            onClick={handleKeyChange}
+            title="Transpose the pattern up a whole step"
+          >
             <i className="fa-solid fa-arrow-up-right-dots" /> Key Change
           </button>
         </div>
@@ -858,7 +874,9 @@ const StepCard = forwardRef<HTMLDivElement, StepCardProps>(function StepCard(
         title={`Play from step ${index + 1}`}
       >
         <span className="step-number">{index + 1}</span>
-        <span className="step-play-icon"><i className="fa-solid fa-play" /></span>
+        <span className="step-play-icon">
+          <i className="fa-solid fa-play" />
+        </span>
         {mode === 'palette' && (
           <input
             type="color"
