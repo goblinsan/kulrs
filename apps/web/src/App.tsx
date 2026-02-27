@@ -5,6 +5,7 @@ import { Browse } from './pages/Browse';
 import { Login } from './pages/Login';
 import { PaletteDetail } from './pages/PaletteDetail';
 import { Compose } from './pages/Compose';
+import { Pattern } from './pages/Pattern';
 import './App.css';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/browse" element={<Browse />} />
           <Route path="/compose" element={<Compose />} />
+          <Route path="/pattern" element={<Pattern />} />
           <Route path="/login" element={<Login />} />
           <Route path="/palette/:id" element={<PaletteDetail />} />
         </Routes>

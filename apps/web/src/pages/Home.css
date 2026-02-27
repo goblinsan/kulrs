@@ -185,3 +185,8 @@
   color: #aaffdd;
   border-color: #aaffdd;
 }
+
+.palette-actions .pattern-button:hover:not(:disabled) {
+  color: #aaffdd;
+  border-color: #aaffdd;
+}

@@ -47,6 +47,9 @@ export function Layout({ children }: LayoutProps) {
             <Link to="/compose" onClick={closeMobileMenu}>
               Compose
             </Link>
+            <Link to="/pattern" onClick={closeMobileMenu}>
+              Pattern
+            </Link>
             {user ? (
               <>
                 <span className="nav-user" title={user.email || undefined}>
