@@ -356,7 +356,10 @@ export class PaletteService {
   }
 
   /**
-   * Browse public palettes with sorting and filtering
+   * Browse public palettes with sorting and filtering.
+   * Deduplicates palettes that share the same colors in the same order,
+   * keeping only the earliest-created instance.
+   * When sorting by popular, excludes palettes with zero likes.
    */
   async browsePalettes(options: {
     sort: 'recent' | 'popular';
@@ -372,13 +375,22 @@ export class PaletteService {
       conditions.push(eq(palettes.userId, userId));
     }
 
+    // Exclude zero-like palettes from the "popular" list
+    if (sort === 'popular') {
+      conditions.push(sql`${palettes.likesCount} > 0`);
+    }
+
     // Build order by
     const orderBy =
       sort === 'popular'
         ? [desc(palettes.likesCount), desc(palettes.createdAt)]
         : [desc(palettes.createdAt)];
 
-    // Get palettes with colors
+    // Fetch more than needed to account for duplicates being removed.
+    // We over-fetch by 3× so we're likely to have enough unique palettes
+    // after deduplication to fill the requested page.
+    const fetchLimit = limit * 3;
+
     const paletteResults = await db
       .select({
         id: palettes.id,
@@ -393,8 +405,7 @@ export class PaletteService {
       .from(palettes)
       .where(and(...conditions))
       .orderBy(...orderBy)
-      .limit(limit)
-      .offset(offset);
+      .limit(fetchLimit);
 
     // Get colors for each palette
     const palettesWithColors = await Promise.all(
@@ -417,7 +428,22 @@ export class PaletteService {
       })
     );
 
-    return palettesWithColors;
+    // Deduplicate: build a color signature from ordered hex values.
+    // Keep only the first (earliest-created) palette per unique color combination.
+    const seen = new Set<string>();
+    const deduplicated = palettesWithColors.filter(palette => {
+      const colorSignature = palette.colors
+        .map(c => c.hexValue.toUpperCase())
+        .join(',');
+      if (seen.has(colorSignature)) {
+        return false;
+      }
+      seen.add(colorSignature);
+      return true;
+    });
+
+    // Apply offset and limit after deduplication
+    return deduplicated.slice(offset, offset + limit);
   }
 
   /**
