@@ -8,6 +8,28 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import './Browse.css';
 
+function CopyIdButton({ paletteId }: { paletteId: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(paletteId).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  };
+
+  return (
+    <button
+      className="copy-id-button"
+      onClick={handleCopy}
+      title={`Copy palette ID: ${paletteId}`}
+    >
+      {copied ? '✓ Copied' : 'Copy ID'}
+    </button>
+  );
+}
+
 type FilterType = 'recent' | 'popular' | 'my';
 
 export function Browse() {
@@ -144,6 +166,7 @@ export function Browse() {
               <div className="palette-info">
                 <div className="palette-stats">
                   <span className="likes">❤️ {palette.likesCount}</span>
+                  <CopyIdButton paletteId={palette.id} />
                   <span className="date">
                     {new Date(palette.createdAt).toLocaleDateString()}
                   </span>
