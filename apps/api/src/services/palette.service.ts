@@ -1,4 +1,4 @@
-import { eq, and, sql, asc, desc } from 'drizzle-orm';
+import { eq, and, sql, asc, desc, inArray } from 'drizzle-orm';
 import { db } from '../config/database.js';
 import { users, palettes, colors, paletteTags, likes, saves } from '@kulrs/db';
 import { CreatePaletteInput } from '../utils/validation.js';
@@ -145,34 +145,37 @@ export class PaletteService {
   async getOrCreateAnonymousUser(deviceId: string) {
     const anonUid = `anon-${deviceId}`;
 
-    // Use upsert to safely handle concurrent requests for the same deviceId.
-    // ON CONFLICT DO NOTHING avoids unique-constraint errors when multiple
-    // requests race to create the same anonymous user.
-    const inserted = await db
-      .insert(users)
-      .values({
-        firebaseUid: anonUid,
-        email: '',
-      })
-      .onConflictDoNothing({ target: users.firebaseUid })
-      .returning({
-        id: users.id,
-        firebaseUid: users.firebaseUid,
-      });
-
-    if (inserted.length > 0) return inserted[0];
-
-    // INSERT was a no-op (user already existed) — fetch the existing row
+    // Try to find the user first (fast path for repeat visitors)
     const [existing] = await db
-      .select({
-        id: users.id,
-        firebaseUid: users.firebaseUid,
-      })
+      .select({ id: users.id, firebaseUid: users.firebaseUid })
       .from(users)
       .where(eq(users.firebaseUid, anonUid))
       .limit(1);
 
-    return existing;
+    if (existing) return existing;
+
+    // User doesn't exist — try to insert. If another request raced us and
+    // inserted first, catch the unique-constraint violation and SELECT again.
+    try {
+      const [created] = await db
+        .insert(users)
+        .values({ firebaseUid: anonUid, email: '' })
+        .returning({ id: users.id, firebaseUid: users.firebaseUid });
+      return created;
+    } catch {
+      // Unique-constraint violation — another request created the user
+      const [raced] = await db
+        .select({ id: users.id, firebaseUid: users.firebaseUid })
+        .from(users)
+        .where(eq(users.firebaseUid, anonUid))
+        .limit(1);
+      if (!raced) {
+        throw new Error(
+          `Failed to resolve anonymous user for device ${deviceId}`
+        );
+      }
+      return raced;
+    }
   }
 
   /**
@@ -340,8 +343,9 @@ export class PaletteService {
     userId?: string;
     limit: number;
     offset: number;
+    viewerUserId?: string | null;
   }) {
-    const { sort, userId, limit, offset } = options;
+    const { sort, userId, limit, offset, viewerUserId } = options;
 
     // Build query conditions
     const conditions = [eq(palettes.isPublic, true)];
@@ -360,8 +364,6 @@ export class PaletteService {
         : [desc(palettes.createdAt)];
 
     // Fetch more than needed to account for duplicates being removed.
-    // We over-fetch by 3× so we're likely to have enough unique palettes
-    // after deduplication to fill the requested page.
     const fetchLimit = limit * 3;
 
     const paletteResults = await db
@@ -380,29 +382,57 @@ export class PaletteService {
       .orderBy(...orderBy)
       .limit(fetchLimit);
 
-    // Get colors for each palette
-    const palettesWithColors = await Promise.all(
-      paletteResults.map(async palette => {
-        const paletteColors = await db
-          .select({
-            id: colors.id,
-            hexValue: colors.hexValue,
-            position: colors.position,
-            name: colors.name,
-          })
-          .from(colors)
-          .where(eq(colors.paletteId, palette.id))
-          .orderBy(asc(colors.position));
+    if (paletteResults.length === 0) return [];
 
-        return {
-          ...palette,
-          colors: paletteColors,
-        };
+    // Batch-fetch all colors in a single query instead of N+1
+    const paletteIds = paletteResults.map(p => p.id);
+    const allColors = await db
+      .select({
+        id: colors.id,
+        paletteId: colors.paletteId,
+        hexValue: colors.hexValue,
+        position: colors.position,
+        name: colors.name,
       })
-    );
+      .from(colors)
+      .where(inArray(colors.paletteId, paletteIds))
+      .orderBy(asc(colors.position));
+
+    // Group colors by paletteId
+    const colorsByPalette = new Map<string, typeof allColors>();
+    for (const c of allColors) {
+      const arr = colorsByPalette.get(c.paletteId) || [];
+      arr.push(c);
+      colorsByPalette.set(c.paletteId, arr);
+    }
+
+    // Batch-fetch viewer's likes in a single query
+    let likedPaletteIds = new Set<string>();
+    if (viewerUserId) {
+      const userLikes = await db
+        .select({ paletteId: likes.paletteId })
+        .from(likes)
+        .where(
+          and(
+            eq(likes.userId, viewerUserId),
+            inArray(likes.paletteId, paletteIds)
+          )
+        );
+      likedPaletteIds = new Set(userLikes.map(l => l.paletteId));
+    }
+
+    const palettesWithColors = paletteResults.map(palette => ({
+      ...palette,
+      colors: (colorsByPalette.get(palette.id) || []).map(c => ({
+        id: c.id,
+        hexValue: c.hexValue,
+        position: c.position,
+        name: c.name,
+      })),
+      userLiked: likedPaletteIds.has(palette.id),
+    }));
 
     // Deduplicate: build a color signature from ordered hex values.
-    // Keep only the first (earliest-created) palette per unique color combination.
     const seen = new Set<string>();
     const deduplicated = palettesWithColors.filter(palette => {
       const colorSignature = palette.colors
@@ -445,28 +475,38 @@ export class PaletteService {
       .limit(limit)
       .offset(offset);
 
-    // Get colors for each palette
-    const palettesWithColors = await Promise.all(
-      paletteResults.map(async palette => {
-        const paletteColors = await db
-          .select({
-            id: colors.id,
-            hexValue: colors.hexValue,
-            position: colors.position,
-            name: colors.name,
-          })
-          .from(colors)
-          .where(eq(colors.paletteId, palette.id))
-          .orderBy(asc(colors.position));
+    if (paletteResults.length === 0) return [];
 
-        return {
-          ...palette,
-          colors: paletteColors,
-        };
+    // Batch-fetch all colors in a single query
+    const paletteIds = paletteResults.map(p => p.id);
+    const allColors = await db
+      .select({
+        id: colors.id,
+        paletteId: colors.paletteId,
+        hexValue: colors.hexValue,
+        position: colors.position,
+        name: colors.name,
       })
-    );
+      .from(colors)
+      .where(inArray(colors.paletteId, paletteIds))
+      .orderBy(asc(colors.position));
 
-    return palettesWithColors;
+    const colorsByPalette = new Map<string, typeof allColors>();
+    for (const c of allColors) {
+      const arr = colorsByPalette.get(c.paletteId) || [];
+      arr.push(c);
+      colorsByPalette.set(c.paletteId, arr);
+    }
+
+    return paletteResults.map(palette => ({
+      ...palette,
+      colors: (colorsByPalette.get(palette.id) || []).map(c => ({
+        id: c.id,
+        hexValue: c.hexValue,
+        position: c.position,
+        name: c.name,
+      })),
+    }));
   }
 
   /**

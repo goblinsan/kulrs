@@ -7,27 +7,49 @@ const router = Router();
 
 /**
  * GET /palettes
- * Browse public palettes with filtering and sorting
+ * Browse public palettes with filtering and sorting.
+ * Accepts optional deviceId query param to include viewer's like status.
  */
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const {
       sort = 'recent',
       userId,
       limit = '20',
       offset = '0',
+      deviceId,
     } = req.query as {
       sort?: 'recent' | 'popular';
       userId?: string;
       limit?: string;
       offset?: string;
+      deviceId?: string;
     };
+
+    // Resolve viewer identity for per-palette like status
+    let viewerUserId: string | null = null;
+    if (req.user) {
+      const viewer = await paletteService.getOrCreateUser(
+        req.user.uid,
+        req.user.email
+      );
+      viewerUserId = viewer.id;
+    } else if (deviceId) {
+      try {
+        const anonUser =
+          await paletteService.getOrCreateAnonymousUser(deviceId);
+        viewerUserId = anonUser.id;
+      } catch {
+        // Ignore — viewer just won't see like status
+      }
+    }
 
     const palettes = await paletteService.browsePalettes({
       sort: sort as 'recent' | 'popular',
       userId,
       limit: parseInt(limit, 10),
       offset: parseInt(offset, 10),
+      viewerUserId,
     });
 
     res.status(200).json({

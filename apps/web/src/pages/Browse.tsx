@@ -5,7 +5,6 @@ import {
   getMyPalettes,
   likePalette,
   unlikePalette,
-  getLikeInfo,
   type BrowsePalette,
 } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -36,23 +35,14 @@ function CopyIdButton({ paletteId }: { paletteId: string }) {
 function LikeButton({
   paletteId,
   initialCount,
+  initialLiked,
 }: {
   paletteId: string;
   initialCount: number;
+  initialLiked: boolean;
 }) {
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(initialLiked);
   const [count, setCount] = useState(initialCount);
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    getLikeInfo(paletteId)
-      .then(res => {
-        setLiked(res.data.userLiked);
-        setCount(res.data.likesCount);
-        setLoaded(true);
-      })
-      .catch(() => setLoaded(true));
-  }, [paletteId]);
 
   const handleClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -80,7 +70,6 @@ function LikeButton({
     <button
       className={`browse-like-button ${liked ? 'liked' : ''}`}
       onClick={handleClick}
-      disabled={!loaded}
       title={liked ? 'Unlike' : 'Like'}
     >
       <i className={`fa-${liked ? 'solid' : 'regular'} fa-heart`}></i>
@@ -227,6 +216,7 @@ export function Browse() {
                   <LikeButton
                     paletteId={palette.id}
                     initialCount={palette.likesCount}
+                    initialLiked={palette.userLiked ?? false}
                   />
                   <CopyIdButton paletteId={palette.id} />
                   <span className="date">

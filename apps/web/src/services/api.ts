@@ -239,6 +239,7 @@ export interface BrowsePalette {
   savesCount: number;
   createdAt: string;
   colors: PaletteColor[];
+  userLiked?: boolean;
 }
 
 export interface BrowsePalettesResponse {
@@ -264,6 +265,7 @@ export async function browsePalettes(
   if (options.userId) params.set('userId', options.userId);
   if (options.limit) params.set('limit', String(options.limit));
   if (options.offset) params.set('offset', String(options.offset));
+  params.set('deviceId', getDeviceId());
 
   const query = params.toString();
   return apiGet<BrowsePalettesResponse>(`/palettes${query ? `?${query}` : ''}`);
