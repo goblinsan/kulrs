@@ -21,7 +21,6 @@ export class PaletteService {
    * Get or create user by Firebase UID
    */
   async getOrCreateUser(firebaseUid: string, email?: string) {
-    // Select only the columns we need (avoids issues if is_bot column doesn't exist yet)
     const [existingUser] = await db
       .select({
         id: users.id,
