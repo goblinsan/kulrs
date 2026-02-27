@@ -85,6 +85,13 @@
   margin-bottom: 0.75rem;
 }
 
+.key-color-swatch-wrapper {
+  position: relative;
+  cursor: pointer;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
 .key-color-swatch {
   width: 28px;
   height: 28px;
@@ -92,6 +99,17 @@
   border: 2px solid rgba(255, 255, 255, 0.2);
   flex-shrink: 0;
   transition: background-color 0.3s;
+}
+
+.key-color-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  border: none;
+  padding: 0;
 }
 
 .preset-grid {

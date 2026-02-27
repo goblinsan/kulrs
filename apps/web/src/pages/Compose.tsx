@@ -21,6 +21,8 @@ import {
   chordToHex,
   applyPresetToPalette,
   shiftPaletteToKey,
+  oklchToHexString,
+  hueToSemitone,
 } from '@kulrs/shared';
 import { playComposition, stopPlayback } from '../audio/playback';
 import { downloadMidi } from '../audio/midi-export';
@@ -164,17 +166,28 @@ export function Compose() {
     }
   }, [tempo, hexColors]);
 
-  // ── Key change (shift hues) ────────────────────────────────────────────
+  // ── Key change (shift hues based on root color) ────────────────────────
 
   const handleChangeKey = useCallback(
     (newKey: NoteName) => {
-      if (!detectedKey || newKey === detectedKey.root) {
-        setSelectedKey(newKey);
+      setSelectedKey(newKey);
+      if (hexColors.length === 0) return;
+
+      // Derive "from" key from the root color's natural hue→semitone mapping
+      const rootOklch = hexToOklchApprox(hexColors[0]);
+      const rootNote = NOTE_NAMES[hueToSemitone(rootOklch.h)];
+
+      if (rootNote === newKey) {
+        // Root color already maps to this key – just rebuild
+        const result = paletteToHarmonicComposition(hexColors, tempo);
+        setComposition(result);
+        setDetectedKey(result.detectedKey);
         return;
       }
+
       const result = shiftPaletteToKey(
         hexColors,
-        detectedKey.root,
+        rootNote,
         newKey,
         selectedScale,
         tempo
@@ -182,9 +195,36 @@ export function Compose() {
       setHexColors(result.steps.map(s => s.hex));
       setComposition(result);
       setDetectedKey(result.detectedKey);
-      setSelectedKey(newKey);
     },
-    [detectedKey, hexColors, selectedScale, tempo]
+    [hexColors, selectedScale, tempo]
+  );
+
+  // ── Root color picker (shift all hues by delta) ────────────────────────
+
+  const handleRootColorChange = useCallback(
+    (newRootHex: string) => {
+      if (hexColors.length === 0) return;
+
+      const oldRootOklch = hexToOklchApprox(hexColors[0]);
+      const newRootOklch = hexToOklchApprox(newRootHex);
+      const hueDelta = newRootOklch.h - oldRootOklch.h;
+
+      const shiftedColors = hexColors.map((hex, i) => {
+        if (i === 0) return newRootHex; // use exact picked color
+        const oklch = hexToOklchApprox(hex);
+        const newHue = (((oklch.h + hueDelta) % 360) + 360) % 360;
+        return oklchToHexString(oklch.l, oklch.c, newHue);
+      });
+
+      setHexColors(shiftedColors);
+      const result = paletteToHarmonicComposition(shiftedColors, tempo);
+      setComposition(result);
+      setDetectedKey(result.detectedKey);
+      if (result.detectedKey) {
+        setSelectedKey(result.detectedKey.root);
+      }
+    },
+    [hexColors, tempo]
   );
 
   // ── Progression presets ─────────────────────────────────────────────────
@@ -623,13 +663,23 @@ export function Compose() {
       {/* ── Key / Scale selectors & Chord progression presets ───── */}
       <div className="preset-panel">
         <div className="preset-key-select">
-          {/* Root color swatch */}
+          {/* Root color picker */}
           {hexColors.length > 0 && (
-            <div
-              className="key-color-swatch"
-              style={{ backgroundColor: hexColors[0] }}
-              title={`Root color: ${hexColors[0]}`}
-            />
+            <label
+              className="key-color-swatch-wrapper"
+              title="Click to change root color"
+            >
+              <div
+                className="key-color-swatch"
+                style={{ backgroundColor: hexColors[0] }}
+              />
+              <input
+                type="color"
+                className="key-color-input"
+                value={hexColors[0]}
+                onChange={e => handleRootColorChange(e.target.value)}
+              />
+            </label>
           )}
           <label className="step-field">
             <span>Key</span>
