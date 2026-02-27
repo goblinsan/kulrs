@@ -121,7 +121,9 @@ export function Compose() {
   const [selectedPreset, setSelectedPreset] = useState<number | null>(null);
   const stepsRef = useRef<(HTMLDivElement | null)[]>([]);
   const userScrolledRef = useRef(false);
-  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined
+  );
 
   // Detect manual scrolling to suppress auto-scroll during playback
   useEffect(() => {
