@@ -242,7 +242,14 @@
 
 .colour-bar-swatch {
   flex: 1;
-  transition: flex 0.3s, outline 0.3s;
+  transition: flex 0.3s, outline 0.3s, filter 0.15s;
+  cursor: pointer;
+}
+
+.colour-bar-swatch:hover {
+  filter: brightness(1.2);
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: -2px;
 }
 
 .colour-bar-swatch.active {
@@ -284,6 +291,24 @@
   gap: 0.5rem;
   position: relative;
   flex-shrink: 0;
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+
+.step-colour:hover {
+  filter: brightness(1.15);
+}
+
+.step-colour:hover .step-play-icon {
+  opacity: 1;
+}
+
+.step-play-icon {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+  opacity: 0;
+  transition: opacity 0.15s;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
 }
 
 .step-number {

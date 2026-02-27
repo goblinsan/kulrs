@@ -32,10 +32,12 @@ export function stopPlayback() {
 /**
  * Play a composition through the Web Audio API.
  * Returns a promise that resolves when playback finishes or is stopped.
+ * @param startFromStep - Optional step index to start playback from (default 0).
  */
 export async function playComposition(
   composition: Composition,
-  callbacks?: PlaybackCallbacks
+  callbacks?: PlaybackCallbacks,
+  startFromStep = 0
 ): Promise<void> {
   stopPlayback();
   stopRequested = false;
@@ -51,7 +53,7 @@ export async function playComposition(
 
   let currentTime = ctx.currentTime + 0.05; // tiny lead-in
 
-  for (let i = 0; i < composition.steps.length; i++) {
+  for (let i = startFromStep; i < composition.steps.length; i++) {
     if (stopRequested) break;
 
     const step = composition.steps[i].chord;
@@ -125,7 +127,9 @@ export async function playComposition(
 
   // Wait for playback to finish
   const totalDuration =
-    composition.steps.reduce((sum, s) => sum + s.chord.beats, 0) * beatDuration;
+    composition.steps
+      .slice(startFromStep)
+      .reduce((sum, s) => sum + s.chord.beats, 0) * beatDuration;
 
   return new Promise(resolve => {
     const timeout = setTimeout(

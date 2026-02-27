@@ -352,6 +352,39 @@ export function Compose() {
     setActiveStep(-1);
   };
 
+  const handlePlayFrom = async (stepIndex: number) => {
+    if (!composition) return;
+    // If already playing, stop first
+    if (playing) {
+      stopPlayback();
+      setPlaying(false);
+      setActiveStep(-1);
+      // Small delay so the audio context can close cleanly
+      await new Promise(r => setTimeout(r, 50));
+    }
+    setPlaying(true);
+    setActiveStep(stepIndex);
+    await playComposition(
+      composition,
+      {
+        onStep: i => {
+          setActiveStep(i);
+          stepsRef.current[i]?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+          });
+        },
+        onEnd: () => {
+          setPlaying(false);
+          setActiveStep(-1);
+        },
+      },
+      stepIndex
+    );
+    setPlaying(false);
+    setActiveStep(-1);
+  };
+
   // ── MIDI export ────────────────────────────────────────────────────────
 
   const handleExport = () => {
@@ -588,7 +621,8 @@ export function Compose() {
             key={i}
             className={`colour-bar-swatch ${activeStep === i ? 'active' : ''}`}
             style={{ backgroundColor: hex }}
-            title={`${hex} → ${composition.steps[i]?.chord.label}`}
+            title={`Play from: ${hex} → ${composition.steps[i]?.chord.label}`}
+            onClick={() => handlePlayFrom(i)}
           />
         ))}
       </div>
@@ -609,6 +643,7 @@ export function Compose() {
             onBeatsChange={b => updateBeats(i, b)}
             onRemove={() => removeColor(i)}
             onApplySuggestion={s => applySuggestion(i, s)}
+            onPlayFrom={() => handlePlayFrom(i)}
             ref={el => {
               stepsRef.current[i] = el;
             }}
@@ -651,6 +686,7 @@ interface StepCardProps {
   onBeatsChange: (beats: number) => void;
   onRemove: () => void;
   onApplySuggestion: (s: ChordSuggestion) => void;
+  onPlayFrom: () => void;
 }
 
 const StepCard = forwardRef<HTMLDivElement, StepCardProps>(function StepCard(
@@ -666,6 +702,7 @@ const StepCard = forwardRef<HTMLDivElement, StepCardProps>(function StepCard(
     onBeatsChange,
     onRemove,
     onApplySuggestion,
+    onPlayFrom,
   },
   ref
 ) {
@@ -678,8 +715,14 @@ const StepCard = forwardRef<HTMLDivElement, StepCardProps>(function StepCard(
   return (
     <div ref={ref} className={`step-card ${active ? 'active' : ''}`}>
       {/* Colour column */}
-      <div className="step-colour" style={{ backgroundColor: hex }}>
+      <div
+        className="step-colour"
+        style={{ backgroundColor: hex }}
+        onClick={onPlayFrom}
+        title={`Play from step ${index + 1}`}
+      >
         <span className="step-number">{index + 1}</span>
+        <span className="step-play-icon"><i className="fa-solid fa-play" /></span>
         {mode === 'palette' && (
           <input
             type="color"
