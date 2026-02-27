@@ -1,0 +1,306 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Compose page styles — dark theme consistent with the rest of Kulrs
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.compose-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1rem 4rem;
+}
+
+/* ── Header ────────────────────────────────────────────────────────────── */
+
+.compose-header h1 {
+  margin: 0 0 0.5rem;
+  font-size: 2rem;
+  color: #fff;
+}
+
+.compose-header h1 i {
+  color: var(--brand-color, #aaffdd);
+  margin-right: 0.3rem;
+}
+
+.compose-subtitle {
+  color: #888;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0 0 1.5rem;
+}
+
+/* ── Toolbar ───────────────────────────────────────────────────────────── */
+
+.compose-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: #111;
+  border: 1px solid #222;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid #333;
+  border-radius: 6px;
+  background: transparent;
+  color: #ccc;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.toolbar-btn:hover {
+  border-color: #aaffdd;
+  color: #aaffdd;
+}
+
+.toolbar-btn.playing {
+  border-color: #e63946;
+  color: #e63946;
+}
+
+.tempo-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #888;
+  font-size: 0.85rem;
+}
+
+.tempo-label input[type='range'] {
+  width: 100px;
+  accent-color: #aaffdd;
+}
+
+.tempo-value {
+  min-width: 60px;
+  text-align: right;
+  color: #aaffdd;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Colour bar (overview strip) ───────────────────────────────────────── */
+
+.colour-bar {
+  display: flex;
+  height: 40px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+  border: 1px solid #222;
+}
+
+.colour-bar-swatch {
+  flex: 1;
+  transition: flex 0.3s, outline 0.3s;
+}
+
+.colour-bar-swatch.active {
+  flex: 2;
+  outline: 2px solid #fff;
+  outline-offset: -2px;
+}
+
+/* ── Step cards ────────────────────────────────────────────────────────── */
+
+.step-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.step-card {
+  display: flex;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #222;
+  background: #111;
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.step-card.active {
+  border-color: #aaffdd;
+  box-shadow: 0 0 16px rgba(170, 255, 221, 0.15);
+}
+
+/* Colour column */
+.step-colour {
+  width: 80px;
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.step-number {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+.colour-picker-input {
+  width: 32px;
+  height: 24px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.colour-picker-input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.colour-picker-input::-webkit-color-swatch {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+/* Details column */
+.step-details {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.step-chord-label {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.02em;
+}
+
+.step-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.step-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.step-field span {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #666;
+}
+
+.step-field select {
+  padding: 0.3rem 0.5rem;
+  border: 1px solid #333;
+  border-radius: 4px;
+  background: #0a0a0a;
+  color: #ccc;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.step-field select:hover {
+  border-color: #555;
+}
+
+.step-meta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.75rem;
+  color: #555;
+}
+
+.hex-label {
+  font-family: monospace;
+}
+
+/* Remove button */
+.step-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  background: transparent;
+  border: none;
+  border-left: 1px solid #222;
+  color: #555;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: color 0.15s, background 0.15s;
+}
+
+.step-remove:hover {
+  background: rgba(230, 57, 70, 0.1);
+  color: #e63946;
+}
+
+/* ── Footer ────────────────────────────────────────────────────────────── */
+
+.compose-footer {
+  margin-top: 2rem;
+}
+
+.back-link {
+  color: #888;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.15s;
+}
+
+.back-link:hover {
+  color: #aaffdd;
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+  .compose-page {
+    padding: 1rem 0.75rem 3rem;
+  }
+
+  .compose-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .compose-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toolbar-group {
+    flex-wrap: wrap;
+  }
+
+  .step-colour {
+    width: 60px;
+  }
+
+  .step-chord-label {
+    font-size: 1.2rem;
+  }
+
+  .step-controls {
+    gap: 0.35rem;
+  }
+}

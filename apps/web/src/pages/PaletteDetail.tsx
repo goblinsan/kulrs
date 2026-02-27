@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   type GeneratedPalette,
   ColorRole,
   type AssignedColor,
+  oklchToRgb,
 } from '@kulrs/shared';
 import { PaletteDisplay } from '../components/palette/PaletteDisplay';
 import { ColorExportTable } from '../components/palette/ColorExportTable';
@@ -103,6 +104,7 @@ export function PaletteDetail() {
   const [isLiked, setIsLiked] = useState(false);
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
   const timeoutRef = useRef<number | null>(null);
+  const navigate = useNavigate();
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -297,6 +299,26 @@ export function PaletteDetail() {
           >
             <i className="fa-solid fa-link"></i>
             Share
+          </button>
+          <button
+            onClick={() => {
+              if (!palette) return;
+              const hexColors = palette.colors.map(c => {
+                const rgb = oklchToRgb(c.color);
+                const toHex = (n: number) =>
+                  Math.round(Math.max(0, Math.min(255, n)))
+                    .toString(16)
+                    .padStart(2, '0');
+                return `${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
+              });
+              navigate(`/compose?colors=${hexColors.join(',')}`);
+            }}
+            className="action-button compose-button"
+            aria-label="Compose music from this palette"
+            title="Compose music from this palette"
+          >
+            <i className="fa-solid fa-music"></i>
+            Compose
           </button>
         </div>
 

@@ -4,6 +4,7 @@ import { Home } from './pages/Home';
 import { Browse } from './pages/Browse';
 import { Login } from './pages/Login';
 import { PaletteDetail } from './pages/PaletteDetail';
+import { Compose } from './pages/Compose';
 import './App.css';
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/browse" element={<Browse />} />
+          <Route path="/compose" element={<Compose />} />
           <Route path="/login" element={<Login />} />
           <Route path="/palette/:id" element={<PaletteDetail />} />
         </Routes>
