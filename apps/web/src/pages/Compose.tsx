@@ -114,6 +114,25 @@ export function Compose() {
   const [originalColors, setOriginalColors] = useState<string[]>([]);
   const [selectedPreset, setSelectedPreset] = useState<number | null>(null);
   const stepsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const userScrolledRef = useRef(false);
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Detect manual scrolling to suppress auto-scroll during playback
+  useEffect(() => {
+    const onScroll = () => {
+      userScrolledRef.current = true;
+      // Reset after 4s of no scrolling so auto-scroll can resume
+      clearTimeout(scrollTimeoutRef.current);
+      scrollTimeoutRef.current = setTimeout(() => {
+        userScrolledRef.current = false;
+      }, 4000);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      clearTimeout(scrollTimeoutRef.current);
+    };
+  }, []);
 
   // Initialise from URL or defaults
   useEffect(() => {
@@ -431,15 +450,18 @@ export function Compose() {
       setActiveStep(-1);
       return;
     }
+    userScrolledRef.current = false;
     setPlaying(true);
     setActiveStep(0);
     await playComposition(composition, {
       onStep: i => {
         setActiveStep(i);
-        stepsRef.current[i]?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest',
-        });
+        if (!userScrolledRef.current) {
+          stepsRef.current[i]?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+          });
+        }
       },
       onEnd: () => {
         setPlaying(false);
@@ -460,6 +482,7 @@ export function Compose() {
       // Small delay so the audio context can close cleanly
       await new Promise(r => setTimeout(r, 50));
     }
+    userScrolledRef.current = false;
     setPlaying(true);
     setActiveStep(stepIndex);
     await playComposition(
@@ -467,10 +490,12 @@ export function Compose() {
       {
         onStep: i => {
           setActiveStep(i);
-          stepsRef.current[i]?.scrollIntoView({
-            behavior: 'smooth',
-            block: 'nearest',
-          });
+          if (!userScrolledRef.current) {
+            stepsRef.current[i]?.scrollIntoView({
+              behavior: 'smooth',
+              block: 'nearest',
+            });
+          }
         },
         onEnd: () => {
           setPlaying(false);
