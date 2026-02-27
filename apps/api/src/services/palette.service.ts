@@ -201,6 +201,38 @@ export class PaletteService {
   }
 
   /**
+   * Get or create an anonymous user by device ID.
+   * Allows unauthenticated visitors to like palettes.
+   */
+  async getOrCreateAnonymousUser(deviceId: string) {
+    const anonUid = `anon-${deviceId}`;
+
+    const [existing] = await db
+      .select({
+        id: users.id,
+        firebaseUid: users.firebaseUid,
+      })
+      .from(users)
+      .where(eq(users.firebaseUid, anonUid))
+      .limit(1);
+
+    if (existing) return existing;
+
+    const result = await db
+      .insert(users)
+      .values({
+        firebaseUid: anonUid,
+        email: '',
+      })
+      .returning({
+        id: users.id,
+        firebaseUid: users.firebaseUid,
+      });
+
+    return result[0];
+  }
+
+  /**
    * Like a palette
    */
   async likePalette(userId: string, paletteId: string) {

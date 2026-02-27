@@ -3,6 +3,20 @@ import { apiUrl } from '../config/env';
 import { onAuthStateChanged } from 'firebase/auth';
 
 /**
+ * Get or create a persistent device ID for anonymous actions (likes).
+ * Stored in localStorage so it survives page reloads.
+ */
+function getDeviceId(): string {
+  const KEY = 'kulrs_device_id';
+  let id = localStorage.getItem(KEY);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(KEY, id);
+  }
+  return id;
+}
+
+/**
  * Wait for Firebase auth to be ready and get the current user's ID token
  */
 async function getAuthToken(): Promise<string | null> {
@@ -160,30 +174,39 @@ export async function savePalette(
 }
 
 /**
- * Like a palette
+ * Like a palette (works for both authenticated and anonymous users)
  */
 export async function likePalette(
   paletteId: string
 ): Promise<SaveLikeResponse> {
-  return apiPost<SaveLikeResponse>(`/palettes/${paletteId}/like`, {});
+  return apiPost<SaveLikeResponse>(`/palettes/${paletteId}/like`, {
+    deviceId: getDeviceId(),
+  });
 }
 
 /**
- * Unlike a palette
+ * Unlike a palette (works for both authenticated and anonymous users)
  */
 export async function unlikePalette(
   paletteId: string
 ): Promise<SaveLikeResponse> {
-  return apiDelete<SaveLikeResponse>(`/palettes/${paletteId}/like`);
+  return apiRequest<SaveLikeResponse>(`/palettes/${paletteId}/like`, {
+    method: 'DELETE',
+    body: JSON.stringify({ deviceId: getDeviceId() }),
+  });
 }
 
 /**
- * Get like info for a palette (count and user's like status)
+ * Get like info for a palette (count and user's like status).
+ * Passes deviceId so anonymous users can see their own like state.
  */
 export async function getLikeInfo(
   paletteId: string
 ): Promise<LikeInfoResponse> {
-  return apiGet<LikeInfoResponse>(`/palettes/${paletteId}/likes`);
+  const deviceId = getDeviceId();
+  return apiGet<LikeInfoResponse>(
+    `/palettes/${paletteId}/likes?deviceId=${deviceId}`
+  );
 }
 
 /**

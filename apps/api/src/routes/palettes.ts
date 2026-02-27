@@ -199,22 +199,25 @@ router.post('/:id/save', async (req: AuthenticatedRequest, res: Response) => {
 
 /**
  * POST /palettes/:id/like
- * Like a palette
+ * Like a palette — works for authenticated AND anonymous users.
+ * Anonymous users are identified by a deviceId in the request body.
  */
 router.post('/:id/like', async (req: AuthenticatedRequest, res: Response) => {
   try {
-    if (!req.user) {
-      res.status(401).json({ error: 'Unauthorized' });
+    const paletteId = String(req.params.id);
+    const { deviceId } = req.body as { deviceId?: string };
+
+    let user;
+    if (req.user) {
+      user = await paletteService.getOrCreateUser(req.user.uid, req.user.email);
+    } else if (deviceId) {
+      user = await paletteService.getOrCreateAnonymousUser(deviceId);
+    } else {
+      res
+        .status(400)
+        .json({ error: 'Must be logged in or provide a deviceId' });
       return;
     }
-
-    const paletteId = String(req.params.id);
-
-    // Get or create user
-    const user = await paletteService.getOrCreateUser(
-      req.user.uid,
-      req.user.email
-    );
 
     // Like palette
     const result = await paletteService.likePalette(user.id, paletteId);
@@ -234,22 +237,24 @@ router.post('/:id/like', async (req: AuthenticatedRequest, res: Response) => {
 
 /**
  * DELETE /palettes/:id/like
- * Unlike a palette
+ * Unlike a palette — works for authenticated AND anonymous users.
  */
 router.delete('/:id/like', async (req: AuthenticatedRequest, res: Response) => {
   try {
-    if (!req.user) {
-      res.status(401).json({ error: 'Unauthorized' });
+    const paletteId = String(req.params.id);
+    const { deviceId } = req.body as { deviceId?: string };
+
+    let user;
+    if (req.user) {
+      user = await paletteService.getOrCreateUser(req.user.uid, req.user.email);
+    } else if (deviceId) {
+      user = await paletteService.getOrCreateAnonymousUser(deviceId);
+    } else {
+      res
+        .status(400)
+        .json({ error: 'Must be logged in or provide a deviceId' });
       return;
     }
-
-    const paletteId = String(req.params.id);
-
-    // Get or create user
-    const user = await paletteService.getOrCreateUser(
-      req.user.uid,
-      req.user.email
-    );
 
     // Unlike palette
     const result = await paletteService.unlikePalette(user.id, paletteId);
@@ -269,13 +274,15 @@ router.delete('/:id/like', async (req: AuthenticatedRequest, res: Response) => {
 
 /**
  * GET /palettes/:id/likes
- * Get like count and user's like status for a palette
+ * Get like count and user's like status for a palette.
+ * Supports anonymous users via ?deviceId= query param.
  */
 router.get('/:id/likes', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const paletteId = String(req.params.id);
+    const { deviceId } = req.query as { deviceId?: string };
 
-    // Get user if authenticated
+    // Resolve user ID from auth token or deviceId
     let userId: string | null = null;
     if (req.user) {
       const user = await paletteService.getOrCreateUser(
@@ -283,6 +290,9 @@ router.get('/:id/likes', async (req: AuthenticatedRequest, res: Response) => {
         req.user.email
       );
       userId = user.id;
+    } else if (deviceId) {
+      const anonUser = await paletteService.getOrCreateAnonymousUser(deviceId);
+      userId = anonUser.id;
     }
 
     // Get like info
