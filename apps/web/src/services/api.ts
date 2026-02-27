@@ -161,7 +161,10 @@ export interface LikeInfoResponse {
 export async function createPalette(
   data: CreatePaletteRequest
 ): Promise<PaletteResponse> {
-  return apiPost<PaletteResponse>('/palettes', data);
+  return apiPost<PaletteResponse>('/palettes', {
+    ...data,
+    deviceId: getDeviceId(),
+  });
 }
 
 /**

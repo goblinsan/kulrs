@@ -34,6 +34,8 @@ export const createPaletteSchema = z.object({
   description: z.string().max(1000).optional(),
   isPublic: z.boolean().default(true),
   tagIds: z.array(z.string().uuid()).optional(),
+  // Anonymous users send a deviceId for palette creation
+  deviceId: z.string().optional(),
 });
 
 export type CreatePaletteInput = z.infer<typeof createPaletteSchema>;

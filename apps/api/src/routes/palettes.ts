@@ -119,7 +119,14 @@ router.get('/:id', async (req: Request, res: Response) => {
  */
 router.post('/', async (req: AuthenticatedRequest, res: Response) => {
   try {
-    if (!req.user) {
+    // Resolve user — authenticated or anonymous via deviceId
+    const { deviceId } = req.body as { deviceId?: string };
+    let user;
+    if (req.user) {
+      user = await paletteService.getOrCreateUser(req.user.uid, req.user.email);
+    } else if (deviceId) {
+      user = await paletteService.getOrCreateAnonymousUser(deviceId);
+    } else {
       res.status(401).json({ error: 'Unauthorized' });
       return;
     }
@@ -133,12 +140,6 @@ router.post('/', async (req: AuthenticatedRequest, res: Response) => {
       });
       return;
     }
-
-    // Get or create user
-    const user = await paletteService.getOrCreateUser(
-      req.user.uid,
-      req.user.email
-    );
 
     // Create palette
     const palette = await paletteService.createPalette(

@@ -145,6 +145,24 @@ export class PaletteService {
   async getOrCreateAnonymousUser(deviceId: string) {
     const anonUid = `anon-${deviceId}`;
 
+    // Use upsert to safely handle concurrent requests for the same deviceId.
+    // ON CONFLICT DO NOTHING avoids unique-constraint errors when multiple
+    // requests race to create the same anonymous user.
+    const inserted = await db
+      .insert(users)
+      .values({
+        firebaseUid: anonUid,
+        email: '',
+      })
+      .onConflictDoNothing({ target: users.firebaseUid })
+      .returning({
+        id: users.id,
+        firebaseUid: users.firebaseUid,
+      });
+
+    if (inserted.length > 0) return inserted[0];
+
+    // INSERT was a no-op (user already existed) — fetch the existing row
     const [existing] = await db
       .select({
         id: users.id,
@@ -154,20 +172,7 @@ export class PaletteService {
       .where(eq(users.firebaseUid, anonUid))
       .limit(1);
 
-    if (existing) return existing;
-
-    const result = await db
-      .insert(users)
-      .values({
-        firebaseUid: anonUid,
-        email: '',
-      })
-      .returning({
-        id: users.id,
-        firebaseUid: users.firebaseUid,
-      });
-
-    return result[0];
+    return existing;
   }
 
   /**
