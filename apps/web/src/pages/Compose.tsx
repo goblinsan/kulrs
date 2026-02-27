@@ -12,6 +12,7 @@ import {
   type ScaleType,
   type KeySignature,
   type ChordSuggestion,
+  type ProgressionPreset,
   PROGRESSION_PRESETS,
   paletteToHarmonicComposition,
   progressionToComposition,
@@ -223,62 +224,28 @@ export function Compose() {
   }, []);
 
   const addColor = useCallback(() => {
-    let newHex: string;
+    if (!composition) return;
 
-    if (selectedPreset !== null) {
-      // Preset selected — derive the next step from the preset's degree cycle
-      const preset = PROGRESSION_PRESETS[selectedPreset];
-      const currentLen = hexColors.length;
-      const nextDegreeIdx = currentLen % preset.degrees.length;
+    // Determine the base pattern length
+    const baseLen = selectedPreset !== null
+      ? PROGRESSION_PRESETS[selectedPreset].degrees.length
+      : (originalColors.length || composition.steps.length);
 
-      if (mode === 'palette') {
-        // Build a temporary composition with one extra degree from the preset
-        const sourceColors =
-          originalColors.length > 0 ? originalColors : hexColors;
-        const extendedPreset = {
-          ...preset,
-          degrees: [
-            ...preset.degrees.slice(0, currentLen),
-            preset.degrees[nextDegreeIdx],
-          ],
-        };
-        const result = applyPresetToPalette(
-          sourceColors,
-          extendedPreset,
-          selectedScale,
-          tempo
-        );
-        const addedStep = result.steps[result.steps.length - 1];
-        newHex = addedStep.hex;
-      } else {
-        // Chords mode — generate color from the chord at the next degree
-        const comp = progressionToComposition(
-          selectedKey,
-          selectedScale,
-          { ...preset, degrees: [preset.degrees[nextDegreeIdx]] },
-          4,
-          tempo
-        );
-        newHex = comp.steps[0].hex;
-      }
-    } else {
-      // No preset — cycle through existing palette colors
-      const currentLen = hexColors.length;
-      newHex = hexColors[currentLen % hexColors.length] || '#AAAAAA';
-    }
+    // Clone the step at the cycling position in the base pattern
+    const currentLen = composition.steps.length;
+    const sourceIdx = currentLen % baseLen;
+    const sourceStep = composition.steps[Math.min(sourceIdx, composition.steps.length - 1)];
 
+    const newHex = sourceStep.hex;
     setHexColors(prev => [...prev, newHex]);
     setComposition(prev => {
       if (!prev) return prev;
-      const oklch = hexToOklchApprox(newHex);
-      const chord = colorToChord(oklch);
-      const newComp = {
+      return {
         ...prev,
-        steps: [...prev.steps, { hex: newHex, oklch, chord }],
+        steps: [...prev.steps, { ...sourceStep }],
       };
-      return newComp;
     });
-  }, [selectedPreset, hexColors, originalColors, mode, selectedKey, selectedScale, tempo]);
+  }, [composition, selectedPreset, originalColors.length]);
 
   const removeColor = useCallback(
     (index: number) => {
@@ -356,6 +323,94 @@ export function Compose() {
       return { ...prev, steps };
     });
   }, []);
+
+  // ── Section builders (Chorus / Bridge / Key Change) ────────────────────
+
+  const BRIDGE_DEGREES: ProgressionPreset = {
+    name: 'Bridge',
+    degrees: [6, 4, 1, 5],
+    description: 'Classic bridge: vi–IV–I–V',
+  };
+
+  const addSection = useCallback(
+    (sectionSteps: ColorMusicMapping[]) => {
+      const newHexes = sectionSteps.map(s => s.hex);
+      setHexColors(prev => [...prev, ...newHexes]);
+      setComposition(prev => {
+        if (!prev) return prev;
+        const newComp = { ...prev, steps: [...prev.steps, ...sectionSteps] };
+        redetectKey(newComp);
+        return newComp;
+      });
+    },
+    [redetectKey]
+  );
+
+  const handleAddChorus = useCallback(() => {
+    if (!composition) return;
+    // Repeat the base pattern (the core progression)
+    const baseLen = selectedPreset !== null
+      ? PROGRESSION_PRESETS[selectedPreset].degrees.length
+      : (originalColors.length || composition.steps.length);
+    const baseSteps = composition.steps.slice(0, baseLen);
+    addSection(baseSteps);
+  }, [composition, selectedPreset, originalColors.length, addSection]);
+
+  const handleAddBridge = useCallback(() => {
+    if (!composition || !detectedKey) return;
+    const bridgeComp = progressionToComposition(
+      detectedKey.root,
+      detectedKey.scale,
+      BRIDGE_DEGREES,
+      4,
+      tempo
+    );
+    addSection(bridgeComp.steps);
+  }, [composition, detectedKey, tempo, addSection]);
+
+  const handleKeyChange = useCallback(() => {
+    if (!composition || !detectedKey) return;
+    const shift = 2; // whole step up
+    const newRootIdx = (NOTE_NAMES.indexOf(detectedKey.root) + shift) % 12;
+    const newRoot = NOTE_NAMES[newRootIdx];
+
+    // Transpose the base pattern into the new key
+    const baseLen = selectedPreset !== null
+      ? PROGRESSION_PRESETS[selectedPreset].degrees.length
+      : (originalColors.length || composition.steps.length);
+    const baseSteps = composition.steps.slice(0, baseLen);
+
+    const transposed: ColorMusicMapping[] = baseSteps.map(step => {
+      const rootIdx = NOTE_NAMES.indexOf(step.chord.root.name);
+      const newNoteRoot = NOTE_NAMES[(rootIdx + shift) % 12];
+      const newChord = buildChordStep(
+        newNoteRoot,
+        step.chord.root.octave,
+        step.chord.quality,
+        step.chord.velocity,
+        step.chord.beats
+      );
+      const newHex = chordToHex(newNoteRoot, step.chord.quality);
+      const oklch = hexToOklchApprox(newHex);
+      return { hex: newHex, oklch, chord: newChord };
+    });
+
+    const newHexes = transposed.map(s => s.hex);
+    setHexColors(prev => [...prev, ...newHexes]);
+    setComposition(prev => {
+      if (!prev) return prev;
+      return { ...prev, steps: [...prev.steps, ...transposed] };
+    });
+
+    // Update key to the new transposed key
+    const newKey: KeySignature = {
+      root: newRoot as NoteName,
+      scale: detectedKey.scale,
+      label: `${newRoot} ${detectedKey.scale}`,
+    };
+    setDetectedKey(newKey);
+    setSelectedKey(newRoot as NoteName);
+  }, [composition, detectedKey, selectedPreset, originalColors.length, tempo]);
 
   // ── Harmonize all ──────────────────────────────────────────────────────
 
@@ -639,6 +694,19 @@ export function Compose() {
           </button>
           <button className="toolbar-btn" onClick={addColor}>
             <i className="fa-solid fa-plus" /> Add Step
+          </button>
+        </div>
+
+        <div className="toolbar-group section-group">
+          <span className="section-label">Sections:</span>
+          <button className="toolbar-btn section-btn" onClick={handleAddChorus} title="Repeat the core progression as a chorus">
+            <i className="fa-solid fa-repeat" /> Chorus
+          </button>
+          <button className="toolbar-btn section-btn" onClick={handleAddBridge} title="Add a contrasting bridge section (vi–IV–I–V)">
+            <i className="fa-solid fa-bridge" /> Bridge
+          </button>
+          <button className="toolbar-btn section-btn" onClick={handleKeyChange} title="Transpose the pattern up a whole step">
+            <i className="fa-solid fa-arrow-up-right-dots" /> Key Change
           </button>
         </div>
 

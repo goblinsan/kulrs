@@ -219,6 +219,26 @@
   color: #e63946;
 }
 
+/* ── Section buttons ────────────────────────────────────────────────────── */
+
+.section-group {
+  border-left: 1px solid #333;
+  padding-left: 0.75rem;
+}
+
+.section-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #555;
+  margin-right: 0.1rem;
+}
+
+.section-btn {
+  font-size: 0.8rem !important;
+  padding: 0.4rem 0.75rem !important;
+}
+
 .tempo-label {
   display: flex;
   align-items: center;
