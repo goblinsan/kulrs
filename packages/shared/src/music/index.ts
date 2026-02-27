@@ -16,3 +16,19 @@ export {
   midiToFrequency,
   buildChordStep,
 } from './mappings.js';
+
+export {
+  type ScaleType,
+  type KeySignature,
+  type ChordInKey,
+  type ProgressionPreset,
+  type ChordSuggestion,
+  PROGRESSION_PRESETS,
+  getChordsInKey,
+  progressionToChords,
+  progressionToComposition,
+  detectKey,
+  suggestAlternatives,
+  paletteToHarmonicComposition,
+  chordToHex,
+} from './theory.js';

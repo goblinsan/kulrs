@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, forwardRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import {
-  paletteToComposition,
   buildChordStep,
   hexToOklchApprox,
   colorToChord,
@@ -10,10 +9,21 @@ import {
   type ChordQuality,
   type Composition,
   type ColorMusicMapping,
+  type ScaleType,
+  type KeySignature,
+  type ChordSuggestion,
+  PROGRESSION_PRESETS,
+  paletteToHarmonicComposition,
+  progressionToComposition,
+  detectKey,
+  suggestAlternatives,
+  chordToHex,
 } from '@kulrs/shared';
 import { playComposition, stopPlayback } from '../audio/playback';
 import { downloadMidi } from '../audio/midi-export';
 import './Compose.css';
+
+type ComposeMode = 'palette' | 'chords';
 
 const CHORD_QUALITIES: ChordQuality[] = [
   'major',
@@ -25,6 +35,13 @@ const CHORD_QUALITIES: ChordQuality[] = [
   'dom7',
   'min7',
   'maj7',
+];
+
+const SCALE_TYPES: { value: ScaleType; label: string }[] = [
+  { value: 'major', label: 'Major' },
+  { value: 'minor', label: 'Minor' },
+  { value: 'dorian', label: 'Dorian' },
+  { value: 'mixolydian', label: 'Mixolydian' },
 ];
 
 const DEFAULT_COLORS = ['#E63946', '#457B9D', '#2A9D8F', '#E9C46A', '#F4A261'];
@@ -59,11 +76,15 @@ function parseColorsFromParams(searchParams: URLSearchParams): string[] | null {
 
 export function Compose() {
   const [searchParams] = useSearchParams();
+  const [mode, setMode] = useState<ComposeMode>('palette');
   const [composition, setComposition] = useState<Composition | null>(null);
   const [hexColors, setHexColors] = useState<string[]>([]);
   const [tempo, setTempo] = useState(100);
   const [playing, setPlaying] = useState(false);
   const [activeStep, setActiveStep] = useState(-1);
+  const [detectedKey, setDetectedKey] = useState<KeySignature | null>(null);
+  const [selectedKey, setSelectedKey] = useState<NoteName>('C');
+  const [selectedScale, setSelectedScale] = useState<ScaleType>('major');
   const stepsRef = useRef<(HTMLDivElement | null)[]>([]);
 
   // Initialise from URL or defaults
@@ -71,7 +92,9 @@ export function Compose() {
     const fromUrl = parseColorsFromParams(searchParams);
     const colors = fromUrl && fromUrl.length > 0 ? fromUrl : DEFAULT_COLORS;
     setHexColors(colors);
-    setComposition(paletteToComposition(colors, tempo));
+    const result = paletteToHarmonicComposition(colors, tempo);
+    setComposition(result);
+    setDetectedKey(result.detectedKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -81,6 +104,44 @@ export function Compose() {
       setComposition(prev => (prev ? { ...prev, tempo } : null));
     }
   }, [tempo, hexColors]);
+
+  // ── Mode switching ─────────────────────────────────────────────────────
+
+  const switchMode = useCallback(
+    (newMode: ComposeMode) => {
+      setMode(newMode);
+      if (newMode === 'palette' && hexColors.length > 0) {
+        const result = paletteToHarmonicComposition(hexColors, tempo);
+        setComposition(result);
+        setDetectedKey(result.detectedKey);
+      }
+    },
+    [hexColors, tempo]
+  );
+
+  // ── Progression presets (chords mode) ──────────────────────────────────
+
+  const loadPreset = useCallback(
+    (presetIndex: number) => {
+      const preset = PROGRESSION_PRESETS[presetIndex];
+      if (!preset) return;
+      const comp = progressionToComposition(
+        selectedKey,
+        selectedScale,
+        preset,
+        4,
+        tempo
+      );
+      setComposition(comp);
+      setHexColors(comp.steps.map(s => s.hex));
+      setDetectedKey({
+        root: selectedKey,
+        scale: selectedScale,
+        label: `${selectedKey} ${selectedScale}`,
+      });
+    },
+    [selectedKey, selectedScale, tempo]
+  );
 
   // ── Colour editing ─────────────────────────────────────────────────────
 
@@ -96,8 +157,15 @@ export function Compose() {
       const oklch = hexToOklchApprox(newHex);
       const chord = colorToChord(oklch);
       steps[index] = { hex: newHex, oklch, chord };
-      return { ...prev, steps };
+      const newComp = { ...prev, steps };
+      return newComp;
     });
+  }, []);
+
+  // Re-detect key whenever composition changes meaningfully
+  const redetectKey = useCallback((comp: Composition) => {
+    const key = detectKey(comp.steps.map(s => s.chord));
+    setDetectedKey(key);
   }, []);
 
   const addColor = useCallback(() => {
@@ -110,20 +178,29 @@ export function Compose() {
       if (!prev) return prev;
       const oklch = hexToOklchApprox(newHex);
       const chord = colorToChord(oklch);
-      return { ...prev, steps: [...prev.steps, { hex: newHex, oklch, chord }] };
+      const newComp = {
+        ...prev,
+        steps: [...prev.steps, { hex: newHex, oklch, chord }],
+      };
+      return newComp;
     });
   }, []);
 
   const removeColor = useCallback(
     (index: number) => {
-      if (hexColors.length <= 2) return; // need at least 2
+      if (hexColors.length <= 2) return;
       setHexColors(prev => prev.filter((_, i) => i !== index));
       setComposition(prev => {
         if (!prev) return prev;
-        return { ...prev, steps: prev.steps.filter((_, i) => i !== index) };
+        const newComp = {
+          ...prev,
+          steps: prev.steps.filter((_, i) => i !== index),
+        };
+        redetectKey(newComp);
+        return newComp;
       });
     },
-    [hexColors.length]
+    [hexColors.length, redetectKey]
   );
 
   // ── Chord editing ──────────────────────────────────────────────────────
@@ -140,11 +217,38 @@ export function Compose() {
         const steps = [...prev.steps];
         const oldStep = steps[index];
         const newChord = buildChordStep(rootName, octave, quality);
-        steps[index] = { ...oldStep, chord: newChord };
-        return { ...prev, steps };
+        // In chords mode, also update the colour to match the chord
+        const newHex =
+          mode === 'chords' ? chordToHex(rootName, quality) : oldStep.hex;
+        const oklch = hexToOklchApprox(newHex);
+        steps[index] = { hex: newHex, oklch, chord: newChord };
+        const newComp = { ...prev, steps };
+        redetectKey(newComp);
+        if (mode === 'chords') {
+          setHexColors(prevH => {
+            const n = [...prevH];
+            n[index] = newHex;
+            return n;
+          });
+        }
+        return newComp;
       });
     },
-    []
+    [mode, redetectKey]
+  );
+
+  const applySuggestion = useCallback(
+    (index: number, suggestion: ChordSuggestion) => {
+      if (!composition) return;
+      const oldStep = composition.steps[index];
+      updateChord(
+        index,
+        suggestion.root,
+        oldStep.chord.root.octave,
+        suggestion.quality
+      );
+    },
+    [composition, updateChord]
   );
 
   const updateBeats = useCallback((index: number, beats: number) => {
@@ -158,6 +262,15 @@ export function Compose() {
       return { ...prev, steps };
     });
   }, []);
+
+  // ── Harmonise all ──────────────────────────────────────────────────────
+
+  const harmoniseAll = useCallback(() => {
+    if (hexColors.length === 0) return;
+    const result = paletteToHarmonicComposition(hexColors, tempo);
+    setComposition(result);
+    setDetectedKey(result.detectedKey);
+  }, [hexColors, tempo]);
 
   // ── Playback ───────────────────────────────────────────────────────────
 
@@ -205,12 +318,90 @@ export function Compose() {
         <h1>
           <i className="fa-solid fa-music" /> Compose
         </h1>
+
+        {/* Mode toggle */}
+        <div className="mode-toggle">
+          <button
+            className={`mode-btn ${mode === 'palette' ? 'active' : ''}`}
+            onClick={() => switchMode('palette')}
+          >
+            <i className="fa-solid fa-palette" /> Palette → Music
+          </button>
+          <button
+            className={`mode-btn ${mode === 'chords' ? 'active' : ''}`}
+            onClick={() => switchMode('chords')}
+          >
+            <i className="fa-solid fa-guitar" /> Chords → Palette
+          </button>
+        </div>
+
         <p className="compose-subtitle">
-          Each colour maps to a chord — hue sets the root note, lightness the
-          octave, and saturation the chord quality. Tweak colours or chords,
-          then play or export as MIDI.
+          {mode === 'palette'
+            ? 'Colours are snapped to the nearest key so the progression sounds harmonious. Tweak colours or chords, then play or export.'
+            : 'Pick a key, choose a chord progression preset, and generate a colour palette from the music.'}
         </p>
+
+        {/* Key display */}
+        {detectedKey && (
+          <div className="key-badge">
+            <i className="fa-solid fa-key" />
+            {mode === 'palette' ? 'Detected key' : 'Key'}:{' '}
+            <strong>{detectedKey.label}</strong>
+            {mode === 'palette' && (
+              <button className="harmonise-btn" onClick={harmoniseAll}>
+                <i className="fa-solid fa-wand-magic-sparkles" /> Re-harmonise
+              </button>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* ── Chord progression presets (chords mode) ───────────────── */}
+      {mode === 'chords' && (
+        <div className="preset-panel">
+          <div className="preset-key-select">
+            <label className="step-field">
+              <span>Key</span>
+              <select
+                value={selectedKey}
+                onChange={e => setSelectedKey(e.target.value as NoteName)}
+              >
+                {NOTE_NAMES.map(n => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="step-field">
+              <span>Scale</span>
+              <select
+                value={selectedScale}
+                onChange={e => setSelectedScale(e.target.value as ScaleType)}
+              >
+                {SCALE_TYPES.map(s => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div className="preset-grid">
+            {PROGRESSION_PRESETS.map((p, i) => (
+              <button
+                key={p.name}
+                className="preset-btn"
+                onClick={() => loadPreset(i)}
+                title={p.description}
+              >
+                <span className="preset-name">{p.name}</span>
+                <span className="preset-desc">{p.description}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── Toolbar ───────────────────────────────────────────────── */}
       <div className="compose-toolbar">
@@ -266,10 +457,13 @@ export function Compose() {
             step={step}
             active={activeStep === i}
             canRemove={composition.steps.length > 2}
+            allChords={composition.steps.map(s => s.chord)}
+            mode={mode}
             onColorChange={hex => updateColor(i, hex)}
             onChordChange={(root, oct, qual) => updateChord(i, root, oct, qual)}
             onBeatsChange={b => updateBeats(i, b)}
             onRemove={() => removeColor(i)}
+            onApplySuggestion={s => applySuggestion(i, s)}
             ref={el => {
               stepsRef.current[i] = el;
             }}
@@ -291,13 +485,15 @@ export function Compose() {
 // Step Card component
 // ═══════════════════════════════════════════════════════════════════════════
 
-import { forwardRef } from 'react';
+import type { ChordStep } from '@kulrs/shared';
 
 interface StepCardProps {
   index: number;
   step: ColorMusicMapping;
   active: boolean;
   canRemove: boolean;
+  allChords: ChordStep[];
+  mode: ComposeMode;
   onColorChange: (hex: string) => void;
   onChordChange: (
     root: NoteName,
@@ -306,6 +502,7 @@ interface StepCardProps {
   ) => void;
   onBeatsChange: (beats: number) => void;
   onRemove: () => void;
+  onApplySuggestion: (s: ChordSuggestion) => void;
 }
 
 const StepCard = forwardRef<HTMLDivElement, StepCardProps>(function StepCard(
@@ -314,32 +511,70 @@ const StepCard = forwardRef<HTMLDivElement, StepCardProps>(function StepCard(
     step,
     active,
     canRemove,
+    allChords,
+    mode,
     onColorChange,
     onChordChange,
     onBeatsChange,
     onRemove,
+    onApplySuggestion,
   },
   ref
 ) {
   const { chord, hex } = step;
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestions = showSuggestions
+    ? suggestAlternatives(chord, allChords)
+    : [];
 
   return (
     <div ref={ref} className={`step-card ${active ? 'active' : ''}`}>
       {/* Colour column */}
       <div className="step-colour" style={{ backgroundColor: hex }}>
         <span className="step-number">{index + 1}</span>
-        <input
-          type="color"
-          value={hex}
-          onChange={e => onColorChange(e.target.value.toUpperCase())}
-          className="colour-picker-input"
-          title="Change colour"
-        />
+        {mode === 'palette' && (
+          <input
+            type="color"
+            value={hex}
+            onChange={e => onColorChange(e.target.value.toUpperCase())}
+            className="colour-picker-input"
+            title="Change colour"
+          />
+        )}
       </div>
 
       {/* Music details */}
       <div className="step-details">
-        <div className="step-chord-label">{chord.label}</div>
+        <div className="step-chord-row">
+          <div className="step-chord-label">{chord.label}</div>
+          <button
+            className={`suggest-toggle ${showSuggestions ? 'open' : ''}`}
+            onClick={() => setShowSuggestions(v => !v)}
+            title="Show chord alternatives"
+          >
+            <i className="fa-solid fa-lightbulb" />
+          </button>
+        </div>
+
+        {/* Suggestions dropdown */}
+        {showSuggestions && suggestions.length > 0 && (
+          <div className="suggestions-panel">
+            {suggestions.map((s, si) => (
+              <button
+                key={si}
+                className="suggestion-btn"
+                onClick={() => {
+                  onApplySuggestion(s);
+                  setShowSuggestions(false);
+                }}
+                title={s.reason}
+              >
+                <span className="suggestion-label">{s.label}</span>
+                <span className="suggestion-reason">{s.reason}</span>
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="step-controls">
           {/* Root note */}
