@@ -123,6 +123,35 @@
   gap: 0.25rem;
 }
 
+.browse-like-button {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid #444;
+  border-radius: 4px;
+  background: transparent;
+  color: #888;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.15s ease;
+}
+
+.browse-like-button:hover {
+  border-color: #ff6b8a;
+  color: #ff6b8a;
+}
+
+.browse-like-button.liked {
+  border-color: #ff6b8a;
+  color: #ff6b8a;
+}
+
+.browse-like-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .copy-id-button {
   padding: 0.15rem 0.5rem;
   border: 1px solid #444;

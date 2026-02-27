@@ -3,6 +3,9 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   browsePalettes,
   getMyPalettes,
+  likePalette,
+  unlikePalette,
+  getLikeInfo,
   type BrowsePalette,
 } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -26,6 +29,62 @@ function CopyIdButton({ paletteId }: { paletteId: string }) {
       title={`Copy palette ID: ${paletteId}`}
     >
       {copied ? '✓ Copied' : 'Copy ID'}
+    </button>
+  );
+}
+
+function LikeButton({
+  paletteId,
+  initialCount,
+}: {
+  paletteId: string;
+  initialCount: number;
+}) {
+  const [liked, setLiked] = useState(false);
+  const [count, setCount] = useState(initialCount);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    getLikeInfo(paletteId)
+      .then(res => {
+        setLiked(res.data.userLiked);
+        setCount(res.data.likesCount);
+        setLoaded(true);
+      })
+      .catch(() => setLoaded(true));
+  }, [paletteId]);
+
+  const handleClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newLiked = !liked;
+    setLiked(newLiked);
+    setCount(prev => (newLiked ? prev + 1 : Math.max(0, prev - 1)));
+
+    try {
+      if (newLiked) {
+        const result = await likePalette(paletteId);
+        if (result.data.likesCount !== undefined)
+          setCount(result.data.likesCount);
+      } else {
+        const result = await unlikePalette(paletteId);
+        if (result.data.likesCount !== undefined)
+          setCount(result.data.likesCount);
+      }
+    } catch {
+      setLiked(!newLiked);
+      setCount(prev => (newLiked ? Math.max(0, prev - 1) : prev + 1));
+    }
+  };
+
+  return (
+    <button
+      className={`browse-like-button ${liked ? 'liked' : ''}`}
+      onClick={handleClick}
+      disabled={!loaded}
+      title={liked ? 'Unlike' : 'Like'}
+    >
+      <i className={`fa-${liked ? 'solid' : 'regular'} fa-heart`}></i>
+      {count > 0 ? ` ${count}` : ''}
     </button>
   );
 }
@@ -165,7 +224,10 @@ export function Browse() {
               </div>
               <div className="palette-info">
                 <div className="palette-stats">
-                  <span className="likes">❤️ {palette.likesCount}</span>
+                  <LikeButton
+                    paletteId={palette.id}
+                    initialCount={palette.likesCount}
+                  />
                   <CopyIdButton paletteId={palette.id} />
                   <span className="date">
                     {new Date(palette.createdAt).toLocaleDateString()}

@@ -60,26 +60,36 @@ export function Home() {
     setLiked(newLiked);
     setLikeCount(prev => (newLiked ? prev + 1 : Math.max(0, prev - 1)));
 
-    // If palette is saved and user is logged in, persist to API
-    if (paletteId && user) {
-      try {
-        if (newLiked) {
-          const result = await likePalette(paletteId);
-          if (result.data.likesCount !== undefined) {
-            setLikeCount(result.data.likesCount);
-          }
-        } else {
-          const result = await unlikePalette(paletteId);
-          if (result.data.likesCount !== undefined) {
-            setLikeCount(result.data.likesCount);
-          }
-        }
-      } catch (error) {
-        // Revert on error
-        setLiked(!newLiked);
-        setLikeCount(prev => (newLiked ? Math.max(0, prev - 1) : prev + 1));
-        console.error('Failed to update like:', error);
+    try {
+      // Auto-save palette to DB first if it hasn't been saved yet
+      let id = paletteId;
+      if (!id) {
+        // Creating a palette requires auth — if not logged in, like is local-only
+        if (!user) return;
+        const result = await apiPost<{
+          success: boolean;
+          data: { id: string; likesCount: number };
+        }>('/palettes', { palette });
+        id = result.data.id;
+        setPaletteId(id);
       }
+
+      if (newLiked) {
+        const result = await likePalette(id);
+        if (result.data.likesCount !== undefined) {
+          setLikeCount(result.data.likesCount);
+        }
+      } else {
+        const result = await unlikePalette(id);
+        if (result.data.likesCount !== undefined) {
+          setLikeCount(result.data.likesCount);
+        }
+      }
+    } catch (error) {
+      // Revert on error
+      setLiked(!newLiked);
+      setLikeCount(prev => (newLiked ? Math.max(0, prev - 1) : prev + 1));
+      console.error('Failed to update like:', error);
     }
   };
 

@@ -343,6 +343,10 @@ export class PaletteService {
     if (userId) {
       conditions.push(eq(palettes.userId, userId));
     }
+    // For popular sort, only show palettes that have at least one like
+    if (sort === 'popular') {
+      conditions.push(sql`${palettes.likesCount} > 0`);
+    }
 
     // Build order by
     const orderBy =

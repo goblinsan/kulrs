@@ -9,7 +9,13 @@ import {
 import { PaletteDisplay } from '../components/palette/PaletteDisplay';
 import { ColorExportTable } from '../components/palette/ColorExportTable';
 import { usePaletteActions } from '../hooks/usePaletteActions';
-import { getPaletteById, type BrowsePalette } from '../services/api';
+import {
+  getPaletteById,
+  getLikeInfo,
+  likePalette as likePaletteApi,
+  unlikePalette as unlikePaletteApi,
+  type BrowsePalette,
+} from '../services/api';
 import './PaletteDetail.css';
 
 // Check if a string looks like a UUID (existing palette ID)
@@ -93,7 +99,6 @@ export function PaletteDetail() {
     error: apiError,
     createPaletteInDb,
     saveExistingPalette,
-    likePalette: likePaletteAction,
   } = usePaletteActions();
 
   const [palette, setPalette] = useState<GeneratedPalette | null>(null);
@@ -102,6 +107,7 @@ export function PaletteDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
   const timeoutRef = useRef<number | null>(null);
   const navigate = useNavigate();
@@ -178,6 +184,17 @@ export function PaletteDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
+  // Load like state when paletteId is available
+  useEffect(() => {
+    if (!paletteId) return;
+    getLikeInfo(paletteId)
+      .then(res => {
+        setIsLiked(res.data.userLiked);
+        setLikeCount(res.data.likesCount);
+      })
+      .catch(err => console.error('Error loading like info:', err));
+  }, [paletteId]);
+
   // Helper to show feedback with auto-dismiss
   const showFeedback = (message: string, duration = 3000) => {
     if (timeoutRef.current !== null) {
@@ -247,16 +264,29 @@ export function PaletteDetail() {
       return;
     }
 
-    const result = await likePaletteAction(paletteId);
-    if (result.success) {
-      if (result.alreadyLiked) {
-        showFeedback('Already liked');
+    // Optimistic toggle
+    const newLiked = !isLiked;
+    setIsLiked(newLiked);
+    setLikeCount(prev => (newLiked ? prev + 1 : Math.max(0, prev - 1)));
+
+    try {
+      if (newLiked) {
+        const result = await likePaletteApi(paletteId);
+        if (result.data.likesCount !== undefined) {
+          setLikeCount(result.data.likesCount);
+        }
       } else {
-        showFeedback('Liked!');
-        setIsLiked(true);
+        const result = await unlikePaletteApi(paletteId);
+        if (result.data.likesCount !== undefined) {
+          setLikeCount(result.data.likesCount);
+        }
       }
-    } else {
-      showFeedback('Failed to like palette. Please try again.');
+    } catch (error) {
+      // Revert on error
+      setIsLiked(!newLiked);
+      setLikeCount(prev => (newLiked ? Math.max(0, prev - 1) : prev + 1));
+      showFeedback('Failed to update like. Please try again.');
+      console.error('Failed to update like:', error);
     }
   };
 
@@ -286,10 +316,11 @@ export function PaletteDetail() {
             className={`action-button like-button ${isLiked ? 'active' : ''}`}
             disabled={loading || !paletteId}
             aria-label="Like this palette"
-            title="Like this palette"
+            title={isLiked ? 'Unlike this palette' : 'Like this palette'}
           >
             <i className={`fa-${isLiked ? 'solid' : 'regular'} fa-heart`}></i>
             {isLiked ? 'Liked' : 'Like'}
+            {likeCount > 0 ? ` (${likeCount})` : ''}
           </button>
           <button
             onClick={handleCopyShareLink}

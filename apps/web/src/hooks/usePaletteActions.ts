@@ -4,6 +4,7 @@ import {
   createPalette,
   savePalette as savePaletteApi,
   likePalette as likePaletteApi,
+  unlikePalette as unlikePaletteApi,
   remixPalette as remixPaletteApi,
   type CreatePaletteRequest,
 } from '../services/api';
@@ -111,6 +112,31 @@ export function usePaletteActions() {
   };
 
   /**
+   * Unlike a palette
+   */
+  const unlikePalette = async (
+    paletteId: string
+  ): Promise<{ success: boolean; wasLiked?: boolean }> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await unlikePaletteApi(paletteId);
+      return {
+        success: true,
+        wasLiked: response.data.wasLiked,
+      };
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to unlike palette';
+      setError(message);
+      console.error('Error unliking palette:', err);
+      return { success: false };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
    * Remix a palette
    */
   const remixPalette = async (paletteId: string): Promise<string | null> => {
@@ -136,6 +162,7 @@ export function usePaletteActions() {
     createPaletteInDb,
     saveExistingPalette,
     likePalette,
+    unlikePalette,
     remixPalette,
   };
 }
