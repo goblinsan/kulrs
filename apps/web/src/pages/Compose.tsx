@@ -20,6 +20,7 @@ import {
   suggestAlternatives,
   chordToHex,
   applyPresetToPalette,
+  shiftPaletteToKey,
 } from '@kulrs/shared';
 import { playComposition, stopPlayback } from '../audio/playback';
 import { downloadMidi } from '../audio/midi-export';
@@ -162,6 +163,29 @@ export function Compose() {
       setComposition(prev => (prev ? { ...prev, tempo } : null));
     }
   }, [tempo, hexColors]);
+
+  // ── Key change (shift hues) ────────────────────────────────────────────
+
+  const handleChangeKey = useCallback(
+    (newKey: NoteName) => {
+      if (!detectedKey || newKey === detectedKey.root) {
+        setSelectedKey(newKey);
+        return;
+      }
+      const result = shiftPaletteToKey(
+        hexColors,
+        detectedKey.root,
+        newKey,
+        selectedScale,
+        tempo
+      );
+      setHexColors(result.steps.map(s => s.hex));
+      setComposition(result);
+      setDetectedKey(result.detectedKey);
+      setSelectedKey(newKey);
+    },
+    [detectedKey, hexColors, selectedScale, tempo]
+  );
 
   // ── Progression presets ─────────────────────────────────────────────────
 
@@ -599,11 +623,19 @@ export function Compose() {
       {/* ── Key / Scale selectors & Chord progression presets ───── */}
       <div className="preset-panel">
         <div className="preset-key-select">
+          {/* Root color swatch */}
+          {hexColors.length > 0 && (
+            <div
+              className="key-color-swatch"
+              style={{ backgroundColor: hexColors[0] }}
+              title={`Root color: ${hexColors[0]}`}
+            />
+          )}
           <label className="step-field">
             <span>Key</span>
             <select
               value={selectedKey}
-              onChange={e => setSelectedKey(e.target.value as NoteName)}
+              onChange={e => handleChangeKey(e.target.value as NoteName)}
             >
               {NOTE_NAMES.map(n => (
                 <option key={n} value={n}>

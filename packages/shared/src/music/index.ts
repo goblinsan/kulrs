@@ -31,5 +31,7 @@ export {
   suggestAlternatives,
   paletteToHarmonicComposition,
   chordToHex,
+  oklchToHexString,
   applyPresetToPalette,
+  shiftPaletteToKey,
 } from './theory.js';

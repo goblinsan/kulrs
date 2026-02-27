@@ -447,7 +447,7 @@ export function chordToHex(
 /**
  * Convert OKLCH to hex (simplified for the reverse mapping).
  */
-function oklchToHexString(l: number, c: number, h: number): string {
+export function oklchToHexString(l: number, c: number, h: number): string {
   // Approximate OKLCH → sRGB via Lab intermediary
   const labL = l * 100;
   const hRad = (h * Math.PI) / 180;
@@ -566,6 +566,51 @@ export function applyPresetToPalette(
     root: keyRoot,
     scale,
     label: `${keyRoot} ${scale}`,
+  };
+
+  return { tempo, steps, timeSignatureTop: 4, detectedKey: key };
+}
+
+// ── Shift palette to a new key ───────────────────────────────────────────
+
+/**
+ * Shift all palette colors so they map to a new key.
+ *
+ * Each color's hue is offset by `(targetSemitone - currentSemitone) * 30°`,
+ * keeping lightness and chroma intact. A new harmonic composition is built
+ * from the shifted colors.
+ */
+export function shiftPaletteToKey(
+  hexColors: string[],
+  fromRoot: NoteName,
+  toRoot: NoteName,
+  scale: ScaleType,
+  tempo = 100
+): Composition & { detectedKey: KeySignature } {
+  const fromIdx = NOTE_NAMES.indexOf(fromRoot);
+  const toIdx = NOTE_NAMES.indexOf(toRoot);
+  const semitoneDelta = (((toIdx - fromIdx) % 12) + 12) % 12;
+  const hueDelta = semitoneDelta * 30; // each semitone = 30° of hue
+
+  const shiftedHexColors = hexColors.map((hex) => {
+    const oklch = hexToOklchApprox(hex);
+    const newHue = (oklch.h + hueDelta) % 360;
+    return oklchToHexString(oklch.l, oklch.c, newHue);
+  });
+
+  // Build a harmonic composition in the new key
+  const diatonic = getChordsInKey(toRoot, scale);
+  const steps: ColorMusicMapping[] = shiftedHexColors.map((hex) => {
+    const oklch = hexToOklchApprox(hex);
+    const rawChord = colorToChord(oklch);
+    const snapped = snapToDiatonic(rawChord, diatonic);
+    return { hex, oklch, chord: snapped };
+  });
+
+  const key: KeySignature = {
+    root: toRoot,
+    scale,
+    label: `${toRoot} ${scale}`,
   };
 
   return { tempo, steps, timeSignatureTop: 4, detectedKey: key };
