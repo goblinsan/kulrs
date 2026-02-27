@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useCallback, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { PaletteGenerator } from '../components/palette/PaletteGenerator';
 import {
   type GeneratedPalette,
@@ -22,7 +22,24 @@ export function Home() {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+
+  // Restore palette from Compose tab if navigated back with state
+  useEffect(() => {
+    const state = location.state as {
+      paletteFromCompose?: GeneratedPalette;
+    } | null;
+    if (state?.paletteFromCompose) {
+      setPalette(state.paletteFromCompose);
+      setPaletteId(null);
+      setLiked(false);
+      setLikeCount(0);
+      setSaved(false);
+      // Clear the state so refreshing doesn't re-apply
+      window.history.replaceState({}, '');
+    }
+  }, [location.state]);
 
   const handlePaletteGenerated = (newPalette: GeneratedPalette) => {
     setPalette(newPalette);

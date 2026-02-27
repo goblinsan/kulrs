@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, forwardRef } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   buildChordStep,
   hexToOklchApprox,
@@ -21,6 +21,11 @@ import {
 } from '@kulrs/shared';
 import { playComposition, stopPlayback } from '../audio/playback';
 import { downloadMidi } from '../audio/midi-export';
+import {
+  createPalette as createPaletteApi,
+  type CreatePaletteRequest,
+} from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import './Compose.css';
 
 type ComposeMode = 'palette' | 'chords';
@@ -76,6 +81,8 @@ function parseColorsFromParams(searchParams: URLSearchParams): string[] | null {
 
 export function Compose() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [mode, setMode] = useState<ComposeMode>('palette');
   const [composition, setComposition] = useState<Composition | null>(null);
   const [hexColors, setHexColors] = useState<string[]>([]);
@@ -85,6 +92,8 @@ export function Compose() {
   const [detectedKey, setDetectedKey] = useState<KeySignature | null>(null);
   const [selectedKey, setSelectedKey] = useState<NoteName>('C');
   const [selectedScale, setSelectedScale] = useState<ScaleType>('major');
+  const [saving, setSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<string | null>(null);
   const stepsRef = useRef<(HTMLDivElement | null)[]>([]);
 
   // Initialise from URL or defaults
@@ -308,6 +317,94 @@ export function Compose() {
     downloadMidi(composition);
   };
 
+  // ── Save palette ───────────────────────────────────────────────────────
+
+  const handleSave = async () => {
+    if (!composition || saving) return;
+    setSaving(true);
+    setSaveStatus(null);
+    try {
+      const ROLES = [
+        'primary',
+        'secondary',
+        'accent',
+        'background',
+        'text',
+        'error',
+        'warning',
+        'success',
+        'info',
+      ];
+      const request: CreatePaletteRequest = {
+        palette: {
+          colors: composition.steps.map((step, i) => ({
+            role: ROLES[i % ROLES.length],
+            color: step.oklch,
+          })),
+          metadata: {
+            generator: 'compose',
+            explanation: detectedKey
+              ? `Composed in ${detectedKey.label}`
+              : 'Composed palette',
+            timestamp: new Date().toISOString(),
+          },
+        },
+        name: detectedKey
+          ? `Compose – ${detectedKey.label}`
+          : 'Composed palette',
+        description: detectedKey
+          ? `Palette composed in ${detectedKey.label}`
+          : 'Palette from the Compose tab',
+        isPublic: true,
+      };
+      const response = await createPaletteApi(request);
+      setSaveStatus(`Saved! ID: ${response.data.id}`);
+    } catch (err) {
+      console.error('Failed to save palette:', err);
+      setSaveStatus(user ? 'Failed to save' : 'Log in to save palettes');
+    } finally {
+      setSaving(false);
+      setTimeout(() => setSaveStatus(null), 4000);
+    }
+  };
+
+  // ── Navigate back with palette ─────────────────────────────────────────
+
+  const handleBackToGenerator = () => {
+    if (!composition) {
+      navigate('/');
+      return;
+    }
+    const ROLES = [
+      'primary',
+      'secondary',
+      'accent',
+      'background',
+      'text',
+      'error',
+      'warning',
+      'success',
+      'info',
+    ];
+    navigate('/', {
+      state: {
+        paletteFromCompose: {
+          colors: composition.steps.map((step, i) => ({
+            role: ROLES[i % ROLES.length],
+            color: step.oklch,
+          })),
+          metadata: {
+            generator: 'compose',
+            explanation: detectedKey
+              ? `Composed in ${detectedKey.label}`
+              : 'Composed palette',
+            timestamp: new Date().toISOString(),
+          },
+        },
+      },
+    });
+  };
+
   // ── Render ─────────────────────────────────────────────────────────────
 
   if (!composition) return null;
@@ -416,6 +513,14 @@ export function Compose() {
           <button className="toolbar-btn" onClick={handleExport}>
             <i className="fa-solid fa-download" /> Export MIDI
           </button>
+          <button
+            className={`toolbar-btn ${saveStatus ? 'saved' : ''}`}
+            onClick={handleSave}
+            disabled={saving}
+          >
+            <i className="fa-solid fa-floppy-disk" />
+            {saving ? 'Saving…' : 'Save Palette'}
+          </button>
           <button className="toolbar-btn" onClick={addColor}>
             <i className="fa-solid fa-plus" /> Add Step
           </button>
@@ -471,11 +576,14 @@ export function Compose() {
         ))}
       </div>
 
+      {/* Save feedback */}
+      {saveStatus && <div className="compose-save-feedback">{saveStatus}</div>}
+
       {/* ── Back link ─────────────────────────────────────────────── */}
       <div className="compose-footer">
-        <Link to="/" className="back-link">
+        <button className="back-link" onClick={handleBackToGenerator}>
           <i className="fa-solid fa-arrow-left" /> Back to Generator
-        </Link>
+        </button>
       </div>
     </div>
   );

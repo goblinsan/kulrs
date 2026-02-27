@@ -472,10 +472,35 @@
   text-decoration: none;
   font-size: 0.9rem;
   transition: color 0.15s;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
 }
 
 .back-link:hover {
   color: #aaffdd;
+}
+
+/* ── Save feedback ─────────────────────────────────────────────────────── */
+
+.compose-save-feedback {
+  text-align: center;
+  padding: 0.5rem 1rem;
+  margin-top: 0.75rem;
+  border-radius: 6px;
+  background: rgba(170, 255, 221, 0.1);
+  border: 1px solid rgba(170, 255, 221, 0.3);
+  color: #aaffdd;
+  font-size: 0.85rem;
+  animation: fadeInOut 4s ease-in-out;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 /* ── Responsive ────────────────────────────────────────────────────────── */
