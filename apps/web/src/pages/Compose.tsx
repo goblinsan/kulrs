@@ -111,6 +111,7 @@ export function Compose() {
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
   const [originalColors, setOriginalColors] = useState<string[]>([]);
+  const [selectedPreset, setSelectedPreset] = useState<number | null>(null);
   const stepsRef = useRef<(HTMLDivElement | null)[]>([]);
 
   // Initialise from URL or defaults
@@ -157,6 +158,8 @@ export function Compose() {
     (presetIndex: number) => {
       const preset = PROGRESSION_PRESETS[presetIndex];
       if (!preset) return;
+
+      setSelectedPreset(presetIndex);
 
       if (mode === 'palette') {
         // In palette mode, map the preset onto existing palette colors
@@ -220,10 +223,50 @@ export function Compose() {
   }, []);
 
   const addColor = useCallback(() => {
-    const newHex = `#${Math.floor(Math.random() * 0xffffff)
-      .toString(16)
-      .padStart(6, '0')
-      .toUpperCase()}`;
+    let newHex: string;
+
+    if (selectedPreset !== null) {
+      // Preset selected — derive the next step from the preset's degree cycle
+      const preset = PROGRESSION_PRESETS[selectedPreset];
+      const currentLen = hexColors.length;
+      const nextDegreeIdx = currentLen % preset.degrees.length;
+
+      if (mode === 'palette') {
+        // Build a temporary composition with one extra degree from the preset
+        const sourceColors =
+          originalColors.length > 0 ? originalColors : hexColors;
+        const extendedPreset = {
+          ...preset,
+          degrees: [
+            ...preset.degrees.slice(0, currentLen),
+            preset.degrees[nextDegreeIdx],
+          ],
+        };
+        const result = applyPresetToPalette(
+          sourceColors,
+          extendedPreset,
+          selectedScale,
+          tempo
+        );
+        const addedStep = result.steps[result.steps.length - 1];
+        newHex = addedStep.hex;
+      } else {
+        // Chords mode — generate color from the chord at the next degree
+        const comp = progressionToComposition(
+          selectedKey,
+          selectedScale,
+          { ...preset, degrees: [preset.degrees[nextDegreeIdx]] },
+          4,
+          tempo
+        );
+        newHex = comp.steps[0].hex;
+      }
+    } else {
+      // No preset — cycle through existing palette colors
+      const currentLen = hexColors.length;
+      newHex = hexColors[currentLen % hexColors.length] || '#AAAAAA';
+    }
+
     setHexColors(prev => [...prev, newHex]);
     setComposition(prev => {
       if (!prev) return prev;
@@ -235,7 +278,7 @@ export function Compose() {
       };
       return newComp;
     });
-  }, []);
+  }, [selectedPreset, hexColors, originalColors, mode, selectedKey, selectedScale, tempo]);
 
   const removeColor = useCallback(
     (index: number) => {
@@ -562,7 +605,7 @@ export function Compose() {
           {PROGRESSION_PRESETS.map((p, i) => (
             <button
               key={p.name}
-              className="preset-btn"
+              className={`preset-btn ${selectedPreset === i ? 'active' : ''}`}
               onClick={() => loadPreset(i)}
               title={p.description}
             >

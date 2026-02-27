@@ -149,6 +149,16 @@
   color: #aaffdd;
 }
 
+.preset-btn.active {
+  border-color: #aaffdd;
+  background: rgba(170, 255, 221, 0.10);
+  color: #aaffdd;
+}
+
+.preset-btn.active .preset-desc {
+  color: #88ccaa;
+}
+
 .preset-name {
   font-weight: 600;
   font-size: 0.82rem;
