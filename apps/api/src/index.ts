@@ -18,6 +18,7 @@ app.use((req, res, next) => {
   const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || [
     'http://localhost:5173',
     'http://localhost:5174',
+    'https://vizail.com',
   ];
   const origin = req.headers.origin;
 
