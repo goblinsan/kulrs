@@ -218,7 +218,7 @@
   opacity: 0;
   transition: opacity 0.15s;
   line-height: 1;
-  padding: 0;
+  padding: 4px;
   display: flex;
   align-items: center;
 }
@@ -493,6 +493,22 @@
 
   .strip-label {
     display: none;
+  }
+
+  .strip-edit,
+  .strip-remove {
+    opacity: 0.8;
+    font-size: 0.85rem;
+    padding: 6px;
+    min-width: 28px;
+    min-height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .strip-remove {
+    font-size: 1.2rem;
   }
 
   .suggestion-swatch {
