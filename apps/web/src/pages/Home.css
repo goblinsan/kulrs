@@ -190,3 +190,8 @@
   color: #aaffdd;
   border-color: #aaffdd;
 }
+
+.palette-actions .design-button:hover:not(:disabled) {
+  color: #aaffdd;
+  border-color: #aaffdd;
+}

@@ -85,6 +85,7 @@
   gap: 8px;
   padding: 8px 12px;
   border-bottom: 1px solid #222;
+  flex-shrink: 0;
 }
 
 .font-picker-search-icon {
@@ -128,6 +129,7 @@
   padding: 6px 8px;
   border-bottom: 1px solid #222;
   overflow-x: auto;
+  flex-shrink: 0;
 }
 
 .font-picker-cat {

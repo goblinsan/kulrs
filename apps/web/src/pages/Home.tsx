@@ -189,6 +189,18 @@ export function Home() {
     navigate(`/pattern?colors=${hexColors.join(',')}`);
   };
 
+  const handleDesign = () => {
+    const hexColors = palette.colors.map(c => {
+      const rgb = oklchToRgb(c.color);
+      const toHex = (n: number) =>
+        Math.round(Math.max(0, Math.min(255, n)))
+          .toString(16)
+          .padStart(2, '0');
+      return `${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
+    });
+    navigate(`/design?colors=${hexColors.join(',')}`);
+  };
+
   return (
     <div className="home">
       <div className="hero-wrapper">
@@ -293,6 +305,13 @@ export function Home() {
           >
             <i className="fa-solid fa-shapes"></i>
             Pattern
+          </button>
+          <button
+            onClick={handleDesign}
+            className="action-button design-button"
+          >
+            <i className="fa-solid fa-palette"></i>
+            Design
           </button>
         </div>
       </div>

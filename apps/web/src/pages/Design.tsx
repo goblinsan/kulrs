@@ -96,7 +96,7 @@ function PreviewTopNav({ colors }: { colors: string[] }) {
           />
         ))}
       </div>
-      <div className="body-area" style={{ backgroundColor: '#1a1a1a' }}>
+      <div className="body-area" style={{ backgroundColor: '#f9fafb' }}>
         {[0, 1, 2, 3, 4].map(i => (
           <div
             key={i}
@@ -127,7 +127,7 @@ function PreviewLeftNav({ colors }: { colors: string[] }) {
           />
         ))}
       </div>
-      <div className="main-area" style={{ backgroundColor: '#1a1a1a' }}>
+      <div className="main-area" style={{ backgroundColor: '#f1f5f9' }}>
         {[0, 1, 2, 3, 4, 5].map(i => (
           <div
             key={i}
@@ -151,7 +151,7 @@ function PreviewMobile({ colors }: { colors: string[] }) {
           className="phone-status"
           style={{ backgroundColor: safeColor(colors, 0) }}
         />
-        <div className="phone-content" style={{ backgroundColor: '#1a1a1a' }}>
+        <div className="phone-content" style={{ backgroundColor: '#f9fafb' }}>
           {[0, 1, 2, 3, 4, 5].map(i => (
             <div
               key={i}
@@ -191,7 +191,7 @@ function PreviewDashboard({ colors }: { colors: string[] }) {
           />
         ))}
       </div>
-      <div className="dash-body" style={{ backgroundColor: '#1a1a1a' }}>
+      <div className="dash-body" style={{ backgroundColor: '#f8fafc' }}>
         {colors.slice(0, 4).map((c, i) => (
           <div key={i} className="card" style={{ backgroundColor: c }} />
         ))}
@@ -216,7 +216,7 @@ function PreviewLanding({ colors }: { colors: string[] }) {
           style={{ backgroundColor: safeColor(colors, 2) }}
         />
       </div>
-      <div className="features-section" style={{ backgroundColor: '#1a1a1a' }}>
+      <div className="features-section" style={{ backgroundColor: '#ffffff' }}>
         {colors.slice(0, 3).map((c, i) => (
           <div key={i} className="feature-box" style={{ backgroundColor: c }} />
         ))}
