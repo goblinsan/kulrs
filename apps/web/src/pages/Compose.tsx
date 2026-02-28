@@ -594,6 +594,17 @@ export function Compose() {
 
   // ── Navigate back with palette ─────────────────────────────────────────
 
+  /* Keep sessionStorage in sync so nav-bar links carry the palette */
+  useEffect(() => {
+    if (hexColors.length > 0) {
+      try {
+        sessionStorage.setItem('kulrs_palette_colors', JSON.stringify(hexColors));
+      } catch { /* ignore */ }
+    }
+  }, [hexColors]);
+
+  const colorsParam = hexColors.map(h => h.replace('#', '')).join(',');
+
   const handleBackToGenerator = () => {
     if (!composition) {
       navigate('/');
@@ -828,11 +839,22 @@ export function Compose() {
       {/* Save feedback */}
       {saveStatus && <div className="compose-save-feedback">{saveStatus}</div>}
 
-      {/* ── Back link ─────────────────────────────────────────────── */}
+      {/* ── Footer nav ────────────────────────────────────────────── */}
       <div className="compose-footer">
         <button className="back-link" onClick={handleBackToGenerator}>
           <i className="fa-solid fa-arrow-left" /> Back to Generator
         </button>
+        <div className="compose-nav-buttons">
+          <button className="compose-nav-btn" onClick={() => navigate(`/pattern?colors=${colorsParam}`)}>
+            <i className="fa-solid fa-shapes" /> Pattern
+          </button>
+          <button className="compose-nav-btn" onClick={() => navigate(`/scratch?colors=${colorsParam}`)}>
+            <i className="fa-solid fa-pencil" /> Scratch
+          </button>
+          <button className="compose-nav-btn" onClick={() => navigate(`/design?colors=${colorsParam}`)}>
+            <i className="fa-solid fa-palette" /> Design
+          </button>
+        </div>
       </div>
     </div>
   );

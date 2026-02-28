@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, Fragment } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import './Pattern.css';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -734,6 +734,7 @@ function renderPattern(
 
 export function Pattern() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const weightBarRef = useRef<HTMLDivElement>(null);
@@ -1106,6 +1107,18 @@ export function Pattern() {
       <div className="pattern-actions">
         <button className="download-btn" onClick={handleDownload}>
           <i className="fa-solid fa-download" /> Download PNG
+        </button>
+        <button className="download-btn" onClick={() => navigate(`/compose?colors=${colors.map(c => c.replace('#', '')).join(',')}`)}
+        >
+          <i className="fa-solid fa-music" /> Compose
+        </button>
+        <button className="download-btn" onClick={() => navigate(`/scratch?colors=${colors.map(c => c.replace('#', '')).join(',')}`)}
+        >
+          <i className="fa-solid fa-pencil" /> Scratch
+        </button>
+        <button className="download-btn" onClick={() => navigate(`/design?colors=${colors.map(c => c.replace('#', '')).join(',')}`)}
+        >
+          <i className="fa-solid fa-palette" /> Design
         </button>
       </div>
     </div>

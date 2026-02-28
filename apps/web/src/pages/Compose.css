@@ -509,6 +509,11 @@
 
 .compose-footer {
   margin-top: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .back-link {
@@ -524,6 +529,32 @@
 
 .back-link:hover {
   color: #aaffdd;
+}
+
+.compose-nav-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.compose-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 1rem;
+  background: transparent;
+  border: 1px solid #444;
+  border-radius: 6px;
+  color: #aaa;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.compose-nav-btn:hover {
+  border-color: #aaffdd;
+  color: #aaffdd;
+  background: rgba(170, 255, 221, 0.06);
 }
 
 /* ── Save feedback ─────────────────────────────────────────────────────── */

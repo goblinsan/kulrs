@@ -1,5 +1,5 @@
-import { useState, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   rgbToOklch,
   oklchToRgb,
@@ -226,7 +226,27 @@ function hexesToPaletteRequest(
 
 export function Scratch() {
   const navigate = useNavigate();
-  const [palette, setPalette] = useState<string[]>([]);
+  const [searchParams] = useSearchParams();
+  const [palette, setPalette] = useState<string[]>(() => {
+    const raw = searchParams.get('colors');
+    if (raw) {
+      const parsed = raw
+        .split(',')
+        .map(v => (v.startsWith('#') ? v : `#${v}`))
+        .filter(v => /^#[0-9a-fA-F]{6}$/.test(v))
+        .map(v => v.toUpperCase());
+      if (parsed.length > 0) return parsed;
+    }
+    try {
+      const stored = sessionStorage.getItem('kulrs_palette_colors');
+      if (stored) {
+        const arr = JSON.parse(stored) as string[];
+        if (Array.isArray(arr) && arr.length > 0)
+          return arr.filter(v => /^#[0-9a-fA-F]{6}$/i.test(v)).map(v => v.toUpperCase());
+      }
+    } catch { /* ignore */ }
+    return [];
+  });
   const [manualColor, setManualColor] = useState('#6A5ACD');
   const [focusIdx, setFocusIdx] = useState(0); // which palette color drives suggestions
   const [savingGroup, setSavingGroup] = useState<string | null>(null);
@@ -335,6 +355,19 @@ export function Scratch() {
   const goToCompose = useCallback(() => {
     navigate(`/compose?colors=${colorsParam}`);
   }, [navigate, colorsParam]);
+
+  const goToDesign = useCallback(() => {
+    navigate(`/design?colors=${colorsParam}`);
+  }, [navigate, colorsParam]);
+
+  /* Keep sessionStorage in sync so nav-bar links carry the palette */
+  useEffect(() => {
+    if (palette.length > 0) {
+      try {
+        sessionStorage.setItem('kulrs_palette_colors', JSON.stringify(palette));
+      } catch { /* ignore */ }
+    }
+  }, [palette]);
 
   const copyHexes = useCallback(() => {
     navigator.clipboard.writeText(palette.join(', ')).catch(() => {});
@@ -621,6 +654,9 @@ export function Scratch() {
           </button>
           <button className="scratch-btn" onClick={goToCompose}>
             <i className="fa-solid fa-music" /> Open in Compose
+          </button>
+          <button className="scratch-btn" onClick={goToDesign}>
+            <i className="fa-solid fa-palette" /> Open in Design
           </button>
           <button className="scratch-btn secondary" onClick={copyHexes}>
             <i className="fa-solid fa-copy" /> Copy Hex Values

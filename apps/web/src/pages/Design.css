@@ -583,6 +583,38 @@
   color: #aaffdd;
 }
 
+/* ── Navigation buttons ──────────────────────────────────────────────── */
+
+.design-nav-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #333;
+}
+
+.design-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 1rem;
+  background: transparent;
+  border: 1px solid #444;
+  border-radius: 6px;
+  color: #aaa;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.design-nav-btn:hover {
+  border-color: #aaffdd;
+  color: #aaffdd;
+  background: rgba(170, 255, 221, 0.06);
+}
+
 @media (max-width: 600px) {
   .design-page {
     padding: 1rem;

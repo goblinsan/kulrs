@@ -1,5 +1,5 @@
-import { useState, useMemo, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { FontPicker } from '../components/FontPicker';
 import './Design.css';
 
@@ -302,6 +302,7 @@ const PREVIEW_COMPONENTS: Record<TemplateId, React.FC<PreviewProps>> = {
 // ── Main component ──────────────────────────────────────────────────
 export function Design() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const initialColors = useMemo(
     () =>
@@ -328,6 +329,15 @@ export function Design() {
   // Drag state
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+
+  /* Keep sessionStorage in sync so nav-bar links carry the palette */
+  useEffect(() => {
+    if (colors.length > 0) {
+      try {
+        sessionStorage.setItem('kulrs_palette_colors', JSON.stringify(colors));
+      } catch { /* ignore */ }
+    }
+  }, [colors]);
 
   const roles = COLOR_ROLES[selectedTemplate];
 
@@ -592,6 +602,19 @@ export function Design() {
             </button>
           </div>
         )}
+      </div>
+
+      {/* ── Navigate to other pages ────────────────────────────── */}
+      <div className="design-nav-buttons">
+        <button className="design-nav-btn" onClick={() => navigate(`/compose?colors=${colors.map(c => c.replace('#', '')).join(',')}`)}>
+          <i className="fa-solid fa-music" /> Compose
+        </button>
+        <button className="design-nav-btn" onClick={() => navigate(`/pattern?colors=${colors.map(c => c.replace('#', '')).join(',')}`)}>
+          <i className="fa-solid fa-shapes" /> Pattern
+        </button>
+        <button className="design-nav-btn" onClick={() => navigate(`/scratch?colors=${colors.map(c => c.replace('#', '')).join(',')}`)}>
+          <i className="fa-solid fa-pencil" /> Scratch
+        </button>
       </div>
     </div>
   );
