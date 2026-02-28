@@ -80,29 +80,6 @@
   flex-wrap: wrap;
 }
 
-.font-selector label {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  color: #aaa;
-  font-size: 0.85rem;
-}
-
-.font-selector select {
-  padding: 0.5rem 0.75rem;
-  background: #111;
-  border: 1px solid #333;
-  border-radius: 6px;
-  color: #fff;
-  font-size: 0.9rem;
-  min-width: 200px;
-  cursor: pointer;
-}
-
-.font-selector select:hover {
-  border-color: #555;
-}
-
 .font-preview {
   margin-top: 0.75rem;
   padding: 0.75rem 1rem;
@@ -448,11 +425,6 @@
 
   .font-selector {
     flex-direction: column;
-  }
-
-  .font-selector select {
-    min-width: unset;
-    width: 100%;
   }
 
   .generated-link-row {

@@ -1,0 +1,265 @@
+/* ── FontPicker ───────────────────────────────────────────────────── */
+
+.font-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+}
+
+.font-picker-label {
+  font-size: 0.8rem;
+  color: #aaa;
+  letter-spacing: 0.02em;
+}
+
+/* Trigger button */
+.font-picker-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0.55rem 0.75rem;
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+  min-height: 42px;
+}
+
+.font-picker-trigger:hover {
+  border-color: #555;
+}
+
+.font-picker-trigger-preview {
+  font-size: 1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.font-picker-arrow {
+  font-size: 0.65rem;
+  color: #777;
+  flex-shrink: 0;
+}
+
+/* Dropdown panel */
+.font-picker-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: #141414;
+  border: 1px solid #333;
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  max-height: 440px;
+  min-width: 320px;
+  overflow: hidden;
+  animation: fontPickerSlideIn 0.15s ease;
+}
+
+@keyframes fontPickerSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Search */
+.font-picker-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #222;
+}
+
+.font-picker-search-icon {
+  color: #555;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.font-picker-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #eee;
+  font-size: 0.85rem;
+}
+
+.font-picker-search-input::placeholder {
+  color: #555;
+}
+
+.font-picker-search-clear {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 0.75rem;
+  border-radius: 4px;
+}
+
+.font-picker-search-clear:hover {
+  color: #aaa;
+  background: #222;
+}
+
+/* Category tabs */
+.font-picker-categories {
+  display: flex;
+  gap: 2px;
+  padding: 6px 8px;
+  border-bottom: 1px solid #222;
+  overflow-x: auto;
+}
+
+.font-picker-cat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #888;
+  font-size: 0.72rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.12s ease;
+}
+
+.font-picker-cat i {
+  font-size: 0.65rem;
+}
+
+.font-picker-cat:hover {
+  color: #ccc;
+  background: #1a1a1a;
+}
+
+.font-picker-cat-active {
+  color: #88bbff;
+  background: rgba(136, 187, 255, 0.08);
+  border-color: rgba(136, 187, 255, 0.2);
+}
+
+/* Font list */
+.font-picker-list {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.font-picker-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: #555;
+  font-size: 0.85rem;
+}
+
+/* Font row */
+.font-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #1a1a1a;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s ease;
+  position: relative;
+  color: inherit;
+}
+
+.font-row:hover {
+  background: #1a1a2a;
+}
+
+.font-row-selected {
+  background: rgba(136, 187, 255, 0.06);
+}
+
+.font-row-selected:hover {
+  background: rgba(136, 187, 255, 0.1);
+}
+
+.font-row-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.font-row-name {
+  font-size: 0.75rem;
+  color: #aaa;
+  font-weight: 500;
+}
+
+.font-row-selected .font-row-name {
+  color: #88bbff;
+}
+
+.font-row-category {
+  font-size: 0.6rem;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.font-row-preview {
+  font-size: 1.15rem;
+  color: #eee;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.font-row-check {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  color: #88bbff;
+  font-size: 0.75rem;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .font-picker-dropdown {
+    min-width: unset;
+    max-height: 380px;
+  }
+
+  .font-picker-cat span {
+    display: none;
+  }
+
+  .font-picker-cat {
+    padding: 6px 8px;
+  }
+
+  .font-picker-cat i {
+    font-size: 0.8rem;
+  }
+}

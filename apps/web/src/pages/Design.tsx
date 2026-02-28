@@ -1,137 +1,7 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { FontPicker } from '../components/FontPicker';
 import './Design.css';
-
-// ── Curated Google Fonts ────────────────────────────────────────────
-const HEADING_FONTS = [
-  'Inter',
-  'Poppins',
-  'Montserrat',
-  'Playfair Display',
-  'Roboto',
-  'Oswald',
-  'Raleway',
-  'Lora',
-  'Merriweather',
-  'Nunito',
-  'Work Sans',
-  'Outfit',
-  'Space Grotesk',
-  'DM Sans',
-  'Sora',
-  'Bebas Neue',
-  'Bitter',
-  'Cabin',
-  'Comfortaa',
-  'Cormorant Garamond',
-  'Crimson Text',
-  'DM Serif Display',
-  'EB Garamond',
-  'Exo 2',
-  'Figtree',
-  'Fira Sans',
-  'Geologica',
-  'Josefin Sans',
-  'Lexend',
-  'Libre Baskerville',
-  'Manrope',
-  'Noto Sans',
-  'Noto Serif',
-  'Nunito Sans',
-  'Pacifico',
-  'Philosopher',
-  'Plus Jakarta Sans',
-  'Quicksand',
-  'Red Hat Display',
-  'Roboto Slab',
-  'Rubik',
-  'Satisfy',
-  'Space Mono',
-  'Spectral',
-  'Titillium Web',
-  'Ubuntu',
-  'Vollkorn',
-  'Yanone Kaffeesatz',
-  'Zilla Slab',
-];
-
-const BODY_FONTS = [
-  'Inter',
-  'Roboto',
-  'Open Sans',
-  'Lato',
-  'Source Sans 3',
-  'Nunito Sans',
-  'DM Sans',
-  'Work Sans',
-  'IBM Plex Sans',
-  'PT Sans',
-  'Libre Franklin',
-  'Rubik',
-  'Karla',
-  'Mulish',
-  'Outfit',
-  'Cabin',
-  'Crimson Text',
-  'EB Garamond',
-  'Exo 2',
-  'Figtree',
-  'Fira Sans',
-  'Geologica',
-  'Hind',
-  'Josefin Sans',
-  'Lexend',
-  'Libre Baskerville',
-  'Lora',
-  'Manrope',
-  'Merriweather',
-  'Montserrat',
-  'Noto Sans',
-  'Noto Serif',
-  'Nunito',
-  'Plus Jakarta Sans',
-  'Poppins',
-  'PT Serif',
-  'Quicksand',
-  'Raleway',
-  'Red Hat Text',
-  'Roboto Mono',
-  'Roboto Slab',
-  'Sora',
-  'Source Serif 4',
-  'Space Grotesk',
-  'Space Mono',
-  'Spectral',
-  'Titillium Web',
-  'Ubuntu',
-  'Vollkorn',
-  'Zilla Slab',
-];
-
-/** Dynamically load Google Fonts by injecting a <link> into <head>. */
-function useGoogleFonts(fonts: string[]) {
-  useEffect(() => {
-    if (fonts.length === 0) return;
-    const families = fonts
-      .map(f => f.replace(/ /g, '+'))
-      .map(f => `family=${f}:wght@400;600;700`)
-      .join('&');
-    const href = `https://fonts.googleapis.com/css2?${families}&display=swap`;
-
-    // Don't add duplicate links
-    const existing = document.querySelector(`link[href="${href}"]`);
-    if (existing) return;
-
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = href;
-    document.head.appendChild(link);
-
-    return () => {
-      link.remove();
-    };
-  }, [fonts]);
-}
 
 // ── Design templates ────────────────────────────────────────────────
 type TemplateId = 'top-nav' | 'left-nav' | 'mobile' | 'dashboard' | 'landing';
@@ -382,10 +252,6 @@ export function Design() {
   const [headingFont, setHeadingFont] = useState('Inter');
   const [bodyFont, setBodyFont] = useState('Roboto');
 
-  // Load the selected Google Fonts dynamically
-  useGoogleFonts(
-    useMemo(() => [headingFont, bodyFont], [headingFont, bodyFont])
-  );
   const [selectedTemplate, setSelectedTemplate] =
     useState<TemplateId>('top-nav');
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
@@ -440,32 +306,18 @@ export function Design() {
       <div className="design-section">
         <h2>Fonts</h2>
         <div className="font-selector">
-          <label>
-            Heading Font
-            <select
-              value={headingFont}
-              onChange={e => setHeadingFont(e.target.value)}
-            >
-              {HEADING_FONTS.map(f => (
-                <option key={f} value={f}>
-                  {f}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Body Font
-            <select
-              value={bodyFont}
-              onChange={e => setBodyFont(e.target.value)}
-            >
-              {BODY_FONTS.map(f => (
-                <option key={f} value={f}>
-                  {f}
-                </option>
-              ))}
-            </select>
-          </label>
+          <FontPicker
+            label="Heading Font"
+            value={headingFont}
+            onChange={setHeadingFont}
+            previewText="The quick brown fox"
+          />
+          <FontPicker
+            label="Body Font"
+            value={bodyFont}
+            onChange={setBodyFont}
+            previewText="Lorem ipsum dolor sit amet, consectetur"
+          />
         </div>
         <div className="font-preview">
           <p

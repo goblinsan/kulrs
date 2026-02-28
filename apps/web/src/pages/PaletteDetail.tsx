@@ -121,6 +121,23 @@ export function PaletteDetail() {
     };
   }, []);
 
+  // Keep palette colors in sessionStorage so other tabs (Design, Compose, etc.)
+  // can pick them up even without explicit URL params.
+  useEffect(() => {
+    if (!palette) return;
+    try {
+      const hexColors = palette.colors.map(c => {
+        const rgb = oklchToRgb(c.color);
+        const toHex = (n: number) =>
+          Math.round(Math.max(0, Math.min(255, n)))
+            .toString(16)
+            .padStart(2, '0');
+        return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
+      });
+      sessionStorage.setItem('kulrs_palette_colors', JSON.stringify(hexColors));
+    } catch { /* ignore */ }
+  }, [palette]);
+
   // Load palette - either fetch by ID or parse from URL
   useEffect(() => {
     if (!id) {
@@ -370,6 +387,26 @@ export function PaletteDetail() {
           >
             <i className="fa-solid fa-shapes"></i>
             Pattern
+          </button>
+          <button
+            onClick={() => {
+              if (!palette) return;
+              const hexColors = palette.colors.map(c => {
+                const rgb = oklchToRgb(c.color);
+                const toHex = (n: number) =>
+                  Math.round(Math.max(0, Math.min(255, n)))
+                    .toString(16)
+                    .padStart(2, '0');
+                return `${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
+              });
+              navigate(`/design?colors=${hexColors.join(',')}`);
+            }}
+            className="action-button design-button"
+            aria-label="Design with this palette"
+            title="Design with this palette"
+          >
+            <i className="fa-solid fa-palette"></i>
+            Design
           </button>
         </div>
 
