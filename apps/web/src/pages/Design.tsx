@@ -207,7 +207,7 @@ function buildVizailUrl(
   params.set('headingFont', headingFont);
   params.set('bodyFont', bodyFont);
   params.set('template', template);
-  return `https://vizail.com/design?${params.toString()}`;
+  return `https://vizail.com/from-kulrs?${params.toString()}`;
 }
 
 // ── Mini preview components ─────────────────────────────────────────

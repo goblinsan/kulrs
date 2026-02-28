@@ -41,6 +41,9 @@ export function Layout({ children }: LayoutProps) {
             {mobileMenuOpen ? '✕' : '☰'}
           </button>
           <div className={`nav-links ${mobileMenuOpen ? 'mobile-open' : ''}`}>
+            <Link to="/" onClick={closeMobileMenu}>
+              Home
+            </Link>
             <Link to="/browse" onClick={closeMobileMenu}>
               Browse
             </Link>
