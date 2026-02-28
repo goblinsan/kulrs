@@ -6,6 +6,7 @@ import {
   type AssignedColor,
   generateRandom,
   oklchToRgb,
+  rgbToOklch,
 } from '@kulrs/shared';
 import { PaletteDisplay } from '../components/palette/PaletteDisplay';
 import { HeroPalette } from '../components/palette/HeroPalette';
@@ -40,6 +41,43 @@ export function Home() {
       window.history.replaceState({}, '');
     }
   }, [location.state]);
+
+  // On mount, check if another page left colors in sessionStorage.
+  // Convert hex strings into a GeneratedPalette so they display normally.
+  useEffect(() => {
+    // Skip if we already restored from Compose state
+    if (location.state) return;
+    try {
+      const stored = sessionStorage.getItem('kulrs_palette_colors');
+      if (stored) {
+        const arr = JSON.parse(stored) as string[];
+        const hexes = Array.isArray(arr)
+          ? arr.filter(v => /^#[0-9a-fA-F]{6}$/i.test(v))
+          : [];
+        if (hexes.length > 0) {
+          const ROLES = ['primary', 'secondary', 'accent', 'info', 'success', 'warning', 'error', 'background'] as const;
+          const colors: AssignedColor[] = hexes.map((hex, i) => {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return {
+              role: ROLES[i % ROLES.length] as AssignedColor['role'],
+              color: rgbToOklch({ r, g, b }),
+            };
+          });
+          setPalette({
+            colors,
+            metadata: {
+              generator: 'imported',
+              explanation: 'Palette carried from another page',
+              timestamp: new Date().toISOString(),
+            },
+          });
+        }
+      }
+    } catch { /* ignore */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Keep current palette hex colors in sessionStorage so the Compose tab
   // nav link can pick them up even without explicit URL params.

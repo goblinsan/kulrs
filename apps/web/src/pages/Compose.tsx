@@ -848,7 +848,7 @@ export function Compose() {
           <button className="compose-nav-btn" onClick={() => navigate(`/pattern?colors=${colorsParam}`)}>
             <i className="fa-solid fa-shapes" /> Pattern
           </button>
-          <button className="compose-nav-btn" onClick={() => navigate(`/scratch?colors=${colorsParam}`)}>
+          <button className="compose-nav-btn" onClick={() => navigate('/scratch')}>
             <i className="fa-solid fa-pencil" /> Scratch
           </button>
           <button className="compose-nav-btn" onClick={() => navigate(`/design?colors=${colorsParam}`)}>

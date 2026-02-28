@@ -612,7 +612,7 @@ export function Design() {
         <button className="design-nav-btn" onClick={() => navigate(`/pattern?colors=${colors.map(c => c.replace('#', '')).join(',')}`)}>
           <i className="fa-solid fa-shapes" /> Pattern
         </button>
-        <button className="design-nav-btn" onClick={() => navigate(`/scratch?colors=${colors.map(c => c.replace('#', '')).join(',')}`)}>
+        <button className="design-nav-btn" onClick={() => navigate('/scratch')}>
           <i className="fa-solid fa-pencil" /> Scratch
         </button>
       </div>

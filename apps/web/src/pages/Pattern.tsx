@@ -1112,7 +1112,7 @@ export function Pattern() {
         >
           <i className="fa-solid fa-music" /> Compose
         </button>
-        <button className="download-btn" onClick={() => navigate(`/scratch?colors=${colors.map(c => c.replace('#', '')).join(',')}`)}
+        <button className="download-btn" onClick={() => navigate('/scratch')}
         >
           <i className="fa-solid fa-pencil" /> Scratch
         </button>
