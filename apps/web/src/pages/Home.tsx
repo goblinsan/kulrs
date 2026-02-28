@@ -89,6 +89,17 @@ export function Home() {
     setSaved(false);
   }, []);
 
+  /** Strip derived background/text colors so only visible palette colors are saved. */
+  const mainColorsOnly = useCallback(
+    (p: GeneratedPalette): GeneratedPalette => ({
+      ...p,
+      colors: p.colors.filter(
+        c => c.role !== 'background' && c.role !== 'text'
+      ),
+    }),
+    []
+  );
+
   const handleLike = async () => {
     // Toggle local state immediately for responsiveness
     const newLiked = !liked;
@@ -104,7 +115,7 @@ export function Home() {
         const result = await apiPost<{
           success: boolean;
           data: { id: string; likesCount: number };
-        }>('/palettes', { palette });
+        }>('/palettes', { palette: mainColorsOnly(palette) });
         id = result.data.id;
         setPaletteId(id);
       }
@@ -136,7 +147,7 @@ export function Home() {
       const result = await apiPost<{
         success: boolean;
         data: { id: string; likesCount: number };
-      }>('/palettes', { palette });
+      }>('/palettes', { palette: mainColorsOnly(palette) });
       setSaved(true);
       setPaletteId(result.data.id);
       setLikeCount(result.data.likesCount);

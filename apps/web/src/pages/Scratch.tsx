@@ -458,7 +458,7 @@ export function Scratch() {
       <div className="scratch-palette-strip">
         {palette.map((hex, i) => (
           <div
-            key={`${i}-${hex}`}
+            key={i}
             className={`strip-swatch${focusIdx === i ? ' focused' : ''}`}
             style={{ backgroundColor: hex }}
             onClick={() => setFocusIdx(i)}
