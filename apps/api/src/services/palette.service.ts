@@ -16,11 +16,39 @@ function oklchToHex(oklch: { l: number; c: number; h: number }): string {
   return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`.toUpperCase();
 }
 
+/**
+ * Simple in-memory cache for user lookups.
+ * Avoids a DB round-trip on every authenticated request for the same user.
+ * TTL: 5 minutes.  Evicted lazily on next read.
+ */
+const USER_CACHE_TTL_MS = 5 * 60 * 1000;
+interface CachedUser {
+  data: {
+    id: string;
+    firebaseUid: string;
+    email: string | null;
+    displayName: string | null;
+    photoUrl: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+  expiresAt: number;
+}
+const userCache = new Map<string, CachedUser>();
+
 export class PaletteService {
   /**
-   * Get or create user by Firebase UID
+   * Get or create user by Firebase UID (with per-instance cache)
    */
   async getOrCreateUser(firebaseUid: string, email?: string) {
+    // Check cache first
+    const cached = userCache.get(firebaseUid);
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.data;
+    }
+    // Evict stale entry
+    if (cached) userCache.delete(firebaseUid);
+
     const [existingUser] = await db
       .select({
         id: users.id,
@@ -36,6 +64,10 @@ export class PaletteService {
       .limit(1);
 
     if (existingUser) {
+      userCache.set(firebaseUid, {
+        data: existingUser,
+        expiresAt: Date.now() + USER_CACHE_TTL_MS,
+      });
       return existingUser;
     }
 
@@ -56,7 +88,12 @@ export class PaletteService {
         updatedAt: users.updatedAt,
       });
 
-    return result[0];
+    const newUser = result[0];
+    userCache.set(firebaseUid, {
+      data: newUser,
+      expiresAt: Date.now() + USER_CACHE_TTL_MS,
+    });
+    return newUser;
   }
 
   /**
@@ -331,7 +368,7 @@ export class PaletteService {
         name: `${originalPalette.name} (Remix)`,
         description: originalPalette.description,
         userId,
-        sourceId: originalPalette.sourceId,
+        sourceId: originalPalette.id,
         isPublic: true,
       })
       .returning();

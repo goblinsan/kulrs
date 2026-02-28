@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { type AssignedColor, oklchToRgb, rgbToOklch } from '@kulrs/shared';
+import { type AssignedColor, rgbToOklch } from '@kulrs/shared';
+import { oklchToHex, getTextColor, hexToRgb } from '../../utils/colorUtils';
 import './ColorSwatch.css';
 
 interface EditableColorSwatchProps {
@@ -7,31 +8,12 @@ interface EditableColorSwatchProps {
   onColorChange: (color: AssignedColor) => void;
 }
 
-// Convert OKLCH to hex for display
-function oklchToHex(color: AssignedColor): string {
-  const rgb = oklchToRgb(color.color);
-  const toHex = (n: number) =>
-    Math.round(Math.max(0, Math.min(255, n)))
-      .toString(16)
-      .padStart(2, '0');
-  return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
-}
-
-// Determine if we should use white or black text on the color
-function getTextColor(hex: string): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return luminance > 0.5 ? '#000' : '#fff';
-}
-
 export function EditableColorSwatch({
   color,
   onColorChange,
 }: EditableColorSwatchProps) {
   const [copied, setCopied] = useState(false);
-  const hex = oklchToHex(color);
+  const hex = oklchToHex(color.color);
   const textColor = getTextColor(hex);
 
   const handleCopy = (e: React.MouseEvent) => {
@@ -48,11 +30,7 @@ export function EditableColorSwatch({
   };
 
   const handleColorPickerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newHex = e.target.value;
-    // Convert hex to OKLCH
-    const r = parseInt(newHex.slice(1, 3), 16);
-    const g = parseInt(newHex.slice(3, 5), 16);
-    const b = parseInt(newHex.slice(5, 7), 16);
+    const { r, g, b } = hexToRgb(e.target.value);
     const newOklch = rgbToOklch({ r, g, b });
 
     onColorChange({

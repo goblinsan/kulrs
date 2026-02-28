@@ -5,14 +5,13 @@ import {
   type GeneratedPalette,
   type AssignedColor,
   generateRandom,
-  oklchToRgb,
-  rgbToOklch,
 } from '@kulrs/shared';
 import { PaletteDisplay } from '../components/palette/PaletteDisplay';
 import { HeroPalette } from '../components/palette/HeroPalette';
 import { initialPalette } from '../components/palette/paletteUtils';
 import { useAuth } from '../contexts/AuthContext';
 import { apiPost, likePalette, unlikePalette } from '../services/api';
+import { oklchToHex, hexToOklch, buildPaletteColorsParam } from '../utils/colorUtils';
 import './Home.css';
 
 export function Home() {
@@ -56,15 +55,10 @@ export function Home() {
           : [];
         if (hexes.length > 0) {
           const ROLES = ['primary', 'secondary', 'accent', 'info', 'success', 'warning', 'error', 'background'] as const;
-          const colors: AssignedColor[] = hexes.map((hex, i) => {
-            const r = parseInt(hex.slice(1, 3), 16);
-            const g = parseInt(hex.slice(3, 5), 16);
-            const b = parseInt(hex.slice(5, 7), 16);
-            return {
-              role: ROLES[i % ROLES.length] as AssignedColor['role'],
-              color: rgbToOklch({ r, g, b }),
-            };
-          });
+          const colors: AssignedColor[] = hexes.map((hex, i) => ({
+            role: ROLES[i % ROLES.length] as AssignedColor['role'],
+            color: hexToOklch(hex),
+          }));
           setPalette({
             colors,
             metadata: {
@@ -83,14 +77,7 @@ export function Home() {
   // nav link can pick them up even without explicit URL params.
   useEffect(() => {
     try {
-      const hexColors = palette.colors.map(c => {
-        const rgb = oklchToRgb(c.color);
-        const toHex = (n: number) =>
-          Math.round(Math.max(0, Math.min(255, n)))
-            .toString(16)
-            .padStart(2, '0');
-        return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
-      });
+      const hexColors = palette.colors.map(c => oklchToHex(c.color));
       sessionStorage.setItem('kulrs_palette_colors', JSON.stringify(hexColors));
     } catch {
       /* ignore */
@@ -204,39 +191,18 @@ export function Home() {
   };
 
   const handleCompose = () => {
-    const hexColors = palette.colors.map(c => {
-      const rgb = oklchToRgb(c.color);
-      const toHex = (n: number) =>
-        Math.round(Math.max(0, Math.min(255, n)))
-          .toString(16)
-          .padStart(2, '0');
-      return `${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
-    });
-    navigate(`/compose?colors=${hexColors.join(',')}`);
+    const colorsParam = buildPaletteColorsParam(palette.colors.map(c => c.color));
+    navigate(`/compose?colors=${colorsParam}`);
   };
 
   const handlePattern = () => {
-    const hexColors = palette.colors.map(c => {
-      const rgb = oklchToRgb(c.color);
-      const toHex = (n: number) =>
-        Math.round(Math.max(0, Math.min(255, n)))
-          .toString(16)
-          .padStart(2, '0');
-      return `${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
-    });
-    navigate(`/pattern?colors=${hexColors.join(',')}`);
+    const colorsParam = buildPaletteColorsParam(palette.colors.map(c => c.color));
+    navigate(`/pattern?colors=${colorsParam}`);
   };
 
   const handleDesign = () => {
-    const hexColors = palette.colors.map(c => {
-      const rgb = oklchToRgb(c.color);
-      const toHex = (n: number) =>
-        Math.round(Math.max(0, Math.min(255, n)))
-          .toString(16)
-          .padStart(2, '0');
-      return `${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
-    });
-    navigate(`/design?colors=${hexColors.join(',')}`);
+    const colorsParam = buildPaletteColorsParam(palette.colors.map(c => c.color));
+    navigate(`/design?colors=${colorsParam}`);
   };
 
   return (

@@ -4,7 +4,6 @@ import {
   type GeneratedPalette,
   ColorRole,
   type AssignedColor,
-  oklchToRgb,
 } from '@kulrs/shared';
 import { PaletteDisplay } from '../components/palette/PaletteDisplay';
 import { ColorExportTable } from '../components/palette/ColorExportTable';
@@ -16,6 +15,7 @@ import {
   unlikePalette as unlikePaletteApi,
   type BrowsePalette,
 } from '../services/api';
+import { hexToOklch, buildPaletteColorsParam, oklchToHex } from '../utils/colorUtils';
 import './PaletteDetail.css';
 
 // Check if a string looks like a UUID (existing palette ID)
@@ -60,38 +60,6 @@ function browsePaletteToGenerated(
   };
 }
 
-// Convert hex to OKLCH (simplified approximation for display)
-function hexToOklch(hex: string): { l: number; c: number; h: number } {
-  const cleanHex = hex.startsWith('#') ? hex.slice(1) : hex;
-  const r = parseInt(cleanHex.slice(0, 2), 16) / 255;
-  const g = parseInt(cleanHex.slice(2, 4), 16) / 255;
-  const b = parseInt(cleanHex.slice(4, 6), 16) / 255;
-
-  // Convert to linear RGB
-  const toLinear = (c: number) =>
-    c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-  const lr = toLinear(r);
-  const lg = toLinear(g);
-  const lb = toLinear(b);
-
-  // Convert to XYZ
-  const x = 0.4124 * lr + 0.3576 * lg + 0.1805 * lb;
-  const y = 0.2126 * lr + 0.7152 * lg + 0.0722 * lb;
-  const z = 0.0193 * lr + 0.1192 * lg + 0.9505 * lb;
-
-  // Convert to Lab (simplified)
-  const l = 116 * Math.cbrt(y) - 16;
-  const a = 500 * (Math.cbrt(x / 0.95047) - Math.cbrt(y));
-  const bLab = 200 * (Math.cbrt(y) - Math.cbrt(z / 1.08883));
-
-  // Convert to OKLCH (approximate)
-  const oklchL = Math.max(0, Math.min(1, l / 100));
-  const chroma = Math.sqrt(a * a + bLab * bLab) / 150;
-  const hue = ((Math.atan2(bLab, a) * 180) / Math.PI + 360) % 360;
-
-  return { l: oklchL, c: chroma, h: hue };
-}
-
 export function PaletteDetail() {
   const { id } = useParams<{ id: string }>();
   const {
@@ -126,14 +94,7 @@ export function PaletteDetail() {
   useEffect(() => {
     if (!palette) return;
     try {
-      const hexColors = palette.colors.map(c => {
-        const rgb = oklchToRgb(c.color);
-        const toHex = (n: number) =>
-          Math.round(Math.max(0, Math.min(255, n)))
-            .toString(16)
-            .padStart(2, '0');
-        return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
-      });
+      const hexColors = palette.colors.map(c => oklchToHex(c.color));
       sessionStorage.setItem('kulrs_palette_colors', JSON.stringify(hexColors));
     } catch { /* ignore */ }
   }, [palette]);
@@ -351,15 +312,8 @@ export function PaletteDetail() {
           <button
             onClick={() => {
               if (!palette) return;
-              const hexColors = palette.colors.map(c => {
-                const rgb = oklchToRgb(c.color);
-                const toHex = (n: number) =>
-                  Math.round(Math.max(0, Math.min(255, n)))
-                    .toString(16)
-                    .padStart(2, '0');
-                return `${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
-              });
-              navigate(`/compose?colors=${hexColors.join(',')}`);
+              const colorsParam = buildPaletteColorsParam(palette.colors.map(c => c.color));
+              navigate(`/compose?colors=${colorsParam}`);
             }}
             className="action-button compose-button"
             aria-label="Compose music from this palette"
@@ -371,15 +325,8 @@ export function PaletteDetail() {
           <button
             onClick={() => {
               if (!palette) return;
-              const hexColors = palette.colors.map(c => {
-                const rgb = oklchToRgb(c.color);
-                const toHex = (n: number) =>
-                  Math.round(Math.max(0, Math.min(255, n)))
-                    .toString(16)
-                    .padStart(2, '0');
-                return `${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
-              });
-              navigate(`/pattern?colors=${hexColors.join(',')}`);
+              const colorsParam = buildPaletteColorsParam(palette.colors.map(c => c.color));
+              navigate(`/pattern?colors=${colorsParam}`);
             }}
             className="action-button pattern-button"
             aria-label="Create patterns from this palette"
@@ -391,15 +338,8 @@ export function PaletteDetail() {
           <button
             onClick={() => {
               if (!palette) return;
-              const hexColors = palette.colors.map(c => {
-                const rgb = oklchToRgb(c.color);
-                const toHex = (n: number) =>
-                  Math.round(Math.max(0, Math.min(255, n)))
-                    .toString(16)
-                    .padStart(2, '0');
-                return `${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
-              });
-              navigate(`/design?colors=${hexColors.join(',')}`);
+              const colorsParam = buildPaletteColorsParam(palette.colors.map(c => c.color));
+              navigate(`/design?colors=${colorsParam}`);
             }}
             className="action-button design-button"
             aria-label="Design with this palette"

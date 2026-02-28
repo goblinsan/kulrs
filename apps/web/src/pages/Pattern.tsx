@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, Fragment } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { parseColorsFromParams, randomHex, hexToRgb } from '../utils/colorUtils';
 import './Pattern.css';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -71,57 +72,19 @@ const WEIGHTS_OK = new Set<PatternType>([
    Helpers
    ═══════════════════════════════════════════════════════════════════════════ */
 
-function hexToRgb(hex: string): [number, number, number] {
-  return [
-    parseInt(hex.slice(1, 3), 16),
-    parseInt(hex.slice(3, 5), 16),
-    parseInt(hex.slice(5, 7), 16),
-  ];
+function hexToRgbTuple(hex: string): [number, number, number] {
+  const { r, g, b } = hexToRgb(hex);
+  return [r, g, b];
 }
 
 function darken(hex: string, amount: number): string {
-  const [r, g, b] = hexToRgb(hex);
+  const [r, g, b] = hexToRgbTuple(hex);
   return `rgb(${Math.round(r * (1 - amount))},${Math.round(g * (1 - amount))},${Math.round(b * (1 - amount))})`;
 }
 
 /** Wrapping palette color accessor. */
 function cc(colors: string[], i: number): string {
   return colors[((i % colors.length) + colors.length) % colors.length];
-}
-
-/**
- * Parse palette hex colors from URL or sessionStorage.
- * Accepts `?colors=FF5733,457B9D,...` (optional # prefix).
- * Falls back to sessionStorage so all nav links carry the palette.
- */
-function parseColorsFromParams(sp: URLSearchParams): string[] | null {
-  const raw = sp.get('colors');
-  if (raw) {
-    return raw
-      .split(',')
-      .map(v => (v.startsWith('#') ? v : `#${v}`))
-      .filter(v => /^#[0-9a-fA-F]{6}$/.test(v));
-  }
-  try {
-    const stored = sessionStorage.getItem('kulrs_palette_colors');
-    if (stored) {
-      const arr = JSON.parse(stored) as string[];
-      if (Array.isArray(arr) && arr.length > 0)
-        return arr.filter(v => /^#[0-9a-fA-F]{6}$/i.test(v));
-    }
-  } catch {
-    /* ignore */
-  }
-  return null;
-}
-
-function randomHex(): string {
-  return (
-    '#' +
-    Math.floor(Math.random() * 0xffffff)
-      .toString(16)
-      .padStart(6, '0')
-  );
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -578,7 +541,7 @@ function crochetDraw(
   while (colX < w + sp) {
     const colW = cycleW * wts[ci % n];
     const color = colors[ci % n];
-    const [r, g, b] = hexToRgb(color);
+    const [r, g, b] = hexToRgbTuple(color);
     const cx = colX + colW / 2;
 
     // Column background

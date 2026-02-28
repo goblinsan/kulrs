@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { FontPicker } from '../components/FontPicker';
+import { parseColorsFromParams, randomHex } from '../utils/colorUtils';
 import './Design.css';
 
 // ── Types ───────────────────────────────────────────────────────────
@@ -79,26 +80,6 @@ const DARK_BG: Record<TemplateId, string> = {
 };
 
 // ── Helpers ─────────────────────────────────────────────────────────
-function parseColorsFromParams(sp: URLSearchParams): string[] | null {
-  const raw = sp.get('colors');
-  if (raw) {
-    return raw
-      .split(',')
-      .map(v => (v.startsWith('#') ? v : `#${v}`))
-      .filter(v => /^#[0-9a-fA-F]{6}$/.test(v));
-  }
-  try {
-    const stored = sessionStorage.getItem('kulrs_palette_colors');
-    if (stored) {
-      const arr = JSON.parse(stored) as string[];
-      if (Array.isArray(arr) && arr.length > 0)
-        return arr.filter(v => /^#[0-9a-fA-F]{6}$/i.test(v));
-    }
-  } catch {
-    /* ignore */
-  }
-  return null;
-}
 
 function safeColor(colors: string[], idx: number): string {
   return colors[idx % colors.length] || '#888888';
@@ -129,16 +110,6 @@ function buildVizailUrl(
   if (theme !== 'light') params.set('theme', theme);
   if (theme === 'custom') params.set('bg', customBg.replace('#', ''));
   return `https://vizail.com/from-kulrs?${params.toString()}`;
-}
-
-function randomHex(): string {
-  return (
-    '#' +
-    Math.floor(Math.random() * 0xffffff)
-      .toString(16)
-      .padStart(6, '0')
-      .toUpperCase()
-  );
 }
 
 // ── Mini preview components ─────────────────────────────────────────

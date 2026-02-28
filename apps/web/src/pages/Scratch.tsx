@@ -1,8 +1,6 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  rgbToOklch,
-  oklchToRgb,
   generateAnalogous,
   generateComplementary,
   generateSplitComplementary,
@@ -10,48 +8,17 @@ import {
   type OKLCHColor,
 } from '@kulrs/shared';
 import { createPalette, type CreatePaletteRequest } from '../services/api';
+import {
+  oklchToHex,
+  hexToOklch,
+  randomHex,
+  luminance,
+} from '../utils/colorUtils';
 import './Scratch.css';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Helpers
    ═══════════════════════════════════════════════════════════════════════════ */
-
-function hexToRgb(hex: string): { r: number; g: number; b: number } {
-  return {
-    r: parseInt(hex.slice(1, 3), 16),
-    g: parseInt(hex.slice(3, 5), 16),
-    b: parseInt(hex.slice(5, 7), 16),
-  };
-}
-
-function rgbToHex(r: number, g: number, b: number): string {
-  const clamp = (v: number) => Math.max(0, Math.min(255, Math.round(v)));
-  return (
-    '#' +
-    [clamp(r), clamp(g), clamp(b)]
-      .map(v => v.toString(16).padStart(2, '0'))
-      .join('')
-  );
-}
-
-function oklchToHex(c: OKLCHColor): string {
-  const { r, g, b } = oklchToRgb(c);
-  return rgbToHex(r, g, b);
-}
-
-function hexToOklch(hex: string): OKLCHColor {
-  const { r, g, b } = hexToRgb(hex);
-  return rgbToOklch({ r, g, b });
-}
-
-function randomHex(): string {
-  return (
-    '#' +
-    Math.floor(Math.random() * 0xffffff)
-      .toString(16)
-      .padStart(6, '0')
-  );
-}
 
 /** Clamp OKLCH lightness so the resulting hex is valid (not clamped to black/white). */
 function safeOklchToHex(c: OKLCHColor): string {
@@ -180,8 +147,7 @@ function buildSuggestions(
 
 /** Perceived luminance for choosing label color. */
 function luma(hex: string): number {
-  const { r, g, b } = hexToRgb(hex);
-  return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance(hex);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

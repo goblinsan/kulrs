@@ -31,6 +31,7 @@ import {
   type CreatePaletteRequest,
 } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { parseColorsFromParams } from '../utils/colorUtils';
 import './Compose.css';
 
 const CHORD_QUALITIES: ChordQuality[] = [
@@ -53,49 +54,6 @@ const SCALE_TYPES: { value: ScaleType; label: string }[] = [
 ];
 
 const DEFAULT_COLORS = ['#E63946', '#457B9D', '#2A9D8F', '#E9C46A', '#F4A261'];
-
-/**
- * Parse palette hex colors from the URL search params.
- * Accepts `?colors=FF5733,457B9D,...` (no # prefix) or `?palette=<json>`.
- * Falls back to sessionStorage (set by Home page) so the nav-bar
- * "Compose" link carries the current palette even without URL params.
- */
-function parseColorsFromParams(searchParams: URLSearchParams): string[] | null {
-  const raw = searchParams.get('colors');
-  if (raw) {
-    return raw
-      .split(',')
-      .map(c => (c.startsWith('#') ? c : `#${c}`))
-      .filter(c => /^#[0-9a-fA-F]{6}$/.test(c));
-  }
-
-  const json = searchParams.get('palette');
-  if (json) {
-    try {
-      const parsed = JSON.parse(decodeURIComponent(json));
-      if (Array.isArray(parsed?.colors)) {
-        return parsed.colors.map((c: { hexValue: string }) => c.hexValue);
-      }
-    } catch {
-      /* ignore */
-    }
-  }
-
-  // Fallback: read from sessionStorage (written by Home page)
-  try {
-    const stored = sessionStorage.getItem('kulrs_palette_colors');
-    if (stored) {
-      const colors = JSON.parse(stored) as string[];
-      if (Array.isArray(colors) && colors.length > 0) {
-        return colors.filter(c => /^#[0-9a-fA-F]{6}$/i.test(c));
-      }
-    }
-  } catch {
-    /* ignore */
-  }
-
-  return null;
-}
 
 const BRIDGE_DEGREES: ProgressionPreset = {
   name: 'Bridge',
