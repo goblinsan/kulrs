@@ -3,6 +3,7 @@ import { db } from '../config/database.js';
 import { users, palettes, colors, paletteTags, likes, saves } from '@kulrs/db';
 import { CreatePaletteInput } from '../utils/validation.js';
 import { oklchToRgb } from '@kulrs/shared';
+import { NotFoundError } from '../utils/errors.js';
 
 /**
  * Convert OKLCH color to hex string
@@ -187,7 +188,7 @@ export class PaletteService {
       .limit(1);
 
     if (!palette) {
-      throw new Error('Palette not found or not owned by user');
+      throw new NotFoundError('Palette not found or not owned by user');
     }
 
     await db.delete(palettes).where(eq(palettes.id, paletteId));
@@ -352,7 +353,7 @@ export class PaletteService {
       .limit(1);
 
     if (!originalPalette) {
-      throw new Error('Palette not found');
+      throw new NotFoundError('Palette not found');
     }
 
     const originalColors = await db

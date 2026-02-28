@@ -9,6 +9,7 @@ import {
 } from './middleware/auth.js';
 import palettesRouter from './routes/palettes.js';
 import generateRouter from './routes/generate.js';
+import { AppError, ValidationError } from './utils/errors.js';
 
 // Initialize Firebase Admin SDK
 initializeFirebase();
@@ -106,7 +107,7 @@ app.use((_req, res) => {
   });
 });
 
-// Error handler
+// Centralized error handler — understands typed AppError subclasses
 app.use(
   (
     err: Error,
@@ -115,6 +116,19 @@ app.use(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _next: express.NextFunction
   ) => {
+    if (err instanceof AppError) {
+      const body: Record<string, unknown> = {
+        error: err.name,
+        message: err.message,
+      };
+      if (err instanceof ValidationError && err.details) {
+        body.details = err.details;
+      }
+      res.status(err.statusCode).json(body);
+      return;
+    }
+
+    // Unexpected / untyped error — log and send generic 500
     console.error('Unhandled error:', err);
     res.status(500).json({
       error: 'Internal Server Error',
