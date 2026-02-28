@@ -50,6 +50,9 @@ export function Layout({ children }: LayoutProps) {
             <Link to="/pattern" onClick={closeMobileMenu}>
               Pattern
             </Link>
+            <Link to="/scratch" onClick={closeMobileMenu}>
+              Scratch
+            </Link>
             {user ? (
               <>
                 <span className="nav-user" title={user.email || undefined}>

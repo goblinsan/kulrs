@@ -1,0 +1,443 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Scratch page — build a palette from scratch, dark theme
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.scratch-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1rem 4rem;
+}
+
+/* ── Header ────────────────────────────────────────────────────────────── */
+
+.scratch-header h1 {
+  margin: 0 0 0.5rem;
+  font-size: 2rem;
+  color: #fff;
+}
+
+.scratch-header h1 i {
+  color: var(--brand-color, #aaffdd);
+  margin-right: 0.3rem;
+}
+
+.scratch-subtitle {
+  color: #888;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0 0 1.5rem;
+}
+
+/* ── Starter screen ────────────────────────────────────────────────────── */
+
+.scratch-start {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.start-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.start-swatch-large {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  display: block;
+  flex-shrink: 0;
+  transition: border-color 0.15s;
+}
+
+.start-swatch-large:hover {
+  border-color: #aaffdd;
+}
+
+.start-swatch-large input[type='color'] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+
+.start-picker-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.start-hex {
+  font-family: monospace;
+  font-size: 1.2rem;
+  color: #ccc;
+}
+
+.start-divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: #555;
+  font-size: 0.8rem;
+  width: 100%;
+  max-width: 500px;
+}
+
+.start-divider::before,
+.start-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #333;
+}
+
+/* ── Preset grid ───────────────────────────────────────────────────────── */
+
+.preset-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  max-width: 560px;
+}
+
+.preset-swatch {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 0 3px;
+  transition: all 0.15s;
+  position: relative;
+  font-family: inherit;
+}
+
+.preset-swatch:hover {
+  border-color: #aaffdd;
+  transform: scale(1.1);
+  z-index: 1;
+}
+
+.preset-label {
+  font-size: 0.5rem;
+  font-family: monospace;
+  opacity: 0;
+  transition: opacity 0.15s;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.preset-swatch:hover .preset-label {
+  opacity: 1;
+}
+
+/* ── Palette strip ─────────────────────────────────────────────────────── */
+
+.scratch-palette-strip {
+  display: flex;
+  gap: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #333;
+  margin-bottom: 1.5rem;
+  min-height: 72px;
+}
+
+.strip-swatch {
+  flex: 1;
+  min-width: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  padding: 0.5rem 0.25rem;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.15s;
+}
+
+.strip-swatch:hover {
+  filter: brightness(1.1);
+}
+
+.strip-swatch.focused {
+  outline: 3px solid #aaffdd;
+  outline-offset: -3px;
+  z-index: 1;
+}
+
+.strip-label {
+  font-family: monospace;
+  font-size: 0.6rem;
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.strip-remove {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+  line-height: 1;
+  padding: 0;
+}
+
+.strip-swatch:hover .strip-remove {
+  opacity: 0.8;
+}
+
+.strip-remove:hover {
+  opacity: 1 !important;
+}
+
+.strip-focus-badge {
+  position: absolute;
+  bottom: 3px;
+  right: 5px;
+  font-size: 0.6rem;
+  opacity: 0.6;
+}
+
+/* ── Suggestions ───────────────────────────────────────────────────────── */
+
+.scratch-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.suggestion-group {
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+}
+
+.suggestion-group-label {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  color: #999;
+  font-weight: 500;
+}
+
+.suggestion-group-label i {
+  margin-right: 0.3rem;
+  color: #aaffdd;
+  font-size: 0.8rem;
+}
+
+.suggestion-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.suggestion-swatch {
+  width: 52px;
+  height: 52px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 0 2px;
+  transition: all 0.15s;
+  position: relative;
+  font-family: inherit;
+}
+
+.suggestion-swatch:hover {
+  border-color: #aaffdd;
+  transform: scale(1.1);
+  z-index: 1;
+}
+
+.swatch-label {
+  font-size: 0.45rem;
+  font-family: monospace;
+  opacity: 0;
+  transition: opacity 0.15s;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.suggestion-swatch:hover .swatch-label {
+  opacity: 1;
+}
+
+/* ── Manual / random row ───────────────────────────────────────────────── */
+
+.scratch-manual-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem 1rem;
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+}
+
+.manual-swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  display: block;
+  flex-shrink: 0;
+}
+
+.manual-swatch input[type='color'] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+
+.manual-hex {
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: #999;
+  min-width: 64px;
+}
+
+/* ── Buttons ───────────────────────────────────────────────────────────── */
+
+.scratch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 1.1rem;
+  background: transparent;
+  border: 1px solid #aaffdd;
+  border-radius: 6px;
+  color: #aaffdd;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.scratch-btn:hover {
+  background: rgba(170, 255, 221, 0.1);
+}
+
+.scratch-btn.primary {
+  background: rgba(170, 255, 221, 0.12);
+}
+
+.scratch-btn.primary:hover {
+  background: rgba(170, 255, 221, 0.22);
+}
+
+.scratch-btn.secondary {
+  border-color: #555;
+  color: #aaa;
+}
+
+.scratch-btn.secondary:hover {
+  border-color: #888;
+  color: #ddd;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.scratch-btn.danger {
+  border-color: #e63946;
+  color: #e63946;
+}
+
+.scratch-btn.danger:hover {
+  background: rgba(230, 57, 70, 0.1);
+}
+
+.scratch-btn.small {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+}
+
+/* ── Actions ───────────────────────────────────────────────────────────── */
+
+.scratch-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  justify-content: center;
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+  .scratch-page {
+    padding: 1rem 0.75rem 3rem;
+  }
+
+  .scratch-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .start-swatch-large {
+    width: 60px;
+    height: 60px;
+  }
+
+  .preset-grid {
+    gap: 0.35rem;
+  }
+
+  .preset-swatch {
+    width: 44px;
+    height: 44px;
+  }
+
+  .strip-label {
+    display: none;
+  }
+
+  .suggestion-swatch {
+    width: 42px;
+    height: 42px;
+  }
+
+  .swatch-label {
+    display: none;
+  }
+
+  .manual-hex {
+    display: none;
+  }
+
+  .scratch-actions {
+    flex-direction: column;
+  }
+
+  .scratch-actions .scratch-btn {
+    justify-content: center;
+  }
+}
