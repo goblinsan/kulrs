@@ -53,6 +53,9 @@ export const palettes = pgTable('palettes', {
   isPublicIdx: index('palettes_is_public_idx').on(table.isPublic),
   createdAtIdx: index('palettes_created_at_idx').on(table.createdAt),
   likesCountIdx: index('palettes_likes_count_idx').on(table.likesCount),
+  // Composite indexes for browse sort queries
+  publicRecentIdx: index('palettes_public_recent_idx').on(table.isPublic, table.createdAt),
+  publicPopularIdx: index('palettes_public_popular_idx').on(table.isPublic, table.likesCount, table.createdAt),
 }));
 
 /**

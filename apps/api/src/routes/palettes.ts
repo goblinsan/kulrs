@@ -1,9 +1,32 @@
 import { Router, Response, Request } from 'express';
+import rateLimit from 'express-rate-limit';
 import { AuthenticatedRequest } from '../middleware/auth.js';
 import { paletteService } from '../services/palette.service.js';
 import { createPaletteSchema } from '../utils/validation.js';
 
 const router = Router();
+
+// ----------------------------------------------------------------
+// Helpers
+// ----------------------------------------------------------------
+
+/** Clamp a numeric query param to [min, max]. */
+function clampInt(raw: string | undefined, fallback: number, min: number, max: number): number {
+  const n = parseInt(raw ?? String(fallback), 10);
+  if (Number.isNaN(n)) return fallback;
+  return Math.max(min, Math.min(max, n));
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Stricter write limiter for like/unlike/create/delete — 20 req/min/IP */
+const paletteWriteLimiter = rateLimit({
+  windowMs: 60_000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests', message: 'Please try again later' },
+});
 
 /**
  * GET /palettes
@@ -12,19 +35,20 @@ const router = Router();
  */
 router.get('/', async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const {
-      sort = 'recent',
-      userId,
-      limit = '20',
-      offset = '0',
-      deviceId,
-    } = req.query as {
-      sort?: 'recent' | 'popular';
-      userId?: string;
-      limit?: string;
-      offset?: string;
-      deviceId?: string;
-    };
+    const rawQuery = req.query as Record<string, string | undefined>;
+
+    // Validate & clamp query params
+    const sort = rawQuery.sort === 'popular' ? 'popular' as const : 'recent' as const;
+    const limit = clampInt(rawQuery.limit, 20, 1, 50);
+    const offset = clampInt(rawQuery.offset, 0, 0, 10_000);
+    const userId = rawQuery.userId;
+    const deviceId = rawQuery.deviceId;
+
+    // Validate deviceId format if present
+    if (deviceId && (deviceId.length > 128 || !/^[\w-]+$/.test(deviceId))) {
+      res.status(400).json({ error: 'Invalid deviceId' });
+      return;
+    }
 
     // Resolve viewer identity for per-palette like status
     let viewerUserId: string | null = null;
@@ -45,12 +69,15 @@ router.get('/', async (req: AuthenticatedRequest, res: Response) => {
     }
 
     const palettes = await paletteService.browsePalettes({
-      sort: sort as 'recent' | 'popular',
+      sort,
       userId,
-      limit: parseInt(limit, 10),
-      offset: parseInt(offset, 10),
+      limit,
+      offset,
       viewerUserId,
     });
+
+    // Cache public browse results briefly to reduce DB load
+    res.setHeader('Cache-Control', 'public, max-age=15, stale-while-revalidate=30');
 
     res.status(200).json({
       success: true,
@@ -81,14 +108,17 @@ router.get('/my', async (req: AuthenticatedRequest, res: Response) => {
       offset?: string;
     };
 
+    const clampedLimit = clampInt(limit, 20, 1, 50);
+    const clampedOffset = clampInt(offset, 0, 0, 10_000);
+
     const user = await paletteService.getOrCreateUser(
       req.user.uid,
       req.user.email
     );
 
     const palettes = await paletteService.getUserPalettes(user.id, {
-      limit: parseInt(limit, 10),
-      offset: parseInt(offset, 10),
+      limit: clampedLimit,
+      offset: clampedOffset,
     });
 
     res.status(200).json({
@@ -108,7 +138,7 @@ router.get('/my', async (req: AuthenticatedRequest, res: Response) => {
  * GET /palettes/:id
  * Get a palette by ID
  */
-router.get('/:id', async (req: Request, res: Response) => {
+router.get('/:id', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const paletteId = String(req.params.id);
 
@@ -120,6 +150,16 @@ router.get('/:id', async (req: Request, res: Response) => {
         message: 'Palette not found',
       });
       return;
+    }
+
+    // Enforce privacy — allow owner or public palettes only
+    if (!palette.isPublic) {
+      const isOwner = req.user && palette.userId ===
+        (await paletteService.getOrCreateUser(req.user.uid, req.user.email)).id;
+      if (!isOwner) {
+        res.status(404).json({ error: 'Not Found', message: 'Palette not found' });
+        return;
+      }
     }
 
     res.status(200).json({
@@ -139,7 +179,7 @@ router.get('/:id', async (req: Request, res: Response) => {
  * POST /palettes
  * Create a new palette
  */
-router.post('/', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/', paletteWriteLimiter, async (req: AuthenticatedRequest, res: Response) => {
   try {
     // Resolve user — authenticated or anonymous via deviceId
     const { deviceId } = req.body as { deviceId?: string };
@@ -147,6 +187,11 @@ router.post('/', async (req: AuthenticatedRequest, res: Response) => {
     if (req.user) {
       user = await paletteService.getOrCreateUser(req.user.uid, req.user.email);
     } else if (deviceId) {
+      // Validate deviceId format
+      if (typeof deviceId !== 'string' || deviceId.length > 128 || !/^[\w-]+$/.test(deviceId)) {
+        res.status(400).json({ error: 'Invalid deviceId format' });
+        return;
+      }
       user = await paletteService.getOrCreateAnonymousUser(deviceId);
     } else {
       res.status(401).json({ error: 'Unauthorized' });
@@ -189,7 +234,7 @@ router.post('/', async (req: AuthenticatedRequest, res: Response) => {
  * POST /palettes/:id/save
  * Save a palette to user's saved collection
  */
-router.post('/:id/save', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/:id/save', paletteWriteLimiter, async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user) {
       res.status(401).json({ error: 'Unauthorized' });
@@ -225,10 +270,16 @@ router.post('/:id/save', async (req: AuthenticatedRequest, res: Response) => {
  * Like a palette — works for authenticated AND anonymous users.
  * Anonymous users are identified by a deviceId in the request body.
  */
-router.post('/:id/like', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/:id/like', paletteWriteLimiter, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const paletteId = String(req.params.id);
     const { deviceId } = req.body as { deviceId?: string };
+
+    // Validate deviceId format if present
+    if (deviceId && (typeof deviceId !== 'string' || deviceId.length > 128 || !/^[\w-]+$/.test(deviceId))) {
+      res.status(400).json({ error: 'Invalid deviceId format' });
+      return;
+    }
 
     let user;
     if (req.user) {
@@ -263,7 +314,7 @@ router.post('/:id/like', async (req: AuthenticatedRequest, res: Response) => {
  * Delete a palette owned by the authenticated user.
  * Cascade-deletes colors, likes, saves, and tags.
  */
-router.delete('/:id', async (req: AuthenticatedRequest, res: Response) => {
+router.delete('/:id', paletteWriteLimiter, async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user) {
       res.status(401).json({ error: 'Unauthorized' });
@@ -306,10 +357,16 @@ router.delete('/:id', async (req: AuthenticatedRequest, res: Response) => {
  * DELETE /palettes/:id/like
  * Unlike a palette — works for authenticated AND anonymous users.
  */
-router.delete('/:id/like', async (req: AuthenticatedRequest, res: Response) => {
+router.delete('/:id/like', paletteWriteLimiter, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const paletteId = String(req.params.id);
     const { deviceId } = req.body as { deviceId?: string };
+
+    // Validate deviceId format if present
+    if (deviceId && (typeof deviceId !== 'string' || deviceId.length > 128 || !/^[\w-]+$/.test(deviceId))) {
+      res.status(400).json({ error: 'Invalid deviceId format' });
+      return;
+    }
 
     let user;
     if (req.user) {
@@ -382,7 +439,7 @@ router.get('/:id/likes', async (req: AuthenticatedRequest, res: Response) => {
  * POST /palettes/:id/remix
  * Remix a palette (create a copy)
  */
-router.post('/:id/remix', async (req: AuthenticatedRequest, res: Response) => {
+router.post('/:id/remix', paletteWriteLimiter, async (req: AuthenticatedRequest, res: Response) => {
   try {
     if (!req.user) {
       res.status(401).json({ error: 'Unauthorized' });

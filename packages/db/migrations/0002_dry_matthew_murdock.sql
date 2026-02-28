@@ -1,0 +1,2 @@
+CREATE INDEX "palettes_public_recent_idx" ON "palettes" USING btree ("is_public","created_at");--> statement-breakpoint
+CREATE INDEX "palettes_public_popular_idx" ON "palettes" USING btree ("is_public","likes_count","created_at");

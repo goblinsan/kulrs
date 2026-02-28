@@ -383,8 +383,13 @@ export class PaletteService {
         ? [desc(palettes.likesCount), desc(palettes.createdAt)]
         : [desc(palettes.createdAt)];
 
-    // Fetch more than needed to account for duplicates being removed.
-    const fetchLimit = limit * 3;
+    // Clamp limit to a safe ceiling (routes should already clamp, belt & braces)
+    const safeLimit = Math.min(Math.max(1, limit), 50);
+    const safeOffset = Math.max(0, offset);
+
+    // Fetch moderately more than requested to account for post-dedup removal,
+    // but never an unbounded amount.  Capped at 100 rows.
+    const fetchLimit = Math.min(safeLimit * 2, 100);
 
     const paletteResults = await db
       .select({
@@ -466,7 +471,7 @@ export class PaletteService {
     });
 
     // Apply offset and limit after deduplication
-    return deduplicated.slice(offset, offset + limit);
+    return deduplicated.slice(safeOffset, safeOffset + safeLimit);
   }
 
   /**
@@ -476,7 +481,8 @@ export class PaletteService {
     userId: string,
     options: { limit: number; offset: number }
   ) {
-    const { limit, offset } = options;
+    const limit = Math.min(Math.max(1, options.limit), 50);
+    const offset = Math.max(0, options.offset);
 
     const paletteResults = await db
       .select({
