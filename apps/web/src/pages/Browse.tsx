@@ -5,6 +5,7 @@ import {
   getMyPalettes,
   likePalette,
   unlikePalette,
+  deletePalette,
   type BrowsePalette,
 } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -132,6 +133,22 @@ export function Browse() {
     navigate(`/palette/${palette.id}`);
   };
 
+  const handleDeletePalette = async (
+    e: React.MouseEvent,
+    paletteId: string
+  ) => {
+    e.stopPropagation();
+    if (!window.confirm('Delete this palette? This cannot be undone.')) return;
+
+    try {
+      await deletePalette(paletteId);
+      setPalettes(prev => prev.filter(p => p.id !== paletteId));
+    } catch (err) {
+      console.error('Error deleting palette:', err);
+      alert('Failed to delete palette');
+    }
+  };
+
   return (
     <div className="browse-page">
       <div className="browse-header">
@@ -219,6 +236,15 @@ export function Browse() {
                     initialLiked={palette.userLiked ?? false}
                   />
                   <CopyIdButton paletteId={palette.id} />
+                  {filter === 'my' && (
+                    <button
+                      className="delete-palette-button"
+                      onClick={e => handleDeletePalette(e, palette.id)}
+                      title="Delete palette"
+                    >
+                      <i className="fa-regular fa-trash-can"></i>
+                    </button>
+                  )}
                   <span className="date">
                     {new Date(palette.createdAt).toLocaleDateString()}
                   </span>

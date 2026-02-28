@@ -7,6 +7,7 @@ import { PaletteDetail } from './pages/PaletteDetail';
 import { Compose } from './pages/Compose';
 import { Pattern } from './pages/Pattern';
 import { Scratch } from './pages/Scratch';
+import { Design } from './pages/Design';
 import './App.css';
 
 function App() {
@@ -18,7 +19,8 @@ function App() {
           <Route path="/browse" element={<Browse />} />
           <Route path="/compose" element={<Compose />} />
           <Route path="/pattern" element={<Pattern />} />
-          <Route path="/scratch" element={<Scratch />} />
+          <Route path="/scratch" element={<Scratch />} />{' '}
+          <Route path="/design" element={<Design />} />{' '}
           <Route path="/login" element={<Login />} />
           <Route path="/palette/:id" element={<PaletteDetail />} />
         </Routes>

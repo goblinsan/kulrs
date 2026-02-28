@@ -298,3 +298,12 @@ export interface GetPaletteResponse {
 export async function getPaletteById(id: string): Promise<GetPaletteResponse> {
   return apiGet<GetPaletteResponse>(`/palettes/${id}`);
 }
+
+/**
+ * Delete a palette owned by the current user
+ */
+export async function deletePalette(
+  id: string
+): Promise<{ success: boolean; data: { deleted: boolean } }> {
+  return apiDelete(`/palettes/${id}`);
+}

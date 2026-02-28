@@ -259,6 +259,50 @@ router.post('/:id/like', async (req: AuthenticatedRequest, res: Response) => {
 });
 
 /**
+ * DELETE /palettes/:id
+ * Delete a palette owned by the authenticated user.
+ * Cascade-deletes colors, likes, saves, and tags.
+ */
+router.delete('/:id', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const paletteId = String(req.params.id);
+
+    const user = await paletteService.getOrCreateUser(
+      req.user.uid,
+      req.user.email
+    );
+
+    try {
+      const result = await paletteService.deletePalette(user.id, paletteId);
+      res.status(200).json({ success: true, data: result });
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message.includes('not found or not owned')
+      ) {
+        res.status(404).json({
+          error: 'Not Found',
+          message: 'Palette not found or you do not own it',
+        });
+        return;
+      }
+      throw error;
+    }
+  } catch (error) {
+    console.error('Error deleting palette:', error);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to delete palette',
+    });
+  }
+});
+
+/**
  * DELETE /palettes/:id/like
  * Unlike a palette — works for authenticated AND anonymous users.
  */

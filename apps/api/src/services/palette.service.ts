@@ -138,6 +138,27 @@ export class PaletteService {
   }
 
   /**
+   * Delete a palette owned by the given user.
+   * Cascade-deletes colors, likes, saves, and tags via FK constraints.
+   */
+  async deletePalette(userId: string, paletteId: string) {
+    // Verify ownership
+    const [palette] = await db
+      .select({ id: palettes.id, userId: palettes.userId })
+      .from(palettes)
+      .where(and(eq(palettes.id, paletteId), eq(palettes.userId, userId)))
+      .limit(1);
+
+    if (!palette) {
+      throw new Error('Palette not found or not owned by user');
+    }
+
+    await db.delete(palettes).where(eq(palettes.id, paletteId));
+
+    return { deleted: true };
+  }
+
+  /**
    * Get or create an anonymous user by device ID.
    * Allows unauthenticated visitors to like palettes.
    */
