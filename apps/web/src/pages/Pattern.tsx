@@ -703,11 +703,29 @@ function renderPattern(
   pattern: PatternType,
   spacing: number,
   grad: boolean,
-  weights?: number[]
+  weights?: number[],
+  rotation = 0
 ) {
   if (colors.length === 0) return;
   ctx.clearRect(0, 0, w, h);
-  DRAW[pattern](ctx, w, h, colors, spacing, grad, weights);
+
+  if (rotation === 0) {
+    DRAW[pattern](ctx, w, h, colors, spacing, grad, weights);
+  } else {
+    const rad = (rotation * Math.PI) / 180;
+    const cos = Math.abs(Math.cos(rad));
+    const sin = Math.abs(Math.sin(rad));
+    // Enlarged bounding box so rotated content covers the entire visible area
+    const bw = w * cos + h * sin;
+    const bh = w * sin + h * cos;
+
+    ctx.save();
+    ctx.translate(w / 2, h / 2);
+    ctx.rotate(rad);
+    ctx.translate(-bw / 2, -bh / 2);
+    DRAW[pattern](ctx, bw, bh, colors, spacing, grad, weights);
+    ctx.restore();
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -731,6 +749,7 @@ export function Pattern() {
   const [transition, setTransition] = useState<TransitionMode>('distinct');
   const [canvasW, setCanvasW] = useState(600);
   const [draggingHandle, setDraggingHandle] = useState<number | null>(null);
+  const [rotation, setRotation] = useState(0);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
 
@@ -780,11 +799,12 @@ export function Pattern() {
         patternType,
         spacing,
         transition === 'gradient',
-        weights
+        weights,
+        rotation
       );
     });
     return () => cancelAnimationFrame(id);
-  }, [colors, patternType, spacing, transition, canvasW, weights]);
+  }, [colors, patternType, spacing, transition, canvasW, weights, rotation]);
 
   /* ── Handlers ─────────────────────────────────────────────────────── */
 
@@ -877,7 +897,8 @@ export function Pattern() {
       patternType,
       spacing * scale,
       transition === 'gradient',
-      weights
+      weights,
+      rotation
     );
     offscreen.toBlob(blob => {
       if (!blob) return;
@@ -888,7 +909,7 @@ export function Pattern() {
       a.click();
       URL.revokeObjectURL(url);
     }, 'image/png');
-  }, [colors, patternType, spacing, transition, canvasW, weights]);
+  }, [colors, patternType, spacing, transition, canvasW, weights, rotation]);
 
   const gradientEnabled = GRADIENT_OK.has(patternType);
   const weightsEnabled = WEIGHTS_OK.has(patternType);
@@ -941,6 +962,18 @@ export function Pattern() {
             onChange={e => setSpacing(Number(e.target.value))}
           />
           <span className="ctrl-value">{spacing}px</span>
+        </div>
+
+        <div className="ctrl-row">
+          <label>Rotation</label>
+          <input
+            type="range"
+            min={0}
+            max={360}
+            value={rotation}
+            onChange={e => setRotation(Number(e.target.value))}
+          />
+          <span className="ctrl-value">{rotation}°</span>
         </div>
 
         <div className="ctrl-row">
