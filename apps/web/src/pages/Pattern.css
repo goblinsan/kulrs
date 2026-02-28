@@ -303,6 +303,35 @@
   background: #1a1a1a;
   border: 1px solid #2a2a2a;
   border-radius: 6px;
+  cursor: grab;
+  transition:
+    opacity 0.15s,
+    border-color 0.15s,
+    transform 0.15s;
+}
+
+.color-item:active {
+  cursor: grabbing;
+}
+
+.color-item.dragging {
+  opacity: 0.35;
+}
+
+.color-item.drag-over {
+  border-color: #aaffdd;
+  transform: scale(1.04);
+}
+
+.color-drag-handle {
+  color: #444;
+  font-size: 0.75rem;
+  cursor: grab;
+  flex-shrink: 0;
+}
+
+.color-item:hover .color-drag-handle {
+  color: #888;
 }
 
 .color-swatch {

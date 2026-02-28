@@ -731,6 +731,8 @@ export function Pattern() {
   const [transition, setTransition] = useState<TransitionMode>('distinct');
   const [canvasW, setCanvasW] = useState(600);
   const [draggingHandle, setDraggingHandle] = useState<number | null>(null);
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
 
   /* Keep sessionStorage in sync so other pages pick up the palette */
   useEffect(() => {
@@ -808,6 +810,22 @@ export function Pattern() {
       const share = 1 / (prev.length + 1);
       const scale = 1 - share;
       return [...prev.map(v => v * scale), share];
+    });
+  }, []);
+
+  const handleReorder = useCallback((from: number, to: number) => {
+    if (from === to) return;
+    setColors(prev => {
+      const next = [...prev];
+      const [item] = next.splice(from, 1);
+      next.splice(to, 0, item);
+      return next;
+    });
+    setWeights(prev => {
+      const next = [...prev];
+      const [item] = next.splice(from, 1);
+      next.splice(to, 0, item);
+      return next;
     });
   }, []);
 
@@ -1002,7 +1020,34 @@ export function Pattern() {
         </div>
         <div className="color-list">
           {colors.map((hex, i) => (
-            <div key={i} className="color-item">
+            <div
+              key={i}
+              className={`color-item${dragIdx === i ? ' dragging' : ''}${dragOverIdx === i ? ' drag-over' : ''}`}
+              draggable
+              onDragStart={e => {
+                setDragIdx(i);
+                e.dataTransfer.effectAllowed = 'move';
+              }}
+              onDragOver={e => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                if (dragOverIdx !== i) setDragOverIdx(i);
+              }}
+              onDragLeave={() => {
+                if (dragOverIdx === i) setDragOverIdx(null);
+              }}
+              onDrop={e => {
+                e.preventDefault();
+                if (dragIdx != null) handleReorder(dragIdx, i);
+                setDragIdx(null);
+                setDragOverIdx(null);
+              }}
+              onDragEnd={() => {
+                setDragIdx(null);
+                setDragOverIdx(null);
+              }}
+            >
+              <i className="fa-solid fa-grip-vertical color-drag-handle" />
               <label className="color-swatch" style={{ backgroundColor: hex }}>
                 <input
                   type="color"
