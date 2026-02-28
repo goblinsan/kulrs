@@ -261,6 +261,10 @@ export function Scratch() {
     [palette.length]
   );
 
+  const updateColor = useCallback((idx: number, hex: string) => {
+    setPalette(prev => prev.map((v, i) => (i === idx ? hex.toUpperCase() : v)));
+  }, []);
+
   const handleStartColor = useCallback(
     (hex: string) => {
       addColor(hex);
@@ -466,19 +470,30 @@ export function Scratch() {
             >
               {hex}
             </span>
-            {palette.length > 1 && (
-              <button
-                className="strip-remove"
-                style={{ color: luma(hex) > 0.55 ? '#333' : '#ddd' }}
-                onClick={e => {
-                  e.stopPropagation();
-                  removeColor(i);
-                }}
-                title="Remove"
-              >
-                ×
-              </button>
-            )}
+            <label
+              className="strip-edit"
+              style={{ color: luma(hex) > 0.55 ? '#333' : '#ddd' }}
+              title="Edit color"
+              onClick={e => e.stopPropagation()}
+            >
+              <i className="fa-solid fa-pen" />
+              <input
+                type="color"
+                value={hex}
+                onChange={e => updateColor(i, e.target.value)}
+              />
+            </label>
+            <button
+              className="strip-remove"
+              style={{ color: luma(hex) > 0.55 ? '#333' : '#ddd' }}
+              onClick={e => {
+                e.stopPropagation();
+                removeColor(i);
+              }}
+              title="Remove"
+            >
+              ×
+            </button>
             {focusIdx === i && (
               <span
                 className="strip-focus-badge"
