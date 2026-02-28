@@ -15,7 +15,11 @@ import {
   unlikePalette as unlikePaletteApi,
   type BrowsePalette,
 } from '../services/api';
-import { hexToOklch, buildPaletteColorsParam, oklchToHex } from '../utils/colorUtils';
+import {
+  hexToOklch,
+  buildPaletteColorsParam,
+  oklchToHex,
+} from '../utils/colorUtils';
 import './PaletteDetail.css';
 
 // Check if a string looks like a UUID (existing palette ID)
@@ -96,7 +100,9 @@ export function PaletteDetail() {
     try {
       const hexColors = palette.colors.map(c => oklchToHex(c.color));
       sessionStorage.setItem('kulrs_palette_colors', JSON.stringify(hexColors));
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }, [palette]);
 
   // Load palette - either fetch by ID or parse from URL
@@ -312,7 +318,9 @@ export function PaletteDetail() {
           <button
             onClick={() => {
               if (!palette) return;
-              const colorsParam = buildPaletteColorsParam(palette.colors.map(c => c.color));
+              const colorsParam = buildPaletteColorsParam(
+                palette.colors.map(c => c.color)
+              );
               navigate(`/compose?colors=${colorsParam}`);
             }}
             className="action-button compose-button"
@@ -325,7 +333,9 @@ export function PaletteDetail() {
           <button
             onClick={() => {
               if (!palette) return;
-              const colorsParam = buildPaletteColorsParam(palette.colors.map(c => c.color));
+              const colorsParam = buildPaletteColorsParam(
+                palette.colors.map(c => c.color)
+              );
               navigate(`/pattern?colors=${colorsParam}`);
             }}
             className="action-button pattern-button"
@@ -338,7 +348,9 @@ export function PaletteDetail() {
           <button
             onClick={() => {
               if (!palette) return;
-              const colorsParam = buildPaletteColorsParam(palette.colors.map(c => c.color));
+              const colorsParam = buildPaletteColorsParam(
+                palette.colors.map(c => c.color)
+              );
               navigate(`/design?colors=${colorsParam}`);
             }}
             className="action-button design-button"

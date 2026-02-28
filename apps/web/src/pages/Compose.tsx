@@ -556,8 +556,13 @@ export function Compose() {
   useEffect(() => {
     if (hexColors.length > 0) {
       try {
-        sessionStorage.setItem('kulrs_palette_colors', JSON.stringify(hexColors));
-      } catch { /* ignore */ }
+        sessionStorage.setItem(
+          'kulrs_palette_colors',
+          JSON.stringify(hexColors)
+        );
+      } catch {
+        /* ignore */
+      }
     }
   }, [hexColors]);
 
@@ -803,13 +808,22 @@ export function Compose() {
           <i className="fa-solid fa-arrow-left" /> Back to Generator
         </button>
         <div className="compose-nav-buttons">
-          <button className="compose-nav-btn" onClick={() => navigate(`/pattern?colors=${colorsParam}`)}>
+          <button
+            className="compose-nav-btn"
+            onClick={() => navigate(`/pattern?colors=${colorsParam}`)}
+          >
             <i className="fa-solid fa-shapes" /> Pattern
           </button>
-          <button className="compose-nav-btn" onClick={() => navigate('/scratch')}>
+          <button
+            className="compose-nav-btn"
+            onClick={() => navigate('/scratch')}
+          >
             <i className="fa-solid fa-pencil" /> Scratch
           </button>
-          <button className="compose-nav-btn" onClick={() => navigate(`/design?colors=${colorsParam}`)}>
+          <button
+            className="compose-nav-btn"
+            onClick={() => navigate(`/design?colors=${colorsParam}`)}
+          >
             <i className="fa-solid fa-palette" /> Design
           </button>
         </div>

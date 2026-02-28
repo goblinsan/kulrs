@@ -311,7 +311,9 @@ export function Scratch() {
     if (palette.length > 0) {
       try {
         sessionStorage.setItem('kulrs_palette_colors', JSON.stringify(palette));
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }
   }, [palette]);
 

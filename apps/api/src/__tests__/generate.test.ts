@@ -2,11 +2,13 @@ import { describe, it, expect } from '@jest/globals';
 import request from 'supertest';
 import express from 'express';
 import generateRouter from '../routes/generate.js';
+import { errorHandler } from '../utils/errors.js';
 
 // Create test app
 const app = express();
 app.use(express.json());
 app.use('/generate', generateRouter);
+app.use(errorHandler({ verbose: false }));
 
 describe('Generate Routes', () => {
   describe('POST /generate/color', () => {

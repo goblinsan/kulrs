@@ -11,7 +11,11 @@ import { HeroPalette } from '../components/palette/HeroPalette';
 import { initialPalette } from '../components/palette/paletteUtils';
 import { useAuth } from '../contexts/AuthContext';
 import { apiPost, likePalette, unlikePalette } from '../services/api';
-import { oklchToHex, hexToOklch, buildPaletteColorsParam } from '../utils/colorUtils';
+import {
+  oklchToHex,
+  hexToOklch,
+  buildPaletteColorsParam,
+} from '../utils/colorUtils';
 import './Home.css';
 
 export function Home() {
@@ -54,7 +58,16 @@ export function Home() {
           ? arr.filter(v => /^#[0-9a-fA-F]{6}$/i.test(v))
           : [];
         if (hexes.length > 0) {
-          const ROLES = ['primary', 'secondary', 'accent', 'info', 'success', 'warning', 'error', 'background'] as const;
+          const ROLES = [
+            'primary',
+            'secondary',
+            'accent',
+            'info',
+            'success',
+            'warning',
+            'error',
+            'background',
+          ] as const;
           const colors: AssignedColor[] = hexes.map((hex, i) => ({
             role: ROLES[i % ROLES.length] as AssignedColor['role'],
             color: hexToOklch(hex),
@@ -69,8 +82,10 @@ export function Home() {
           });
         }
       }
-    } catch { /* ignore */ }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    } catch {
+      /* ignore */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Keep current palette hex colors in sessionStorage so the Compose tab
@@ -191,17 +206,23 @@ export function Home() {
   };
 
   const handleCompose = () => {
-    const colorsParam = buildPaletteColorsParam(palette.colors.map(c => c.color));
+    const colorsParam = buildPaletteColorsParam(
+      palette.colors.map(c => c.color)
+    );
     navigate(`/compose?colors=${colorsParam}`);
   };
 
   const handlePattern = () => {
-    const colorsParam = buildPaletteColorsParam(palette.colors.map(c => c.color));
+    const colorsParam = buildPaletteColorsParam(
+      palette.colors.map(c => c.color)
+    );
     navigate(`/pattern?colors=${colorsParam}`);
   };
 
   const handleDesign = () => {
-    const colorsParam = buildPaletteColorsParam(palette.colors.map(c => c.color));
+    const colorsParam = buildPaletteColorsParam(
+      palette.colors.map(c => c.color)
+    );
     navigate(`/design?colors=${colorsParam}`);
   };
 

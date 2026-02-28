@@ -306,7 +306,9 @@ export function Design() {
     if (colors.length > 0) {
       try {
         sessionStorage.setItem('kulrs_palette_colors', JSON.stringify(colors));
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }
   }, [colors]);
 
@@ -577,10 +579,24 @@ export function Design() {
 
       {/* ── Navigate to other pages ────────────────────────────── */}
       <div className="design-nav-buttons">
-        <button className="design-nav-btn" onClick={() => navigate(`/compose?colors=${colors.map(c => c.replace('#', '')).join(',')}`)}>
+        <button
+          className="design-nav-btn"
+          onClick={() =>
+            navigate(
+              `/compose?colors=${colors.map(c => c.replace('#', '')).join(',')}`
+            )
+          }
+        >
           <i className="fa-solid fa-music" /> Compose
         </button>
-        <button className="design-nav-btn" onClick={() => navigate(`/pattern?colors=${colors.map(c => c.replace('#', '')).join(',')}`)}>
+        <button
+          className="design-nav-btn"
+          onClick={() =>
+            navigate(
+              `/pattern?colors=${colors.map(c => c.replace('#', '')).join(',')}`
+            )
+          }
+        >
           <i className="fa-solid fa-shapes" /> Pattern
         </button>
         <button className="design-nav-btn" onClick={() => navigate('/scratch')}>

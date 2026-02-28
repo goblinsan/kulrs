@@ -5,7 +5,12 @@
  * and parseColorsFromParams across page components.
  */
 
-import { type OKLCHColor, type RGBColor, oklchToRgb, rgbToOklch } from '@kulrs/shared';
+import {
+  type OKLCHColor,
+  type RGBColor,
+  oklchToRgb,
+  rgbToOklch,
+} from '@kulrs/shared';
 
 // ---------------------------------------------------------------------------
 // Hex ↔ OKLCH conversions
@@ -140,9 +145,7 @@ export function parseColorsFromParams(sp: URLSearchParams): string[] | null {
  * Build a `?colors=` query-string from an array of OKLCH colors,
  * and navigate to the given route.
  */
-export function buildPaletteColorsParam(
-  oklchColors: OKLCHColor[]
-): string {
+export function buildPaletteColorsParam(oklchColors: OKLCHColor[]): string {
   return oklchColors
     .map(c => {
       const rgb = oklchToRgb(c);

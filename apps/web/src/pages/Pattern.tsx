@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback, useRef, Fragment } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { parseColorsFromParams, randomHex, hexToRgb } from '../utils/colorUtils';
+import {
+  parseColorsFromParams,
+  randomHex,
+  hexToRgb,
+} from '../utils/colorUtils';
 import './Pattern.css';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1071,15 +1075,26 @@ export function Pattern() {
         <button className="download-btn" onClick={handleDownload}>
           <i className="fa-solid fa-download" /> Download PNG
         </button>
-        <button className="download-btn" onClick={() => navigate(`/compose?colors=${colors.map(c => c.replace('#', '')).join(',')}`)}
+        <button
+          className="download-btn"
+          onClick={() =>
+            navigate(
+              `/compose?colors=${colors.map(c => c.replace('#', '')).join(',')}`
+            )
+          }
         >
           <i className="fa-solid fa-music" /> Compose
         </button>
-        <button className="download-btn" onClick={() => navigate('/scratch')}
-        >
+        <button className="download-btn" onClick={() => navigate('/scratch')}>
           <i className="fa-solid fa-pencil" /> Scratch
         </button>
-        <button className="download-btn" onClick={() => navigate(`/design?colors=${colors.map(c => c.replace('#', '')).join(',')}`)}
+        <button
+          className="download-btn"
+          onClick={() =>
+            navigate(
+              `/design?colors=${colors.map(c => c.replace('#', '')).join(',')}`
+            )
+          }
         >
           <i className="fa-solid fa-palette" /> Design
         </button>

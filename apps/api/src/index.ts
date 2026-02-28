@@ -9,7 +9,7 @@ import {
 } from './middleware/auth.js';
 import palettesRouter from './routes/palettes.js';
 import generateRouter from './routes/generate.js';
-import { AppError, ValidationError } from './utils/errors.js';
+import { errorHandler } from './utils/errors.js';
 
 // Initialize Firebase Admin SDK
 initializeFirebase();
@@ -25,11 +25,11 @@ app.set('trust proxy', 1);
 // CORS middleware
 const isProduction = process.env.NODE_ENV === 'production';
 app.use((req, res, next) => {
-  const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || (
-    isProduction
+  const allowedOrigins =
+    process.env.CORS_ORIGIN?.split(',') ||
+    (isProduction
       ? ['https://kulrs.com', 'https://www.kulrs.com', 'https://vizail.com']
-      : ['http://localhost:5173', 'http://localhost:5174']
-  );
+      : ['http://localhost:5173', 'http://localhost:5174']);
   const origin = req.headers.origin;
 
   if (origin && allowedOrigins.includes(origin)) {
@@ -108,34 +108,7 @@ app.use((_req, res) => {
 });
 
 // Centralized error handler — understands typed AppError subclasses
-app.use(
-  (
-    err: Error,
-    _req: express.Request,
-    res: express.Response,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _next: express.NextFunction
-  ) => {
-    if (err instanceof AppError) {
-      const body: Record<string, unknown> = {
-        error: err.name,
-        message: err.message,
-      };
-      if (err instanceof ValidationError && err.details) {
-        body.details = err.details;
-      }
-      res.status(err.statusCode).json(body);
-      return;
-    }
-
-    // Unexpected / untyped error — log and send generic 500
-    console.error('Unhandled error:', err);
-    res.status(500).json({
-      error: 'Internal Server Error',
-      message: isProduction ? 'An unexpected error occurred' : err.message,
-    });
-  }
-);
+app.use(errorHandler());
 
 // Export the HTTP handler for Google Cloud Functions
 export const handler: HttpFunction = app;

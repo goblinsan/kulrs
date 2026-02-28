@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import './FontPicker.css';
 
+/* eslint-disable react-refresh/only-export-components */
+
 /* ── Font data with categories ───────────────────────────────────── */
 
 export type FontCategory =
@@ -115,7 +117,11 @@ export const FONT_CATALOG: FontEntry[] = [
   { name: 'Ubuntu Mono', category: 'monospace' },
 ];
 
-const CATEGORY_LABELS: { id: FontCategory | 'all'; label: string; icon: string }[] = [
+const CATEGORY_LABELS: {
+  id: FontCategory | 'all';
+  label: string;
+  icon: string;
+}[] = [
   { id: 'all', label: 'All', icon: 'fa-solid fa-font' },
   { id: 'sans-serif', label: 'Sans-Serif', icon: 'fa-solid fa-a' },
   { id: 'serif', label: 'Serif', icon: 'fa-solid fa-feather' },
@@ -193,7 +199,9 @@ function FontRow({
       </div>
       <div
         className="font-row-preview"
-        style={{ fontFamily: visible ? `'${font.name}', sans-serif` : 'inherit' }}
+        style={{
+          fontFamily: visible ? `'${font.name}', sans-serif` : 'inherit',
+        }}
       >
         {visible ? previewText : '...'}
       </div>
@@ -231,7 +239,10 @@ export function FontPicker({
   useEffect(() => {
     if (!open) return;
     const handleClick = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
         setOpen(false);
       }
     };
@@ -284,7 +295,9 @@ export function FontPicker({
         >
           {value}
         </span>
-        <i className={`fa-solid fa-chevron-${open ? 'up' : 'down'} font-picker-arrow`}></i>
+        <i
+          className={`fa-solid fa-chevron-${open ? 'up' : 'down'} font-picker-arrow`}
+        ></i>
       </button>
 
       {open && (
@@ -327,7 +340,9 @@ export function FontPicker({
 
           <div className="font-picker-list">
             {filtered.length === 0 ? (
-              <div className="font-picker-empty">No fonts match your search</div>
+              <div className="font-picker-empty">
+                No fonts match your search
+              </div>
             ) : (
               filtered.map(f => (
                 <FontRow

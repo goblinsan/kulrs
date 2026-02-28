@@ -86,3 +86,47 @@ export function asyncHandler(
     fn(req, res, next).catch(next);
   };
 }
+
+/**
+ * Centralized Express error-handling middleware.
+ *
+ * - Recognises `AppError` subclasses and responds with the appropriate
+ *   HTTP status code + JSON body.
+ * - Falls through to a generic 500 for unexpected errors.
+ *
+ * Mount this **after** all routes:
+ * ```ts
+ * app.use(errorHandler());
+ * ```
+ */
+export function errorHandler(
+  options: { verbose?: boolean } = {}
+): (err: Error, req: Request, res: Response, next: NextFunction) => void {
+  const verbose = options.verbose ?? process.env.NODE_ENV !== 'production';
+
+  // Express requires all 4 params for error middleware detection
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  return (err, _req, res, _next) => {
+    if (err instanceof AppError) {
+      const body: Record<string, unknown> = {
+        error: err.message,
+      };
+      if (err instanceof ValidationError && err.details) {
+        body.details = err.details;
+      }
+      res.status(err.statusCode).json(body);
+      return;
+    }
+
+    // Unexpected / untyped error — respect status from HTTP-aware errors (e.g. body-parser)
+    const status =
+      (err as unknown as { status?: number }).status ??
+      (err as unknown as { statusCode?: number }).statusCode ??
+      500;
+    console.error('Unhandled error:', err);
+    res.status(status).json({
+      error: status === 500 ? 'Internal Server Error' : err.message,
+      message: verbose ? err.message : 'An unexpected error occurred',
+    });
+  };
+}

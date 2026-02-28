@@ -11,7 +11,11 @@ import {
   generateFromMoodSchema,
   generateFromImageSchema,
 } from '../utils/validation.js';
-import { BadRequestError, ValidationError, asyncHandler } from '../utils/errors.js';
+import {
+  BadRequestError,
+  ValidationError,
+  asyncHandler,
+} from '../utils/errors.js';
 
 const router = Router();
 

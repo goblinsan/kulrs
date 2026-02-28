@@ -18,7 +18,12 @@ const router = Router();
 // ----------------------------------------------------------------
 
 /** Clamp a numeric query param to [min, max]. */
-function clampInt(raw: string | undefined, fallback: number, min: number, max: number): number {
+function clampInt(
+  raw: string | undefined,
+  fallback: number,
+  min: number,
+  max: number
+): number {
   const n = parseInt(raw ?? String(fallback), 10);
   if (Number.isNaN(n)) return fallback;
   return Math.max(min, Math.min(max, n));
@@ -36,7 +41,9 @@ function validateDeviceId(deviceId: unknown): asserts deviceId is string {
 }
 
 /** Require an authenticated user or throw 401. */
-function requireAuth(req: AuthenticatedRequest): NonNullable<AuthenticatedRequest['user']> {
+function requireAuth(
+  req: AuthenticatedRequest
+): NonNullable<AuthenticatedRequest['user']> {
   if (!req.user) throw new UnauthorizedError();
   return req.user;
 }
@@ -59,7 +66,8 @@ router.get(
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const rawQuery = req.query as Record<string, string | undefined>;
 
-    const sort = rawQuery.sort === 'popular' ? ('popular' as const) : ('recent' as const);
+    const sort =
+      rawQuery.sort === 'popular' ? ('popular' as const) : ('recent' as const);
     const limit = clampInt(rawQuery.limit, 20, 1, 50);
     const offset = clampInt(rawQuery.offset, 0, 0, 10_000);
     const userId = rawQuery.userId;
@@ -70,11 +78,15 @@ router.get(
     // Resolve viewer identity for per-palette like status
     let viewerUserId: string | null = null;
     if (req.user) {
-      const viewer = await paletteService.getOrCreateUser(req.user.uid, req.user.email);
+      const viewer = await paletteService.getOrCreateUser(
+        req.user.uid,
+        req.user.email
+      );
       viewerUserId = viewer.id;
     } else if (deviceId) {
       try {
-        const anonUser = await paletteService.getOrCreateAnonymousUser(deviceId);
+        const anonUser =
+          await paletteService.getOrCreateAnonymousUser(deviceId);
         viewerUserId = anonUser.id;
       } catch {
         // Ignore — viewer just won't see like status
@@ -89,7 +101,10 @@ router.get(
       viewerUserId,
     });
 
-    res.setHeader('Cache-Control', 'public, max-age=15, stale-while-revalidate=30');
+    res.setHeader(
+      'Cache-Control',
+      'public, max-age=15, stale-while-revalidate=30'
+    );
     res.status(200).json({ success: true, data: palettes });
   })
 );
@@ -108,7 +123,10 @@ router.get(
       offset?: string;
     };
 
-    const user = await paletteService.getOrCreateUser(authUser.uid, authUser.email);
+    const user = await paletteService.getOrCreateUser(
+      authUser.uid,
+      authUser.email
+    );
 
     const palettes = await paletteService.getUserPalettes(user.id, {
       limit: clampInt(limit, 20, 1, 50),
@@ -136,7 +154,8 @@ router.get(
       const isOwner =
         req.user &&
         palette.userId ===
-          (await paletteService.getOrCreateUser(req.user.uid, req.user.email)).id;
+          (await paletteService.getOrCreateUser(req.user.uid, req.user.email))
+            .id;
       if (!isOwner) throw new NotFoundError('Palette not found');
     }
 
@@ -169,7 +188,10 @@ router.post(
       throw new ValidationError('Validation failed', validation.error.errors);
     }
 
-    const palette = await paletteService.createPalette(user.id, validation.data);
+    const palette = await paletteService.createPalette(
+      user.id,
+      validation.data
+    );
     res.status(201).json({ success: true, data: palette });
   })
 );
@@ -184,7 +206,10 @@ router.post(
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const authUser = requireAuth(req);
     const paletteId = String(req.params.id);
-    const user = await paletteService.getOrCreateUser(authUser.uid, authUser.email);
+    const user = await paletteService.getOrCreateUser(
+      authUser.uid,
+      authUser.email
+    );
     const result = await paletteService.savePalette(user.id, paletteId);
 
     res.status(200).json({ success: true, data: result });
@@ -228,7 +253,10 @@ router.delete(
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const authUser = requireAuth(req);
     const paletteId = String(req.params.id);
-    const user = await paletteService.getOrCreateUser(authUser.uid, authUser.email);
+    const user = await paletteService.getOrCreateUser(
+      authUser.uid,
+      authUser.email
+    );
 
     // deletePalette throws NotFoundError if not found / not owned
     const result = await paletteService.deletePalette(user.id, paletteId);
@@ -274,7 +302,10 @@ router.get(
 
     let userId: string | null = null;
     if (req.user) {
-      const user = await paletteService.getOrCreateUser(req.user.uid, req.user.email);
+      const user = await paletteService.getOrCreateUser(
+        req.user.uid,
+        req.user.email
+      );
       userId = user.id;
     } else if (deviceId) {
       const anonUser = await paletteService.getOrCreateAnonymousUser(deviceId);
@@ -296,7 +327,10 @@ router.post(
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const authUser = requireAuth(req);
     const paletteId = String(req.params.id);
-    const user = await paletteService.getOrCreateUser(authUser.uid, authUser.email);
+    const user = await paletteService.getOrCreateUser(
+      authUser.uid,
+      authUser.email
+    );
 
     // remixPalette throws NotFoundError if palette doesn't exist
     const newPalette = await paletteService.remixPalette(user.id, paletteId);
