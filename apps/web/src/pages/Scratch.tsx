@@ -9,6 +9,7 @@ import {
   generateTriadic,
   type OKLCHColor,
 } from '@kulrs/shared';
+import { createPalette, type CreatePaletteRequest } from '../services/api';
 import './Scratch.css';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -187,11 +188,51 @@ function luma(hex: string): number {
    Component
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/** Generic role names for derived palette colors. */
+const ROLE_NAMES = [
+  'primary',
+  'secondary',
+  'accent',
+  'info',
+  'success',
+  'warning',
+  'error',
+  'background',
+];
+
+/** Build a CreatePaletteRequest from an array of hex strings. */
+function hexesToPaletteRequest(
+  hexes: string[],
+  name: string,
+  explanation: string
+): CreatePaletteRequest {
+  return {
+    palette: {
+      colors: hexes.map((hex, i) => ({
+        role: ROLE_NAMES[i % ROLE_NAMES.length],
+        color: hexToOklch(hex),
+      })),
+      metadata: {
+        generator: 'scratch-derived',
+        explanation,
+        timestamp: new Date().toISOString(),
+      },
+    },
+    name,
+    description: explanation,
+    isPublic: true,
+  };
+}
+
 export function Scratch() {
   const navigate = useNavigate();
   const [palette, setPalette] = useState<string[]>([]);
   const [manualColor, setManualColor] = useState('#6A5ACD');
   const [focusIdx, setFocusIdx] = useState(0); // which palette color drives suggestions
+  const [savingGroup, setSavingGroup] = useState<string | null>(null);
+  const [savedGroups, setSavedGroups] = useState<Record<string, string>>({}); // label → palette ID
+  const [savingPalette, setSavingPalette] = useState(false);
+  const [savedPaletteId, setSavedPaletteId] = useState<string | null>(null);
 
   /* Derived ──────────────────────────────────────────────────────────── */
   const focusHex = palette[focusIdx] ?? null;
@@ -238,7 +279,48 @@ export function Scratch() {
   const clearPalette = useCallback(() => {
     setPalette([]);
     setFocusIdx(0);
+    setSavedPaletteId(null);
+    setSavedGroups({});
   }, []);
+
+  /** Save a suggestion group (including the focused source color) as a palette. */
+  const saveGroupAsPalette = useCallback(
+    async (group: SuggestionGroup) => {
+      if (savedGroups[group.label]) return; // already saved
+      setSavingGroup(group.label);
+      try {
+        // Include the focused source color at position 0 so the palette makes sense on its own
+        const allColors = focusHex ? [focusHex, ...group.colors] : group.colors;
+        const name = `${group.label} — from ${focusHex ?? 'scratch'}`;
+        const explanation = `${group.label} palette derived from ${focusHex ?? 'scratch'} via Start from Scratch.`;
+        const req = hexesToPaletteRequest(allColors, name, explanation);
+        const res = await createPalette(req);
+        setSavedGroups(prev => ({ ...prev, [group.label]: res.data.id }));
+      } catch (err) {
+        console.error('Failed to save group palette:', err);
+      } finally {
+        setSavingGroup(null);
+      }
+    },
+    [focusHex, savedGroups]
+  );
+
+  /** Save the user's built palette. */
+  const saveBuiltPalette = useCallback(async () => {
+    if (savedPaletteId || palette.length < 2) return;
+    setSavingPalette(true);
+    try {
+      const name = `Scratch palette (${palette.length} colors)`;
+      const explanation = `Custom palette built from scratch with ${palette.length} hand-picked colors.`;
+      const req = hexesToPaletteRequest(palette, name, explanation);
+      const res = await createPalette(req);
+      setSavedPaletteId(res.data.id);
+    } catch (err) {
+      console.error('Failed to save palette:', err);
+    } finally {
+      setSavingPalette(false);
+    }
+  }, [palette, savedPaletteId]);
 
   const colorsParam = palette.map(h => h.replace('#', '')).join(',');
 
@@ -411,31 +493,62 @@ export function Scratch() {
 
       {/* ── Suggestion groups ───────────────────────────────────────── */}
       <div className="scratch-suggestions">
-        {suggestions.map(group => (
-          <div key={group.label} className="suggestion-group">
-            <h3 className="suggestion-group-label">
-              <i className={group.icon} /> {group.label}
-            </h3>
-            <div className="suggestion-swatches">
-              {group.colors.map((hex, i) => (
-                <button
-                  key={`${hex}-${i}`}
-                  className="suggestion-swatch"
-                  style={{ backgroundColor: hex }}
-                  title={`${hex} — click to add`}
-                  onClick={() => addColor(hex)}
-                >
-                  <span
-                    className="swatch-label"
-                    style={{ color: luma(hex) > 0.55 ? '#222' : '#fff' }}
+        {suggestions.map(group => {
+          const isSaving = savingGroup === group.label;
+          const savedId = savedGroups[group.label];
+          return (
+            <div key={group.label} className="suggestion-group">
+              <div className="suggestion-group-head">
+                <h3 className="suggestion-group-label">
+                  <i className={group.icon} /> {group.label}
+                </h3>
+                {savedId ? (
+                  <button
+                    className="save-group-btn saved"
+                    onClick={() => navigate(`/palette/${savedId}`)}
+                    title="View saved palette"
                   >
-                    {hex.toUpperCase()}
-                  </span>
-                </button>
-              ))}
+                    <i className="fa-solid fa-check" /> Saved
+                  </button>
+                ) : (
+                  <button
+                    className="save-group-btn"
+                    disabled={isSaving}
+                    onClick={() => saveGroupAsPalette(group)}
+                    title="Save this set as its own palette"
+                  >
+                    <i
+                      className={
+                        isSaving
+                          ? 'fa-solid fa-spinner fa-spin'
+                          : 'fa-solid fa-floppy-disk'
+                      }
+                    />{' '}
+                    {isSaving ? 'Saving…' : 'Save as Palette'}
+                  </button>
+                )}
+              </div>
+              <div className="suggestion-swatches">
+                {group.colors.map((hex, i) => (
+                  <button
+                    key={`${hex}-${i}`}
+                    className="suggestion-swatch"
+                    style={{ backgroundColor: hex }}
+                    title={`${hex} — click to add`}
+                    onClick={() => addColor(hex)}
+                  >
+                    <span
+                      className="swatch-label"
+                      style={{ color: luma(hex) > 0.55 ? '#222' : '#fff' }}
+                    >
+                      {hex.toUpperCase()}
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* ── Manual / random row ─────────────────────────────────────── */}
@@ -465,6 +578,29 @@ export function Scratch() {
       {/* ── Actions ─────────────────────────────────────────────────── */}
       {palette.length >= 2 && (
         <div className="scratch-actions">
+          {savedPaletteId ? (
+            <button
+              className="scratch-btn saved"
+              onClick={() => navigate(`/palette/${savedPaletteId}`)}
+            >
+              <i className="fa-solid fa-check" /> Saved — View Palette
+            </button>
+          ) : (
+            <button
+              className="scratch-btn primary"
+              onClick={saveBuiltPalette}
+              disabled={savingPalette}
+            >
+              <i
+                className={
+                  savingPalette
+                    ? 'fa-solid fa-spinner fa-spin'
+                    : 'fa-solid fa-floppy-disk'
+                }
+              />{' '}
+              {savingPalette ? 'Saving…' : 'Save Palette'}
+            </button>
+          )}
           <button className="scratch-btn" onClick={goToPattern}>
             <i className="fa-solid fa-shapes" /> Open in Pattern
           </button>
