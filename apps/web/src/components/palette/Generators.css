@@ -16,6 +16,25 @@
   color: #888;
 }
 
+.scratch-inline-link {
+  background: none;
+  border: none;
+  color: #aaffdd;
+  font-size: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.scratch-inline-link:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
 .mood-input,
 .hex-input {
   width: 100%;

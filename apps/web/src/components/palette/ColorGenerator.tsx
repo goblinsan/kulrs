@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { type OKLCHColor, rgbToOklch } from '@kulrs/shared';
 import './Generators.css';
 
@@ -23,6 +24,7 @@ export function ColorGenerator({
   colorCount,
   onColorCountChange,
 }: ColorGeneratorProps) {
+  const navigate = useNavigate();
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
@@ -176,7 +178,15 @@ export function ColorGenerator({
     <div className="generator-form">
       <h3>Generate from Base Colors</h3>
       <p className="generator-description">
-        Pick up to {colorCount} base colors to generate a harmonious palette
+        Pick up to {colorCount} base colors to generate a harmonious palette —
+        or{' '}
+        <button
+          type="button"
+          className="scratch-inline-link"
+          onClick={() => navigate('/scratch')}
+        >
+          <i className="fa-solid fa-wand-magic-sparkles" /> Start from Scratch
+        </button>
       </p>
 
       <form onSubmit={handleSubmit}>
