@@ -67,7 +67,9 @@ export function PaletteEditor({ colors, onChange }: PaletteEditorProps) {
           const textColor = getTextColor(hex);
           const isDragging = dragIndex === index;
           const isOver =
-            dragOverIndex === index && dragIndex !== null && dragIndex !== index;
+            dragOverIndex === index &&
+            dragIndex !== null &&
+            dragIndex !== index;
 
           return (
             <div

@@ -1,4 +1,4 @@
-import { type ReactNode, useState, useEffect } from 'react';
+import { type ReactNode, useState, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { hexToOklch } from '../../utils/colorUtils';
@@ -47,13 +47,10 @@ export function Layout({ children }: LayoutProps) {
   const { user, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
-  const [detailsUrl, setDetailsUrl] = useState<string | null>(() =>
-    buildDetailsUrl(typeof window !== 'undefined' ? window.location.pathname : '')
+  const detailsUrl = useMemo(
+    () => buildDetailsUrl(location.pathname),
+    [location.pathname]
   );
-
-  useEffect(() => {
-    setDetailsUrl(buildDetailsUrl(location.pathname));
-  }, [location.pathname]);
 
   const handleSignOut = async () => {
     try {

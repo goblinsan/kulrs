@@ -406,15 +406,14 @@ export function PaletteDetail() {
       </div>
 
       {isEditing ? (
-        <PaletteEditor
-          colors={editedColors}
-          onChange={setEditedColors}
-        />
+        <PaletteEditor colors={editedColors} onChange={setEditedColors} />
       ) : (
         <PaletteDisplay palette={palette} />
       )}
 
-      <ColorExportTable palette={isEditing ? { ...palette, colors: editedColors } : palette} />
+      <ColorExportTable
+        palette={isEditing ? { ...palette, colors: editedColors } : palette}
+      />
     </div>
   );
 }
