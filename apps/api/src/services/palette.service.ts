@@ -574,6 +574,41 @@ export class PaletteService {
   }
 
   /**
+   * Update the colors of a palette owned by the given user.
+   * Replaces all existing colors with the provided set.
+   */
+  async updatePaletteColors(
+    userId: string,
+    paletteId: string,
+    newColors: Array<{ hexValue: string; position: number; name: string }>
+  ) {
+    const [palette] = await db
+      .select({ id: palettes.id, userId: palettes.userId })
+      .from(palettes)
+      .where(and(eq(palettes.id, paletteId), eq(palettes.userId, userId)))
+      .limit(1);
+
+    if (!palette) {
+      throw new NotFoundError('Palette not found or not owned by user');
+    }
+
+    await db.delete(colors).where(eq(colors.paletteId, paletteId));
+
+    if (newColors.length > 0) {
+      await db.insert(colors).values(
+        newColors.map(c => ({
+          paletteId,
+          hexValue: c.hexValue,
+          position: c.position,
+          name: c.name,
+        }))
+      );
+    }
+
+    return { updated: true };
+  }
+
+  /**
    * Get a palette by ID with its colors
    */
   async getPaletteById(paletteId: string) {

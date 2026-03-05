@@ -235,6 +235,7 @@ export interface BrowsePalette {
   description: string | null;
   userId: string;
   isPublic: boolean;
+  isOwner?: boolean;
   likesCount: number;
   savesCount: number;
   createdAt: string;
@@ -306,4 +307,17 @@ export async function deletePalette(
   id: string
 ): Promise<{ success: boolean; data: { deleted: boolean } }> {
   return apiDelete(`/palettes/${id}`);
+}
+
+/**
+ * Update the colors of a palette owned by the current user
+ */
+export async function updatePalette(
+  paletteId: string,
+  colors: Array<{ hexValue: string; position: number; name: string }>
+): Promise<{ success: boolean; data: { updated: boolean } }> {
+  return apiRequest(`/palettes/${paletteId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ colors }),
+  });
 }

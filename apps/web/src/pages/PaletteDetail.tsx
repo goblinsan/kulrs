@@ -14,6 +14,7 @@ import {
   getLikeInfo,
   likePalette as likePaletteApi,
   unlikePalette as unlikePaletteApi,
+  updatePalette,
   type BrowsePalette,
 } from '../services/api';
 import {
@@ -76,14 +77,15 @@ export function PaletteDetail() {
 
   const [palette, setPalette] = useState<GeneratedPalette | null>(null);
   const [paletteId, setPaletteId] = useState<string | null>(null);
+  const [isOwner, setIsOwner] = useState(false);
+  const [editedColors, setEditedColors] = useState<AssignedColor[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedColors, setEditedColors] = useState<AssignedColor[]>([]);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
   const timeoutRef = useRef<number | null>(null);
   const navigate = useNavigate();
 
@@ -95,6 +97,11 @@ export function PaletteDetail() {
       }
     };
   }, []);
+
+  // Sync editedColors whenever the canonical palette state changes
+  useEffect(() => {
+    if (palette) setEditedColors([...palette.colors]);
+  }, [palette]);
 
   // Keep palette colors in sessionStorage so other tabs (Design, Compose, etc.)
   // can pick them up even without explicit URL params.
@@ -126,6 +133,7 @@ export function PaletteDetail() {
         .then(response => {
           if (response.success && response.data) {
             setPalette(browsePaletteToGenerated(response.data));
+            setIsOwner(response.data.isOwner ?? false);
           } else {
             setError('Palette not found');
           }
@@ -143,6 +151,7 @@ export function PaletteDetail() {
         const decoded = decodeURIComponent(id);
         const parsedPalette = JSON.parse(decoded);
         setPalette(parsedPalette);
+        setIsOwner(true); // user just generated this palette
         setIsLoading(false);
 
         // Create palette in database (not saved to user's collection yet)
@@ -214,6 +223,16 @@ export function PaletteDetail() {
 
   const shareUrl = window.location.href;
 
+  // Whether the user has made unsaved edits
+  const isDirty =
+    palette !== null &&
+    (editedColors.length !== palette.colors.length ||
+      editedColors.some(
+        (c, i) =>
+          oklchToHex(c.color) !== oklchToHex(palette.colors[i]?.color) ||
+          c.role !== palette.colors[i]?.role
+      ));
+
   const handleCopyShareLink = () => {
     navigator.clipboard
       .writeText(shareUrl)
@@ -232,6 +251,12 @@ export function PaletteDetail() {
       return;
     }
 
+    // Owner with unsaved edits => show overwrite/new-palette dialog
+    if (isOwner && isDirty) {
+      setShowSaveDialog(true);
+      return;
+    }
+
     const result = await saveExistingPalette(paletteId);
     if (result.success) {
       if (result.alreadySaved) {
@@ -242,6 +267,38 @@ export function PaletteDetail() {
       }
     } else {
       showFeedback('Failed to save palette. Please try again.');
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!paletteId || !palette) return;
+    try {
+      await updatePalette(
+        paletteId,
+        editedColors.map((c, i) => ({
+          hexValue: oklchToHex(c.color),
+          position: i,
+          name: c.role as string,
+        }))
+      );
+      setPalette({ ...palette, colors: [...editedColors] });
+      setShowSaveDialog(false);
+      showFeedback('Palette updated!');
+    } catch (err) {
+      console.error('Failed to update palette:', err);
+      showFeedback('Failed to update palette. Please try again.');
+    }
+  };
+
+  const handleSaveAsNew = async () => {
+    if (!palette) return;
+    const newPalette: GeneratedPalette = { ...palette, colors: editedColors };
+    const newId = await createPaletteInDb(newPalette);
+    if (newId) {
+      setShowSaveDialog(false);
+      navigate(`/palette/${newId}`);
+    } else {
+      showFeedback('Failed to save as new palette.');
     }
   };
 
@@ -290,13 +347,19 @@ export function PaletteDetail() {
         <div className="palette-actions">
           <button
             onClick={handleSave}
-            className={`action-button save-button ${isSaved ? 'active' : ''}`}
+            className={`action-button save-button ${isSaved && !isDirty ? 'active' : ''} ${isOwner && isDirty ? 'save-dirty' : ''}`}
             disabled={loading || !paletteId}
-            aria-label="Save palette to your collection"
-            title="Save to your collection"
+            aria-label="Save palette"
+            title={
+              isOwner && isDirty
+                ? 'Save your changes'
+                : 'Save to your collection'
+            }
           >
-            <i className="fa-regular fa-bookmark"></i>
-            {isSaved ? 'Saved' : 'Save'}
+            <i
+              className={`fa-${isSaved && !isDirty ? 'solid' : 'regular'} fa-bookmark`}
+            ></i>
+            {isOwner && isDirty ? 'Save changes…' : isSaved ? 'Saved' : 'Save'}
           </button>
           <button
             onClick={handleLike}
@@ -309,40 +372,6 @@ export function PaletteDetail() {
             {isLiked ? 'Liked' : 'Like'}
             {likeCount > 0 ? ` (${likeCount})` : ''}
           </button>
-          <button
-            onClick={() => {
-              if (!palette) return;
-              if (isEditing) {
-                // Cancel: discard changes
-                setIsEditing(false);
-              } else {
-                setEditedColors([...palette.colors]);
-                setIsEditing(true);
-              }
-            }}
-            className={`action-button edit-button ${isEditing ? 'active' : ''}`}
-            aria-label={isEditing ? 'Cancel editing' : 'Edit palette colors'}
-            title={isEditing ? 'Cancel editing' : 'Edit palette colors'}
-          >
-            <i className={`fa-solid fa-${isEditing ? 'xmark' : 'pen'}`}></i>
-            {isEditing ? 'Cancel' : 'Edit'}
-          </button>
-          {isEditing && (
-            <button
-              onClick={() => {
-                if (!palette) return;
-                setPalette({ ...palette, colors: editedColors });
-                setIsEditing(false);
-                showFeedback('Palette updated!');
-              }}
-              className="action-button save-edits-button active"
-              aria-label="Save palette edits"
-              title="Apply changes"
-            >
-              <i className="fa-solid fa-check"></i>
-              Apply
-            </button>
-          )}
           <button
             onClick={handleCopyShareLink}
             className="action-button share-button"
@@ -403,16 +432,58 @@ export function PaletteDetail() {
           <div className="action-feedback">{actionFeedback}</div>
         )}
         {apiError && <div className="action-error">{apiError}</div>}
+
+        {/* Save-changes dialog for owners with pending edits */}
+        {showSaveDialog && (
+          <div
+            className="save-dialog-backdrop"
+            onClick={() => setShowSaveDialog(false)}
+          >
+            <div className="save-dialog" onClick={e => e.stopPropagation()}>
+              <h3>Save changes</h3>
+              <p>
+                You&rsquo;ve edited the palette. How would you like to save?
+              </p>
+              <div className="save-dialog-actions">
+                <button
+                  className="save-dialog-btn primary"
+                  onClick={handleUpdate}
+                  disabled={loading}
+                >
+                  <i className="fa-solid fa-rotate"></i>
+                  Update this palette
+                </button>
+                <button
+                  className="save-dialog-btn"
+                  onClick={handleSaveAsNew}
+                  disabled={loading}
+                >
+                  <i className="fa-regular fa-copy"></i>
+                  Save as new palette
+                </button>
+                <button
+                  className="save-dialog-btn cancel"
+                  onClick={() => setShowSaveDialog(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {isEditing ? (
+      {isOwner ? (
         <PaletteEditor colors={editedColors} onChange={setEditedColors} />
       ) : (
         <PaletteDisplay palette={palette} />
       )}
 
       <ColorExportTable
-        palette={isEditing ? { ...palette, colors: editedColors } : palette}
+        palette={{
+          ...palette,
+          colors: isOwner ? editedColors : palette.colors,
+        }}
       />
     </div>
   );

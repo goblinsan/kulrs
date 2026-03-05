@@ -150,16 +150,63 @@ router.get(
     if (!palette) throw new NotFoundError('Palette not found');
 
     // Enforce privacy — allow owner or public palettes only
-    if (!palette.isPublic) {
-      const isOwner =
-        req.user &&
-        palette.userId ===
-          (await paletteService.getOrCreateUser(req.user.uid, req.user.email))
-            .id;
-      if (!isOwner) throw new NotFoundError('Palette not found');
+    let isOwner = false;
+    if (req.user) {
+      const viewer = await paletteService.getOrCreateUser(
+        req.user.uid,
+        req.user.email
+      );
+      isOwner = viewer.id === palette.userId;
     }
 
-    res.status(200).json({ success: true, data: palette });
+    if (!palette.isPublic && !isOwner) {
+      throw new NotFoundError('Palette not found');
+    }
+
+    res.status(200).json({ success: true, data: { ...palette, isOwner } });
+  })
+);
+
+/**
+ * PUT /palettes/:id
+ * Update the colors of a palette owned by the authenticated user.
+ */
+router.put(
+  '/:id',
+  paletteWriteLimiter,
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const authUser = requireAuth(req);
+    const paletteId = String(req.params.id);
+    const user = await paletteService.getOrCreateUser(
+      authUser.uid,
+      authUser.email
+    );
+
+    const { colors: newColors } = req.body as {
+      colors?: Array<{ hexValue: string; position: number; name: string }>;
+    };
+
+    if (
+      !Array.isArray(newColors) ||
+      newColors.length === 0 ||
+      newColors.some(
+        c =>
+          typeof c.hexValue !== 'string' ||
+          typeof c.position !== 'number' ||
+          typeof c.name !== 'string'
+      )
+    ) {
+      throw new BadRequestError(
+        'colors must be a non-empty array of {hexValue, position, name}'
+      );
+    }
+
+    const result = await paletteService.updatePaletteColors(
+      user.id,
+      paletteId,
+      newColors
+    );
+    res.status(200).json({ success: true, data: result });
   })
 );
 
