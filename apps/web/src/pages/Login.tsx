@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LoginForm } from '../components/auth/LoginForm';
 import { SignupForm } from '../components/auth/SignupForm';
 import { useAuth } from '../contexts/AuthContext';
@@ -11,12 +11,14 @@ export function Login() {
   const [authMode, setAuthMode] = useState<AuthMode>('login');
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     if (user) {
-      navigate('/');
+      const redirect = searchParams.get('redirect');
+      navigate(redirect || '/');
     }
-  }, [user, navigate]);
+  }, [user, navigate, searchParams]);
 
   return (
     <div className="login-page">

@@ -1,12 +1,27 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { FontPicker } from '../components/FontPicker';
-import { parseColorsFromParams, randomHex } from '../utils/colorUtils';
+import {
+  parseColorsFromParams,
+  randomHex,
+  hexToOklch,
+} from '../utils/colorUtils';
 import './Design.css';
 
 // ── Types ───────────────────────────────────────────────────────────
 type TemplateId = 'top-nav' | 'left-nav' | 'mobile' | 'dashboard' | 'landing';
 type ThemeMode = 'light' | 'dark' | 'custom';
+
+const PALETTE_ROLES = [
+  'primary',
+  'secondary',
+  'accent',
+  'info',
+  'success',
+  'warning',
+  'error',
+  'background',
+] as const;
 
 interface DesignTemplate {
   id: TemplateId;
@@ -601,6 +616,25 @@ export function Design() {
         </button>
         <button className="design-nav-btn" onClick={() => navigate('/scratch')}>
           <i className="fa-solid fa-pencil" /> Scratch
+        </button>
+        <button
+          className="design-nav-btn"
+          onClick={() => {
+            const palette = {
+              colors: colors.map((hex, i) => ({
+                role: PALETTE_ROLES[i % PALETTE_ROLES.length],
+                color: hexToOklch(hex),
+              })),
+              metadata: {
+                generator: 'session',
+                explanation: 'Palette from Design page',
+                timestamp: new Date().toISOString(),
+              },
+            };
+            navigate(`/palette/${encodeURIComponent(JSON.stringify(palette))}`);
+          }}
+        >
+          <i className="fa-solid fa-palette" /> Details
         </button>
       </div>
     </div>

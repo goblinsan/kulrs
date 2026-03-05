@@ -104,7 +104,6 @@ export function Layout({ children }: LayoutProps) {
               <Link
                 to={detailsUrl}
                 onClick={closeMobileMenu}
-                className="nav-link-details"
                 title="View current palette details"
               >
                 Details

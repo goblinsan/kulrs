@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   type GeneratedPalette,
   ColorRole,
@@ -9,6 +9,7 @@ import { PaletteDisplay } from '../components/palette/PaletteDisplay';
 import { PaletteEditor } from '../components/palette/PaletteEditor';
 import { ColorExportTable } from '../components/palette/ColorExportTable';
 import { usePaletteActions } from '../hooks/usePaletteActions';
+import { useAuth } from '../contexts/AuthContext';
 import {
   getPaletteById,
   getLikeInfo,
@@ -68,6 +69,8 @@ function browsePaletteToGenerated(
 
 export function PaletteDetail() {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
+  const location = useLocation();
   const {
     loading,
     error: apiError,
@@ -246,6 +249,11 @@ export function PaletteDetail() {
   };
 
   const handleSave = async () => {
+    if (!user) {
+      navigate(`/login?redirect=${encodeURIComponent(location.pathname)}`);
+      return;
+    }
+
     if (!paletteId) {
       showFeedback('Please wait a moment and try again');
       return;
@@ -271,6 +279,10 @@ export function PaletteDetail() {
   };
 
   const handleUpdate = async () => {
+    if (!user) {
+      navigate(`/login?redirect=${encodeURIComponent(location.pathname)}`);
+      return;
+    }
     if (!paletteId || !palette) return;
     try {
       await updatePalette(
@@ -291,6 +303,10 @@ export function PaletteDetail() {
   };
 
   const handleSaveAsNew = async () => {
+    if (!user) {
+      navigate(`/login?redirect=${encodeURIComponent(location.pathname)}`);
+      return;
+    }
     if (!palette) return;
     const newPalette: GeneratedPalette = { ...palette, colors: editedColors };
     const newId = await createPaletteInDb(newPalette);
