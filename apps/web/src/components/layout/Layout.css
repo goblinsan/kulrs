@@ -48,6 +48,13 @@
   color: #646cff;
 }
 
+.nav-link-details {
+  color: var(--brand-color, #aaffdd) !important;
+  border: 1px solid var(--brand-color, #aaffdd);
+  border-radius: 4px;
+  padding: 0.25rem 0.65rem;
+}
+
 .nav-user {
   color: #888;
   font-size: 0.9rem;

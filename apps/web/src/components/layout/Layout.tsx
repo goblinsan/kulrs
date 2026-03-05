@@ -1,7 +1,43 @@
-import { type ReactNode, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { type ReactNode, useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { hexToOklch } from '../../utils/colorUtils';
 import './Layout.css';
+
+const PALETTE_ROLES = [
+  'primary',
+  'secondary',
+  'accent',
+  'info',
+  'success',
+  'warning',
+  'error',
+  'background',
+] as const;
+
+function buildDetailsUrl(pathname: string): string | null {
+  if (pathname.startsWith('/palette/')) return null;
+  try {
+    const stored = sessionStorage.getItem('kulrs_palette_colors');
+    if (!stored) return null;
+    const hexColors = JSON.parse(stored) as string[];
+    if (!Array.isArray(hexColors) || hexColors.length === 0) return null;
+    const palette = {
+      colors: hexColors.map((hex, i) => ({
+        role: PALETTE_ROLES[i % PALETTE_ROLES.length],
+        color: hexToOklch(hex),
+      })),
+      metadata: {
+        generator: 'session',
+        explanation: 'Current palette',
+        timestamp: new Date().toISOString(),
+      },
+    };
+    return `/palette/${encodeURIComponent(JSON.stringify(palette))}`;
+  } catch {
+    return null;
+  }
+}
 
 interface LayoutProps {
   children: ReactNode;
@@ -10,6 +46,14 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const { user, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
+  const [detailsUrl, setDetailsUrl] = useState<string | null>(() =>
+    buildDetailsUrl(typeof window !== 'undefined' ? window.location.pathname : '')
+  );
+
+  useEffect(() => {
+    setDetailsUrl(buildDetailsUrl(location.pathname));
+  }, [location.pathname]);
 
   const handleSignOut = async () => {
     try {
@@ -59,6 +103,16 @@ export function Layout({ children }: LayoutProps) {
             <Link to="/design" onClick={closeMobileMenu}>
               Design
             </Link>
+            {detailsUrl && (
+              <Link
+                to={detailsUrl}
+                onClick={closeMobileMenu}
+                className="nav-link-details"
+                title="View current palette details"
+              >
+                Details
+              </Link>
+            )}
             {user ? (
               <>
                 <span className="nav-user" title={user.email || undefined}>

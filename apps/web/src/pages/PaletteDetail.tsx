@@ -6,6 +6,7 @@ import {
   type AssignedColor,
 } from '@kulrs/shared';
 import { PaletteDisplay } from '../components/palette/PaletteDisplay';
+import { PaletteEditor } from '../components/palette/PaletteEditor';
 import { ColorExportTable } from '../components/palette/ColorExportTable';
 import { usePaletteActions } from '../hooks/usePaletteActions';
 import {
@@ -81,6 +82,8 @@ export function PaletteDetail() {
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedColors, setEditedColors] = useState<AssignedColor[]>([]);
   const timeoutRef = useRef<number | null>(null);
   const navigate = useNavigate();
 
@@ -307,6 +310,40 @@ export function PaletteDetail() {
             {likeCount > 0 ? ` (${likeCount})` : ''}
           </button>
           <button
+            onClick={() => {
+              if (!palette) return;
+              if (isEditing) {
+                // Cancel: discard changes
+                setIsEditing(false);
+              } else {
+                setEditedColors([...palette.colors]);
+                setIsEditing(true);
+              }
+            }}
+            className={`action-button edit-button ${isEditing ? 'active' : ''}`}
+            aria-label={isEditing ? 'Cancel editing' : 'Edit palette colors'}
+            title={isEditing ? 'Cancel editing' : 'Edit palette colors'}
+          >
+            <i className={`fa-solid fa-${isEditing ? 'xmark' : 'pen'}`}></i>
+            {isEditing ? 'Cancel' : 'Edit'}
+          </button>
+          {isEditing && (
+            <button
+              onClick={() => {
+                if (!palette) return;
+                setPalette({ ...palette, colors: editedColors });
+                setIsEditing(false);
+                showFeedback('Palette updated!');
+              }}
+              className="action-button save-edits-button active"
+              aria-label="Save palette edits"
+              title="Apply changes"
+            >
+              <i className="fa-solid fa-check"></i>
+              Apply
+            </button>
+          )}
+          <button
             onClick={handleCopyShareLink}
             className="action-button share-button"
             aria-label="Copy share link to clipboard"
@@ -368,9 +405,16 @@ export function PaletteDetail() {
         {apiError && <div className="action-error">{apiError}</div>}
       </div>
 
-      <PaletteDisplay palette={palette} />
+      {isEditing ? (
+        <PaletteEditor
+          colors={editedColors}
+          onChange={setEditedColors}
+        />
+      ) : (
+        <PaletteDisplay palette={palette} />
+      )}
 
-      <ColorExportTable palette={palette} />
+      <ColorExportTable palette={isEditing ? { ...palette, colors: editedColors } : palette} />
     </div>
   );
 }

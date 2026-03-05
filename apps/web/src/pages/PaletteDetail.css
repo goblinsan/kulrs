@@ -100,6 +100,16 @@
   border-color: #4caf50;
 }
 
+.edit-button.active {
+  color: #f5a623;
+  border-color: #f5a623;
+}
+
+.save-edits-button {
+  color: var(--brand-color, #aaffdd);
+  border-color: var(--brand-color, #aaffdd);
+}
+
 .palette-detail-error {
   text-align: center;
   padding: 3rem;
