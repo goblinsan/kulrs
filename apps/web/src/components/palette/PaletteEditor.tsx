@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { type AssignedColor, rgbToOklch } from '@kulrs/shared';
 import { oklchToHex, getTextColor, hexToRgb } from '../../utils/colorUtils';
 import './PaletteEditor.css';
@@ -11,6 +11,78 @@ interface PaletteEditorProps {
 export function PaletteEditor({ colors, onChange }: PaletteEditorProps) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  // Refs used for touch-drag so handlers always see the latest values
+  const touchDragIndexRef = useRef<number | null>(null);
+  const touchOverIndexRef = useRef<number | null>(null);
+  const rowRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const colorsRef = useRef(colors);
+  const onChangeRef = useRef(onChange);
+
+  // Keep refs in sync with the latest props without adding them to the
+  // touch-listener effect's dependency array (avoids re-registering listeners
+  // on every render triggered by colors changes).
+  useLayoutEffect(() => {
+    colorsRef.current = colors;
+    onChangeRef.current = onChange;
+  });
+
+  // Register non-passive document listeners once so touchmove can preventDefault
+  useEffect(() => {
+    const handleTouchMove = (e: TouchEvent) => {
+      if (touchDragIndexRef.current === null) return;
+      e.preventDefault(); // stop page scroll while dragging a row
+
+      const touch = e.touches[0];
+      for (let i = 0; i < rowRefs.current.length; i++) {
+        const row = rowRefs.current[i];
+        if (!row) continue;
+        const rect = row.getBoundingClientRect();
+        if (touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+          if (touchOverIndexRef.current !== i) {
+            touchOverIndexRef.current = i;
+            setDragOverIndex(i);
+          }
+          break;
+        }
+      }
+    };
+
+    const handleTouchEnd = () => {
+      if (touchDragIndexRef.current === null) return;
+      const fromIndex = touchDragIndexRef.current;
+      const toIndex = touchOverIndexRef.current;
+
+      if (toIndex !== null && toIndex !== fromIndex) {
+        const newColors = [...colorsRef.current];
+        const [moved] = newColors.splice(fromIndex, 1);
+        newColors.splice(toIndex, 0, moved);
+        onChangeRef.current(newColors);
+      }
+
+      touchDragIndexRef.current = null;
+      touchOverIndexRef.current = null;
+      setDragIndex(null);
+      setDragOverIndex(null);
+    };
+
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      document.removeEventListener('touchmove', handleTouchMove, {
+        passive: false,
+      } as EventListenerOptions);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, []);
+
+  const handleTouchStart = (e: React.TouchEvent, index: number) => {
+    e.preventDefault(); // prevent scroll starting from the handle
+    touchDragIndexRef.current = index;
+    touchOverIndexRef.current = index;
+    setDragIndex(index);
+  };
 
   const handleDragStart = (index: number) => {
     setDragIndex(index);
@@ -74,6 +146,9 @@ export function PaletteEditor({ colors, onChange }: PaletteEditorProps) {
           return (
             <div
               key={`${color.role}-${index}`}
+              ref={el => {
+                rowRefs.current[index] = el;
+              }}
               className={`palette-editor-row${isDragging ? ' is-dragging' : ''}${isOver ? ' drag-over' : ''}`}
               draggable
               onDragStart={() => handleDragStart(index)}
@@ -86,6 +161,7 @@ export function PaletteEditor({ colors, onChange }: PaletteEditorProps) {
                 className="editor-drag-handle"
                 title="Drag to reorder"
                 aria-hidden="true"
+                onTouchStart={e => handleTouchStart(e, index)}
               >
                 <i className="fa-solid fa-grip-vertical" />
               </span>
