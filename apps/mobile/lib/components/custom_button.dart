@@ -6,6 +6,7 @@ class CustomButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool isLoading;
   final bool isOutlined;
+  final bool isEnabled;
   final IconData? icon;
   final Color? backgroundColor;
   final Color? foregroundColor;
@@ -16,6 +17,7 @@ class CustomButton extends StatelessWidget {
     this.onPressed,
     this.isLoading = false,
     this.isOutlined = false,
+    this.isEnabled = true,
     this.icon,
     this.backgroundColor,
     this.foregroundColor,
@@ -42,7 +44,7 @@ class CustomButton extends StatelessWidget {
 
     if (isOutlined) {
       return OutlinedButton(
-        onPressed: isLoading ? null : onPressed,
+        onPressed: (isLoading || !isEnabled) ? null : onPressed,
         style: OutlinedButton.styleFrom(
           padding: const EdgeInsets.all(16),
           backgroundColor: backgroundColor,
@@ -53,7 +55,7 @@ class CustomButton extends StatelessWidget {
     }
 
     return ElevatedButton(
-      onPressed: isLoading ? null : onPressed,
+      onPressed: (isLoading || !isEnabled) ? null : onPressed,
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.all(16),
         backgroundColor: backgroundColor,

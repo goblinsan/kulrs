@@ -111,12 +111,21 @@ flutter analyze
 
 - **Generate Screen** (`lib/screens/generate/`)
   - `generate_screen.dart` - Main screen for generating color palettes
+    - Generate from mood/description text
+    - Generate from images (camera or gallery)
+    - Integrated with palette generation API
 
 - **Detail Screen** (`lib/screens/detail/`)
   - `detail_screen.dart` - Display detailed information about a color palette
+    - Color swatches with hex values
+    - Copy-to-clipboard functionality
+    - Save, like, and remix actions
 
 - **Saved Screen** (`lib/screens/saved/`)
   - `saved_screen.dart` - Browse and manage saved color palettes
+    - Fetch user's saved palettes from API
+    - Color preview thumbnails
+    - Pull-to-refresh support
 
 - **Home Screen** (`lib/screens/`)
   - `home_screen.dart` - Legacy home screen (kept for backward compatibility)
@@ -128,13 +137,24 @@ Reusable UI components are located in `lib/components/`:
 - `loading_indicator.dart` - Customizable loading spinner
 - `error_message.dart` - Error display with optional retry button
 - `custom_app_bar.dart` - Consistent app bar across screens
-- `custom_button.dart` - Reusable button with loading state
-- `custom_card.dart` - Customizable card widget
+- `custom_button.dart` - Reusable button with loading and enabled states
+- `custom_card.dart` - Customizable card widget with tap support
 - `components.dart` - Barrel file exporting all components
+
+### Models
+
+Data models are located in `lib/models/`:
+
+- `palette.dart` - Palette, PaletteColor, and OKLCHColor models
+- `models.dart` - Barrel file exporting all models
 
 ### Services
 
 - `auth_service.dart` - Firebase authentication service with email/password, Google, and Apple sign-in
+- `api_service.dart` - Backend API service for palette operations
+  - Generate palettes (mood, color, image)
+  - Save, like, unlike, remix palettes
+  - Fetch user palettes and browse public palettes
 
 ### Providers
 
@@ -152,7 +172,7 @@ The app uses named routes for navigation:
 - `/signup` - Signup screen
 - `/home` - Legacy home screen
 - `/generate` - Generate color palettes (default authenticated screen)
-- `/detail` - View palette details (accepts `paletteId` argument)
+- `/detail` - View palette details (accepts `Palette` object or `paletteId` string)
 - `/saved` - Browse saved palettes
 
 ## Environment Flavors
@@ -164,3 +184,26 @@ The app supports three environment flavors:
 - **Production**: Production environment
 
 Use the appropriate run script (`run-dev.sh`, `run-staging.sh`, `run-prod.sh`) or pass `--dart-define` flags manually.
+
+## Features
+
+### Palette Generation
+
+Generate color palettes in multiple ways:
+
+1. **From Mood**: Enter a mood or description (e.g., "sunset", "ocean breeze") to generate a palette
+2. **From Image**: Take a photo or choose from gallery to extract colors
+3. **From Base Color**: Generate harmonious palettes from a base color (API support)
+
+### Palette Management
+
+- **Save**: Save generated palettes to your collection
+- **Like**: Like palettes to show appreciation
+- **Remix**: Create variations of existing palettes
+- **Copy Hex**: Tap any color to copy its hex value to clipboard
+
+### Browse & Search
+
+- View all your saved palettes
+- Browse public palettes (API integration)
+- Pull-to-refresh to get latest palettes
