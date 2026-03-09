@@ -7,6 +7,7 @@ import {
   verifyFirebaseToken,
   optionalFirebaseToken,
 } from './middleware/auth.js';
+import healthRouter from './routes/health.js';
 import palettesRouter from './routes/palettes.js';
 import generateRouter from './routes/generate.js';
 import { errorHandler } from './utils/errors.js';
@@ -79,12 +80,7 @@ const writeLimiter = rateLimit({
 app.use(generalLimiter);
 
 // Health check endpoint (no auth required)
-app.get('/health', (_req, res) => {
-  res.status(200).json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-  });
-});
+app.use('/health', healthRouter);
 
 // Hello endpoint for testing (no auth required)
 app.get('/hello', (_req, res) => {
