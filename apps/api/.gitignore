@@ -6,3 +6,4 @@ dist/
 coverage/
 .DS_Store
 *.tgz
+scripts/bot-credentials.json
