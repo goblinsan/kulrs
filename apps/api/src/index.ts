@@ -26,13 +26,23 @@ app.set('trust proxy', 1);
 // CORS middleware
 const isProduction = process.env.NODE_ENV === 'production';
 app.use((req, res, next) => {
+  // Parse configured origins or fall back to sensible defaults
+  const configured = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map(s => s.trim()).filter(Boolean)
+    : null;
+
   const allowedOrigins =
-    process.env.CORS_ORIGIN?.split(',') ||
+    configured ||
     (isProduction
       ? ['https://kulrs.com', 'https://www.kulrs.com', 'https://vizail.com']
       : ['http://localhost:5173', 'http://localhost:5174']);
-  const origin = req.headers.origin;
 
+  // Ensure both root and www variants are allowed if one is present
+  if (allowedOrigins.includes('https://kulrs.com') && !allowedOrigins.includes('https://www.kulrs.com')) {
+    allowedOrigins.push('https://www.kulrs.com');
+  }
+
+  const origin = req.headers.origin;
   if (origin && allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   }
