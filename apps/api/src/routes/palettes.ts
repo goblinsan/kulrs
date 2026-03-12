@@ -221,11 +221,13 @@ router.post(
     const { deviceId } = req.body as { deviceId?: string };
 
     let user;
+    let isAnonymous = false;
     if (req.user) {
       user = await paletteService.getOrCreateUser(req.user.uid, req.user.email);
     } else if (deviceId) {
       validateDeviceId(deviceId);
       user = await paletteService.getOrCreateAnonymousUser(deviceId);
+      isAnonymous = true;
     } else {
       throw new UnauthorizedError();
     }
@@ -235,9 +237,14 @@ router.post(
       throw new ValidationError('Validation failed', validation.error.errors);
     }
 
+    // Anonymous palettes are always private — prevents feed pollution
+    const paletteInput = isAnonymous
+      ? { ...validation.data, isPublic: false }
+      : validation.data;
+
     const palette = await paletteService.createPalette(
       user.id,
-      validation.data
+      paletteInput
     );
     res.status(201).json({ success: true, data: palette });
   })
