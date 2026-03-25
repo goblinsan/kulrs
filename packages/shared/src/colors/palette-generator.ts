@@ -90,26 +90,8 @@ export function generateFromBaseColor(baseColor: OKLCHColor, colorCount: number 
   // Assign roles to colors
   const assignedColors = assignRoles(finalColors);
   
-  // Filter to get main colors (not background/text) and slice to requested count
-  const mainColorRoles = [
-    ColorRole.PRIMARY,
-    ColorRole.SECONDARY,
-    ColorRole.ACCENT,
-    ColorRole.INFO,
-    ColorRole.SUCCESS,
-    ColorRole.WARNING,
-    ColorRole.ERROR,
-  ];
-  const mainColors = assignedColors.filter(c => mainColorRoles.includes(c.role as ColorRole));
-  const derivedColors = assignedColors.filter(c => 
-    c.role === ColorRole.BACKGROUND || c.role === ColorRole.TEXT
-  );
-  
-  // Take requested number of main colors + derived colors
-  const resultColors = [...mainColors.slice(0, numColors), ...derivedColors];
-  
   return {
-    colors: resultColors,
+    colors: assignedColors,
     metadata: {
       generator: 'color',
       explanation: `Generated palette from base color with ${numColors} harmonious colors using complementary, analogous, and neutral strategies.`,
@@ -756,49 +738,24 @@ export function generateFromMood(mood: string, seed?: number, colorCount: number
   // Assign roles - this creates BACKGROUND, TEXT, PRIMARY, SECONDARY, etc.
   const assignedColors = assignRoles(finalColors);
   
-  // Shuffle the first 5 main colors (excluding BACKGROUND/TEXT which will be 
-  // treated as derived) to create variety in palette presentation
-  // Fisher-Yates shuffle on the main saturated colors
-  const mainColorRoles = [
-    ColorRole.PRIMARY,
-    ColorRole.SECONDARY,
-    ColorRole.ACCENT,
-    ColorRole.INFO,
-    ColorRole.SUCCESS,
-    ColorRole.WARNING,
-    ColorRole.ERROR,
-  ];
-  
-  // Separate main colors from background/text
-  const mainColors = assignedColors.filter(c => mainColorRoles.includes(c.role as ColorRole));
+  // Shuffle main colors (excluding BACKGROUND/TEXT) to create variety in
+  // palette presentation while preserving the roles assigned by assignRoles.
+  // Fisher-Yates shuffle on the main saturated colors.
+  const mainColors = assignedColors.filter(c => 
+    c.role !== ColorRole.BACKGROUND && c.role !== ColorRole.TEXT
+  );
   const derivedColors = assignedColors.filter(c => 
     c.role === ColorRole.BACKGROUND || c.role === ColorRole.TEXT
   );
   
-  // Shuffle main colors using seeded random for deterministic but varied results
+  // Shuffle all main colors using seeded random for deterministic but varied results
   for (let i = mainColors.length - 1; i > 0; i--) {
     const j = Math.floor(random.next() * (i + 1));
     [mainColors[i], mainColors[j]] = [mainColors[j], mainColors[i]];
   }
   
-  // Take the requested number of main colors (shuffled order) + derived colors at the end
-  const shuffledMain = mainColors.slice(0, numColors);
-  
-  // Reassign roles to shuffled main colors (order now varies)
-  const roleOrder = [
-    ColorRole.PRIMARY,
-    ColorRole.SECONDARY,
-    ColorRole.ACCENT,
-    ColorRole.INFO,
-    ColorRole.SUCCESS,
-  ];
-  const reorderedColors: AssignedColor[] = shuffledMain.map((color, i) => ({
-    role: roleOrder[i] || ColorRole.ACCENT,
-    color: color.color,
-  }));
-  
   // Add background and text at the end (these are "derived" colors in the UI)
-  reorderedColors.push(...derivedColors);
+  const reorderedColors = [...mainColors, ...derivedColors];
   
   return {
     colors: reorderedColors,
@@ -968,26 +925,8 @@ export function generateFromImage(
   // Assign roles
   const assignedColors = assignRoles(finalColors);
   
-  // Filter to get main colors (not background/text) and slice to requested count
-  const mainColorRoles = [
-    ColorRole.PRIMARY,
-    ColorRole.SECONDARY,
-    ColorRole.ACCENT,
-    ColorRole.INFO,
-    ColorRole.SUCCESS,
-    ColorRole.WARNING,
-    ColorRole.ERROR,
-  ];
-  const mainColors = assignedColors.filter(c => mainColorRoles.includes(c.role as ColorRole));
-  const derivedColors = assignedColors.filter(c => 
-    c.role === ColorRole.BACKGROUND || c.role === ColorRole.TEXT
-  );
-  
-  // Take requested number of main colors + derived colors
-  const resultColors = [...mainColors.slice(0, numColors), ...derivedColors];
-  
   return {
-    colors: resultColors,
+    colors: assignedColors,
     metadata: {
       generator: 'image',
       explanation: `Generated palette with ${numColors} colors extracted from ${numDominant} dominant colors in the image.`,
