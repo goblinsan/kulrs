@@ -462,4 +462,3 @@ describe('Generate Routes', () => {
     });
   });
 });
-

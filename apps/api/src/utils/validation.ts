@@ -97,4 +97,3 @@ export type GenerateFromMoodInput = z.infer<typeof generateFromMoodSchema>;
 export type GenerateFromImageInput = z.infer<typeof generateFromImageSchema>;
 export type RelatedColorsInput = z.infer<typeof relatedColorsSchema>;
 export type PaletteSuggestionsInput = z.infer<typeof paletteSuggestionsSchema>;
-
