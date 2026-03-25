@@ -7,7 +7,14 @@ import {
   generateNeutrals,
   applyQualityGates,
 } from './harmony.js';
-import { assignRoles, AssignedColor, ColorRole } from './contrast.js';
+import {
+  assignRoles,
+  AssignedColor,
+  ColorRole,
+  calculateContrastRatio,
+  WCAGLevel,
+  meetsWCAGLevel,
+} from './contrast.js';
 import { rgbToOklch } from './oklch.js';
 
 /**
@@ -27,7 +34,103 @@ export interface GeneratedPalette {
     generator: string;
     explanation: string;
     timestamp: string;
+    /** Descriptive tags for UI filtering and display (Issue #103) */
+    tags?: string[];
+    /** Confidence score in [0, 1] indicating palette quality (Issue #103) */
+    confidence?: number;
+    /** Per-role usage hints for Vizail UI decisions (Issue #103) */
+    roleHints?: Record<string, string>;
   };
+}
+
+// ---------------------------------------------------------------------------
+// Metadata helpers (Issue #103)
+// ---------------------------------------------------------------------------
+
+/** Standard UI hints for each recognised color role */
+const ROLE_HINTS: Record<string, string> = {
+  [ColorRole.BACKGROUND]: 'Use for page and surface backgrounds',
+  [ColorRole.TEXT]: 'Use for body text and readable content',
+  [ColorRole.PRIMARY]: 'Use for primary interactive elements and key actions',
+  [ColorRole.SECONDARY]: 'Use for secondary buttons and supporting elements',
+  [ColorRole.ACCENT]: 'Use for highlights, badges, and calls-to-action',
+  [ColorRole.ERROR]: 'Use for error states and destructive actions',
+  [ColorRole.WARNING]: 'Use for warning messages and cautionary indicators',
+  [ColorRole.SUCCESS]: 'Use for success states and positive confirmations',
+  [ColorRole.INFO]: 'Use for informational labels and neutral indicators',
+};
+
+/**
+ * Build a roleHints map from an array of assigned colors, including only
+ * the roles present in the palette.
+ */
+function buildRoleHints(colors: AssignedColor[]): Record<string, string> {
+  const hints: Record<string, string> = {};
+  for (const { role } of colors) {
+    const hint = ROLE_HINTS[role];
+    if (hint) hints[role] = hint;
+  }
+  return hints;
+}
+
+/**
+ * Derive descriptive tags from the source color and harmony type.
+ * Returns an array of lowercase strings suitable for filtering in the UI.
+ */
+function deriveTags(source: OKLCHColor, harmony: string): string[] {
+  const tags: string[] = [harmony];
+
+  // Temperature
+  if (source.h >= 330 || source.h < 90) tags.push('warm');
+  else if (source.h >= 150 && source.h < 270) tags.push('cool');
+  else tags.push('neutral-tone');
+
+  // Lightness
+  if (source.l > 0.7) tags.push('light');
+  else if (source.l < 0.3) tags.push('dark');
+
+  // Saturation
+  if (source.c > 0.25) tags.push('vibrant');
+  else if (source.c < 0.1) tags.push('muted');
+
+  return tags;
+}
+
+/**
+ * Compute a confidence score for a palette in [0, 1].
+ *
+ * Measures the fraction of adjacent text/background pairs that pass
+ * WCAG AA normal contrast (4.5 : 1).  Falls back to a general pairwise
+ * scan when no explicit background role is present.
+ */
+function computeConfidence(colors: AssignedColor[]): number {
+  const backgrounds = colors.filter(c => c.role === ColorRole.BACKGROUND);
+  const foregrounds = colors.filter(c => c.role !== ColorRole.BACKGROUND);
+
+  const pairs: Array<[AssignedColor, AssignedColor]> = [];
+
+  if (backgrounds.length > 0) {
+    for (const bg of backgrounds) {
+      for (const fg of foregrounds) {
+        pairs.push([fg, bg]);
+      }
+    }
+  } else {
+    for (let i = 0; i < colors.length; i++) {
+      for (let j = i + 1; j < colors.length; j++) {
+        pairs.push([colors[i], colors[j]]);
+      }
+    }
+  }
+
+  if (pairs.length === 0) return 0.5;
+
+  const passing = pairs.filter(([fg, bg]) => {
+    const ratio = calculateContrastRatio(fg.color, bg.color);
+    return meetsWCAGLevel(ratio, WCAGLevel.AA_NORMAL);
+  }).length;
+
+  return passing / pairs.length;
 }
 
 /**
@@ -96,6 +199,9 @@ export function generateFromBaseColor(baseColor: OKLCHColor, colorCount: number 
       generator: 'color',
       explanation: `Generated palette from base color with ${numColors} harmonious colors using complementary, analogous, and neutral strategies.`,
       timestamp: new Date().toISOString(),
+      tags: deriveTags(baseColor, 'color'),
+      confidence: computeConfidence(assignedColors),
+      roleHints: buildRoleHints(assignedColors),
     },
   };
 }
@@ -230,6 +336,9 @@ export function generateFromBaseColors(baseColors: OKLCHColor[], colorCount: num
       generator: 'colors',
       explanation: `Generated palette from ${baseColors.length} base colors with ${numColors} harmonious colors.`,
       timestamp: new Date().toISOString(),
+      tags: deriveTags(baseColors[0], 'colors'),
+      confidence: computeConfidence(resultColors),
+      roleHints: buildRoleHints(resultColors),
     },
   };
 }
@@ -763,6 +872,9 @@ export function generateFromMood(mood: string, seed?: number, colorCount: number
       generator: 'mood',
       explanation: `Generated ${params.harmony} palette with ${numColors} colors inspired by: "${mood}"`,
       timestamp: new Date().toISOString(),
+      tags: [params.harmony, 'mood', ...deriveTags(baseColor, params.harmony).slice(1)],
+      confidence: computeConfidence(reorderedColors),
+      roleHints: buildRoleHints(reorderedColors),
     },
   };
 }
@@ -924,13 +1036,21 @@ export function generateFromImage(
   
   // Assign roles
   const assignedColors = assignRoles(finalColors);
-  
+
+  // Use the first dominant color as the representative source for metadata.
+  // Falls back to the first final color when no dominant colors were extracted
+  // (e.g., empty pixel input after quality-gate filtering).
+  const representativeSource = dominantColors[0] ?? finalColors[0];
+
   return {
     colors: assignedColors,
     metadata: {
       generator: 'image',
       explanation: `Generated palette with ${numColors} colors extracted from ${numDominant} dominant colors in the image.`,
       timestamp: new Date().toISOString(),
+      tags: ['image', ...deriveTags(representativeSource, 'image').slice(1)],
+      confidence: computeConfidence(assignedColors),
+      roleHints: buildRoleHints(assignedColors),
     },
   };
 }
@@ -1085,6 +1205,9 @@ export function generateRandom(colorCount?: number): GeneratedPalette {
       generator: 'random',
       explanation: `Randomly generated ${strategy} palette with ${numColors} colors.`,
       timestamp: new Date().toISOString(),
+      tags: deriveTags(baseColor, strategy),
+      confidence: computeConfidence(reorderedColors),
+      roleHints: buildRoleHints(reorderedColors),
     },
   };
 }

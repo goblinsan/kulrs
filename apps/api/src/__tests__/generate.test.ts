@@ -260,4 +260,206 @@ describe('Generate Routes', () => {
       expect(response.body.error).toBe('Validation failed');
     });
   });
+
+  describe('POST /generate/color/related', () => {
+    const validColor = { l: 0.6, c: 0.2, h: 220 };
+
+    it('should return all harmony relationship groups for a valid color', async () => {
+      const response = await request(app)
+        .post('/generate/color/related')
+        .send({ color: validColor });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      const data = response.body.data;
+      expect(data.source).toMatchObject(validColor);
+      expect(Array.isArray(data.relationships)).toBe(true);
+
+      const types = data.relationships.map((r: { type: string }) => r.type);
+      expect(types).toContain('complementary');
+      expect(types).toContain('analogous');
+      expect(types).toContain('triadic');
+      expect(types).toContain('split-complementary');
+      expect(types).toContain('neutral');
+    });
+
+    it('each relationship group should have label, description, and colors', async () => {
+      const response = await request(app)
+        .post('/generate/color/related')
+        .send({ color: validColor });
+
+      expect(response.status).toBe(200);
+      for (const group of response.body.data.relationships) {
+        expect(typeof group.label).toBe('string');
+        expect(typeof group.description).toBe('string');
+        expect(Array.isArray(group.colors)).toBe(true);
+        expect(group.colors.length).toBeGreaterThan(0);
+        for (const c of group.colors) {
+          expect(typeof c.l).toBe('number');
+          expect(typeof c.c).toBe('number');
+          expect(typeof c.h).toBe('number');
+        }
+      }
+    });
+
+    it('should reject missing color', async () => {
+      const response = await request(app)
+        .post('/generate/color/related')
+        .send({});
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toBe('Validation failed');
+    });
+
+    it('should reject invalid OKLCH values', async () => {
+      const response = await request(app)
+        .post('/generate/color/related')
+        .send({ color: { l: 2, c: 0.2, h: 220 } }); // l > 1
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toBe('Validation failed');
+    });
+  });
+
+  describe('POST /generate/color/suggestions', () => {
+    const validColor = { l: 0.6, c: 0.2, h: 220 };
+
+    it('should return ranked palette suggestions for a valid color', async () => {
+      const response = await request(app)
+        .post('/generate/color/suggestions')
+        .send({ color: validColor });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      const suggestions = response.body.data;
+      expect(Array.isArray(suggestions)).toBe(true);
+      expect(suggestions.length).toBe(4); // default count
+    });
+
+    it('each suggestion should have rank, harmony, score, tags, and palette', async () => {
+      const response = await request(app)
+        .post('/generate/color/suggestions')
+        .send({ color: validColor });
+
+      expect(response.status).toBe(200);
+      for (const s of response.body.data) {
+        expect(typeof s.rank).toBe('number');
+        expect(typeof s.harmony).toBe('string');
+        expect(typeof s.score).toBe('number');
+        expect(s.score).toBeGreaterThanOrEqual(0);
+        expect(s.score).toBeLessThanOrEqual(1);
+        expect(Array.isArray(s.tags)).toBe(true);
+        expect(s.tags.length).toBeGreaterThan(0);
+        expect(s.palette).toBeDefined();
+        expect(Array.isArray(s.palette.colors)).toBe(true);
+        expect(s.palette.metadata.generator).toBeDefined();
+      }
+    });
+
+    it('suggestions should be sorted best-first (rank 1 has highest score)', async () => {
+      const response = await request(app)
+        .post('/generate/color/suggestions')
+        .send({ color: validColor });
+
+      expect(response.status).toBe(200);
+      const suggestions = response.body.data;
+      expect(suggestions[0].rank).toBe(1);
+      for (let i = 0; i < suggestions.length - 1; i++) {
+        expect(suggestions[i].score).toBeGreaterThanOrEqual(
+          suggestions[i + 1].score
+        );
+      }
+    });
+
+    it('should return only requested number of suggestions', async () => {
+      const response = await request(app)
+        .post('/generate/color/suggestions')
+        .send({ color: validColor, count: 2 });
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.length).toBe(2);
+    });
+
+    it('palette metadata should include tags, confidence, and roleHints', async () => {
+      const response = await request(app)
+        .post('/generate/color/suggestions')
+        .send({ color: validColor });
+
+      expect(response.status).toBe(200);
+      for (const s of response.body.data) {
+        const meta = s.palette.metadata;
+        expect(Array.isArray(meta.tags)).toBe(true);
+        expect(typeof meta.confidence).toBe('number');
+        expect(meta.confidence).toBeGreaterThanOrEqual(0);
+        expect(meta.confidence).toBeLessThanOrEqual(1);
+        expect(typeof meta.roleHints).toBe('object');
+      }
+    });
+
+    it('should reject missing color', async () => {
+      const response = await request(app)
+        .post('/generate/color/suggestions')
+        .send({});
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toBe('Validation failed');
+    });
+
+    it('should reject count > 4', async () => {
+      const response = await request(app)
+        .post('/generate/color/suggestions')
+        .send({ color: validColor, count: 5 });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toBe('Validation failed');
+    });
+  });
+
+  describe('Issue #103 – palette metadata fields', () => {
+    it('POST /generate/color should include tags, confidence, roleHints in metadata', async () => {
+      const response = await request(app)
+        .post('/generate/color')
+        .send({ color: { l: 0.5, c: 0.15, h: 120 } });
+
+      expect(response.status).toBe(200);
+      const meta = response.body.data.metadata;
+      expect(Array.isArray(meta.tags)).toBe(true);
+      expect(meta.tags.length).toBeGreaterThan(0);
+      expect(typeof meta.confidence).toBe('number');
+      expect(meta.confidence).toBeGreaterThanOrEqual(0);
+      expect(meta.confidence).toBeLessThanOrEqual(1);
+      expect(typeof meta.roleHints).toBe('object');
+    });
+
+    it('POST /generate/mood should include tags, confidence, roleHints in metadata', async () => {
+      const response = await request(app)
+        .post('/generate/mood')
+        .send({ mood: 'calm ocean' });
+
+      expect(response.status).toBe(200);
+      const meta = response.body.data.metadata;
+      expect(Array.isArray(meta.tags)).toBe(true);
+      expect(typeof meta.confidence).toBe('number');
+      expect(typeof meta.roleHints).toBe('object');
+    });
+
+    it('POST /generate/image should include tags, confidence, roleHints in metadata', async () => {
+      const response = await request(app)
+        .post('/generate/image')
+        .send({
+          pixels: [
+            { r: 255, g: 100, b: 50 },
+            { r: 50, g: 100, b: 255 },
+            { r: 100, g: 200, b: 100 },
+          ],
+        });
+
+      expect(response.status).toBe(200);
+      const meta = response.body.data.metadata;
+      expect(Array.isArray(meta.tags)).toBe(true);
+      expect(typeof meta.confidence).toBe('number');
+      expect(typeof meta.roleHints).toBe('object');
+    });
+  });
 });
+
