@@ -28,7 +28,9 @@ const isProduction = process.env.NODE_ENV === 'production';
 app.use((req, res, next) => {
   // Parse configured origins or fall back to sensible defaults
   const configured = process.env.CORS_ORIGIN
-    ? process.env.CORS_ORIGIN.split(',').map(s => s.trim()).filter(Boolean)
+    ? process.env.CORS_ORIGIN.split(',')
+        .map(s => s.trim())
+        .filter(Boolean)
     : null;
 
   const allowedOrigins =
@@ -38,7 +40,10 @@ app.use((req, res, next) => {
       : ['http://localhost:5173', 'http://localhost:5174']);
 
   // Ensure both root and www variants are allowed if one is present
-  if (allowedOrigins.includes('https://kulrs.com') && !allowedOrigins.includes('https://www.kulrs.com')) {
+  if (
+    allowedOrigins.includes('https://kulrs.com') &&
+    !allowedOrigins.includes('https://www.kulrs.com')
+  ) {
     allowedOrigins.push('https://www.kulrs.com');
   }
 

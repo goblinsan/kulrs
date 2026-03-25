@@ -242,10 +242,7 @@ router.post(
       ? { ...validation.data, isPublic: false }
       : validation.data;
 
-    const palette = await paletteService.createPalette(
-      user.id,
-      paletteInput
-    );
+    const palette = await paletteService.createPalette(user.id, paletteInput);
     res.status(201).json({ success: true, data: palette });
   })
 );

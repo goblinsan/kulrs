@@ -27,7 +27,6 @@ describe('Generate Routes', () => {
       expect(response.body.success).toBe(true);
       expect(response.body.data).toBeDefined();
       expect(response.body.data.colors).toBeDefined();
-      // With colorCount default of 5 main colors + 2 derived (background, text) = 7
       expect(response.body.data.colors.length).toBeGreaterThanOrEqual(5);
       expect(response.body.data.colors.length).toBeLessThanOrEqual(12);
       expect(response.body.data.metadata.generator).toBe('color');
@@ -191,7 +190,6 @@ describe('Generate Routes', () => {
       expect(response.body.success).toBe(true);
       expect(response.body.data).toBeDefined();
       expect(response.body.data.colors).toBeDefined();
-      // With colorCount default of 5 main colors + 2 derived (background, text) = 7
       expect(response.body.data.colors.length).toBeGreaterThanOrEqual(5);
       expect(response.body.data.colors.length).toBeLessThanOrEqual(12);
       expect(response.body.data.metadata.generator).toBe('image');

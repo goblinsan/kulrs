@@ -35,21 +35,57 @@ dotenv.config({ path: join(__dirname, '..', '.env.local') });
 // Bot roster — keep in sync with ideas/agent-bot-personalities.md
 // ---------------------------------------------------------------------------
 const BOTS = [
-  { username: 'mireille',   email: 'mireille@kulrs.com',   displayName: 'mireille'   },
-  { username: 'hex_junkie', email: 'hex@kulrs.com',         displayName: 'hex_junkie' },
-  { username: 'sol_studio', email: 'sol@kulrs.com',         displayName: 'sol_studio' },
-  { username: 'nyx',        email: 'nyx@kulrs.com',         displayName: 'nyx'        },
-  { username: 'sundrop',    email: 'sundrop@kulrs.com',     displayName: 'sundrop'    },
-  { username: 'fieldnotes', email: 'fieldnotes@kulrs.com',  displayName: 'fieldnotes' },
-  { username: 'retrograde', email: 'retrograde@kulrs.com',  displayName: 'retrograde' },
-  { username: 'civic_grey', email: 'civic@kulrs.com',       displayName: 'civic_grey' },
-  { username: 'pastelwave', email: 'pastelwave@kulrs.com',  displayName: 'pastelwave' },
-  { username: 'inkwell',    email: 'inkwell@kulrs.com',     displayName: 'inkwell'    },
-  { username: 'saltflat',   email: 'saltflat@kulrs.com',    displayName: 'saltflat'   },
-  { username: 'velvetroom', email: 'velvetroom@kulrs.com',  displayName: 'velvetroom' },
-  { username: 'chromalab',  email: 'chromalab@kulrs.com',   displayName: 'chromalab'  },
-  { username: 'zestpop',    email: 'zestpop@kulrs.com',     displayName: 'zestpop'    },
-  { username: 'driftwood',  email: 'driftwood@kulrs.com',   displayName: 'driftwood'  },
+  {
+    username: 'mireille',
+    email: 'mireille@kulrs.com',
+    displayName: 'mireille',
+  },
+  { username: 'hex_junkie', email: 'hex@kulrs.com', displayName: 'hex_junkie' },
+  { username: 'sol_studio', email: 'sol@kulrs.com', displayName: 'sol_studio' },
+  { username: 'nyx', email: 'nyx@kulrs.com', displayName: 'nyx' },
+  { username: 'sundrop', email: 'sundrop@kulrs.com', displayName: 'sundrop' },
+  {
+    username: 'fieldnotes',
+    email: 'fieldnotes@kulrs.com',
+    displayName: 'fieldnotes',
+  },
+  {
+    username: 'retrograde',
+    email: 'retrograde@kulrs.com',
+    displayName: 'retrograde',
+  },
+  {
+    username: 'civic_grey',
+    email: 'civic@kulrs.com',
+    displayName: 'civic_grey',
+  },
+  {
+    username: 'pastelwave',
+    email: 'pastelwave@kulrs.com',
+    displayName: 'pastelwave',
+  },
+  { username: 'inkwell', email: 'inkwell@kulrs.com', displayName: 'inkwell' },
+  {
+    username: 'saltflat',
+    email: 'saltflat@kulrs.com',
+    displayName: 'saltflat',
+  },
+  {
+    username: 'velvetroom',
+    email: 'velvetroom@kulrs.com',
+    displayName: 'velvetroom',
+  },
+  {
+    username: 'chromalab',
+    email: 'chromalab@kulrs.com',
+    displayName: 'chromalab',
+  },
+  { username: 'zestpop', email: 'zestpop@kulrs.com', displayName: 'zestpop' },
+  {
+    username: 'driftwood',
+    email: 'driftwood@kulrs.com',
+    displayName: 'driftwood',
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -57,7 +93,8 @@ const BOTS = [
 // ---------------------------------------------------------------------------
 function initFirebase() {
   const projectId = process.env.FIREBASE_PROJECT_ID;
-  if (!projectId) throw new Error('FIREBASE_PROJECT_ID is not set in .env.local');
+  if (!projectId)
+    throw new Error('FIREBASE_PROJECT_ID is not set in .env.local');
   admin.initializeApp({ projectId });
   return admin.auth();
 }
