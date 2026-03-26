@@ -319,3 +319,87 @@ describe('GET /palettes (safe fallback on DB error)', () => {
     expect(res.headers['x-degraded']).toBe('true');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Issue #117 – Theme-aware queries
+// ---------------------------------------------------------------------------
+
+describe('GET /palettes/themes', () => {
+  it('returns the list of available themes', async () => {
+    const res = await request(app).get('/palettes/themes');
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(Array.isArray(res.body.data)).toBe(true);
+    expect(res.body.data.length).toBeGreaterThan(0);
+  });
+
+  it('each theme has slug, label, description, and tagSlugs', async () => {
+    const res = await request(app).get('/palettes/themes');
+
+    expect(res.status).toBe(200);
+    for (const theme of res.body.data) {
+      expect(typeof theme.slug).toBe('string');
+      expect(typeof theme.label).toBe('string');
+      expect(typeof theme.description).toBe('string');
+      expect(Array.isArray(theme.tagSlugs)).toBe(true);
+      expect(theme.tagSlugs.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('sets a long-lived Cache-Control header', async () => {
+    const res = await request(app).get('/palettes/themes');
+
+    expect(res.headers['cache-control']).toContain('max-age=300');
+  });
+});
+
+describe('GET /palettes (theme filter)', () => {
+  beforeEach(() => {
+    mockBrowsePalettes.mockReset();
+  });
+
+  it('expands ?theme=warm to the warm tagSlugs', async () => {
+    mockBrowsePalettes.mockResolvedValue([SAMPLE_PALETTE]);
+
+    const res = await request(app).get('/palettes?theme=warm');
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    const callArg = (
+      mockBrowsePalettes.mock.calls[0] as unknown as [{ tags?: string[] }]
+    )[0];
+    expect(Array.isArray(callArg.tags)).toBe(true);
+    expect(callArg.tags).toContain('warm');
+  });
+
+  it('expands ?theme=vibrant to the vibrant tagSlugs', async () => {
+    mockBrowsePalettes.mockResolvedValue([]);
+
+    await request(app).get('/palettes?theme=vibrant');
+
+    const callArg = (
+      mockBrowsePalettes.mock.calls[0] as unknown as [{ tags?: string[] }]
+    )[0];
+    expect(callArg.tags).toContain('vibrant');
+  });
+
+  it('merges ?theme= tags with explicit ?tags= slugs', async () => {
+    mockBrowsePalettes.mockResolvedValue([]);
+
+    await request(app).get('/palettes?theme=warm&tags=nature');
+
+    const callArg = (
+      mockBrowsePalettes.mock.calls[0] as unknown as [{ tags?: string[] }]
+    )[0];
+    expect(callArg.tags).toContain('warm');
+    expect(callArg.tags).toContain('nature');
+  });
+
+  it('returns 400 for an unknown theme slug', async () => {
+    const res = await request(app).get('/palettes?theme=nonexistent-theme');
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/unknown theme/i);
+  });
+});

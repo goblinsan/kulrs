@@ -10,6 +10,7 @@ import {
   ValidationError,
   asyncHandler,
 } from '../utils/errors.js';
+import { listThemes, getThemeBySlug } from '@kulrs/shared';
 
 const router = Router();
 
@@ -97,6 +98,25 @@ router.get(
           .filter(Boolean)
       : undefined;
 
+    // Theme filter: ?theme=minimalist  (single theme slug, expands to tag slugs)
+    // A theme is a higher-level style concept that maps to one or more tag slugs.
+    // The resolved tag slugs are merged with any explicitly-provided ?tags= slugs.
+    let resolvedTags = tags;
+    if (rawQuery.theme) {
+      const themeSlug = rawQuery.theme.trim().toLowerCase();
+      const theme = getThemeBySlug(themeSlug);
+      if (!theme) {
+        throw new BadRequestError(`Unknown theme: ${themeSlug}`);
+      }
+      const themeTagSlugs = theme.tagSlugs;
+      // Merge with explicit tags if both are provided, deduplicating
+      if (resolvedTags && resolvedTags.length > 0) {
+        resolvedTags = [...new Set([...resolvedTags, ...themeTagSlugs])];
+      } else {
+        resolvedTags = themeTagSlugs;
+      }
+    }
+
     // Text search: ?q=keyword  (max 100 chars)
     const q =
       rawQuery.q && rawQuery.q.trim().length > 0
@@ -130,7 +150,7 @@ router.get(
         limit,
         offset,
         viewerUserId,
-        tags,
+        tags: resolvedTags,
         q,
       })
       .catch(() => {
@@ -162,6 +182,23 @@ router.get(
       'public, max-age=300, stale-while-revalidate=600'
     );
     res.status(200).json({ success: true, data: allTags });
+  })
+);
+
+/**
+ * GET /palettes/themes
+ * List all available style themes (higher-level groupings of tag slugs).
+ * Must be registered before /:id to prevent Express treating "themes" as an id.
+ */
+router.get(
+  '/themes',
+  asyncHandler(async (_req: AuthenticatedRequest, res: Response) => {
+    const themes = listThemes();
+    res.setHeader(
+      'Cache-Control',
+      'public, max-age=300, stale-while-revalidate=600'
+    );
+    res.status(200).json({ success: true, data: themes });
   })
 );
 

@@ -101,6 +101,13 @@ export const paletteSuggestionsSchema = z.object({
   count: z.number().int().min(1).max(4).optional().default(4),
 });
 
+/** Schema for POST /generate/image/suggestions (Issue #118) */
+export const imageSuggestionsSchema = z.object({
+  colors: z.array(oklchColorSchema).min(1).max(5),
+  colorCount: z.number().int().min(2).max(5).optional().default(5),
+  count: z.number().int().min(1).max(4).optional().default(4),
+});
+
 export type GenerateFromBaseColorInput = z.infer<
   typeof generateFromBaseColorSchema
 >;
@@ -108,3 +115,4 @@ export type GenerateFromMoodInput = z.infer<typeof generateFromMoodSchema>;
 export type GenerateFromImageInput = z.infer<typeof generateFromImageSchema>;
 export type RelatedColorsInput = z.infer<typeof relatedColorsSchema>;
 export type PaletteSuggestionsInput = z.infer<typeof paletteSuggestionsSchema>;
+export type ImageSuggestionsInput = z.infer<typeof imageSuggestionsSchema>;
