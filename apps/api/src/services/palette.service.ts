@@ -45,6 +45,24 @@ interface CachedUser {
 }
 const userCache = new Map<string, CachedUser>();
 
+/**
+ * In-memory cache for the tags list.
+ * Tags change very infrequently so a 5-minute TTL eliminates a DB round-trip
+ * on every browse-page load without risking stale data for long.
+ */
+const TAGS_CACHE_TTL_MS = 5 * 60 * 1000;
+type TagRow = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+};
+interface CachedTags {
+  data: TagRow[];
+  expiresAt: number;
+}
+let tagsCache: CachedTags | null = null;
+
 export class PaletteService {
   /**
    * Get or create user by Firebase UID (with per-instance cache)
@@ -403,9 +421,14 @@ export class PaletteService {
    * Browse public palettes with sorting and filtering.
    * Deduplicates palettes that share the same colors in the same order,
    * keeping only the earliest-created instance.
+   *
+   * Sort modes:
+   *  - `recent`   – newest first (default)
+   *  - `popular`  – highest likes count first
+   *  - `trending` – time-decayed score: likesCount / (ageHours + 2)^1.5
    */
   async browsePalettes(options: {
-    sort: 'recent' | 'popular';
+    sort: 'recent' | 'popular' | 'trending';
     userId?: string;
     limit: number;
     offset: number;
@@ -454,7 +477,7 @@ export class PaletteService {
       if (searchCond) conditions.push(searchCond);
     }
 
-    // Build order by
+    // Build order by — trending re-ranks in application code so fetch by recency first
     const orderBy =
       sort === 'popular'
         ? [desc(palettes.likesCount), desc(palettes.createdAt)]
@@ -546,6 +569,19 @@ export class PaletteService {
       seen.add(colorSignature);
       return true;
     });
+
+    // Trending re-rank: score = likesCount / (ageHours + 2)^1.5
+    // Keeps popular-but-fresh content above old viral palettes.
+    if (sort === 'trending') {
+      const now = Date.now();
+      deduplicated.sort((a, b) => {
+        const ageA = (now - a.createdAt.getTime()) / 3_600_000;
+        const ageB = (now - b.createdAt.getTime()) / 3_600_000;
+        const scoreA = a.likesCount / Math.pow(ageA + 2, 1.5);
+        const scoreB = b.likesCount / Math.pow(ageB + 2, 1.5);
+        return scoreB - scoreA;
+      });
+    }
 
     // Apply offset and limit after deduplication
     return deduplicated.slice(safeOffset, safeOffset + safeLimit);
@@ -688,9 +724,15 @@ export class PaletteService {
   }
   /**
    * Get all available tags, ordered alphabetically.
+   * Results are cached for up to 5 minutes to reduce DB round-trips on
+   * high-traffic browse pages.
    */
   async getAllTags() {
-    return db
+    if (tagsCache && tagsCache.expiresAt > Date.now()) {
+      return tagsCache.data;
+    }
+
+    const rows = await db
       .select({
         id: tagsTable.id,
         name: tagsTable.name,
@@ -699,6 +741,9 @@ export class PaletteService {
       })
       .from(tagsTable)
       .orderBy(asc(tagsTable.name));
+
+    tagsCache = { data: rows, expiresAt: Date.now() + TAGS_CACHE_TTL_MS };
+    return rows;
   }
 
   /**

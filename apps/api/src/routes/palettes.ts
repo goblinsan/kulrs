@@ -2,7 +2,7 @@ import { Router, Response } from 'express';
 import rateLimit from 'express-rate-limit';
 import { AuthenticatedRequest } from '../middleware/auth.js';
 import { paletteService } from '../services/palette.service.js';
-import { createPaletteSchema } from '../utils/validation.js';
+import { createPaletteSchema, isValidUUID } from '../utils/validation.js';
 import {
   BadRequestError,
   UnauthorizedError,
@@ -48,6 +48,16 @@ function requireAuth(
   return req.user;
 }
 
+/**
+ * Validate that `id` is a well-formed UUID.
+ * Rejects obviously-invalid IDs with 400 before they reach the database.
+ */
+function requireValidPaletteId(id: string): void {
+  if (!isValidUUID(id)) {
+    throw new BadRequestError('Invalid palette id format');
+  }
+}
+
 /** Stricter write limiter for like/unlike/create/delete — 20 req/min/IP */
 const paletteWriteLimiter = rateLimit({
   windowMs: 60_000,
@@ -67,7 +77,11 @@ router.get(
     const rawQuery = req.query as Record<string, string | undefined>;
 
     const sort =
-      rawQuery.sort === 'popular' ? ('popular' as const) : ('recent' as const);
+      rawQuery.sort === 'popular'
+        ? ('popular' as const)
+        : rawQuery.sort === 'trending'
+          ? ('trending' as const)
+          : ('recent' as const);
     const limit = clampInt(rawQuery.limit, 20, 1, 50);
     const offset = clampInt(rawQuery.offset, 0, 0, 10_000);
     const userId = rawQuery.userId;
@@ -109,15 +123,22 @@ router.get(
       }
     }
 
-    const palettes = await paletteService.browsePalettes({
-      sort,
-      userId,
-      limit,
-      offset,
-      viewerUserId,
-      tags,
-      q,
-    });
+    const palettes = await paletteService
+      .browsePalettes({
+        sort,
+        userId,
+        limit,
+        offset,
+        viewerUserId,
+        tags,
+        q,
+      })
+      .catch(() => {
+        // Safe fallback: if the DB is temporarily unavailable, return an empty
+        // list rather than a 500 so clients degrade gracefully.
+        res.setHeader('X-Degraded', 'true');
+        return [] as Awaited<ReturnType<typeof paletteService.browsePalettes>>;
+      });
 
     res.setHeader(
       'Cache-Control',
@@ -180,6 +201,7 @@ router.get(
   '/:id',
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const paletteId = String(req.params.id);
+    requireValidPaletteId(paletteId);
     const palette = await paletteService.getPaletteById(paletteId);
 
     if (!palette) throw new NotFoundError('Palette not found');
@@ -212,6 +234,7 @@ router.put(
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const authUser = requireAuth(req);
     const paletteId = String(req.params.id);
+    requireValidPaletteId(paletteId);
     const user = await paletteService.getOrCreateUser(
       authUser.uid,
       authUser.email
@@ -292,6 +315,7 @@ router.post(
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const authUser = requireAuth(req);
     const paletteId = String(req.params.id);
+    requireValidPaletteId(paletteId);
     const user = await paletteService.getOrCreateUser(
       authUser.uid,
       authUser.email
@@ -311,6 +335,7 @@ router.post(
   paletteWriteLimiter,
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const paletteId = String(req.params.id);
+    requireValidPaletteId(paletteId);
     const { deviceId } = req.body as { deviceId?: string };
 
     let user;
@@ -339,6 +364,7 @@ router.delete(
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const authUser = requireAuth(req);
     const paletteId = String(req.params.id);
+    requireValidPaletteId(paletteId);
     const user = await paletteService.getOrCreateUser(
       authUser.uid,
       authUser.email
@@ -359,6 +385,7 @@ router.delete(
   paletteWriteLimiter,
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const paletteId = String(req.params.id);
+    requireValidPaletteId(paletteId);
     const { deviceId } = req.body as { deviceId?: string };
 
     let user;
@@ -384,6 +411,7 @@ router.get(
   '/:id/likes',
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const paletteId = String(req.params.id);
+    requireValidPaletteId(paletteId);
     const { deviceId } = req.query as { deviceId?: string };
 
     let userId: string | null = null;
@@ -411,6 +439,7 @@ router.get(
   '/:id/related',
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const paletteId = String(req.params.id);
+    requireValidPaletteId(paletteId);
     const limit = clampInt(req.query.limit as string | undefined, 6, 1, 20);
 
     let viewerUserId: string | null = null;
@@ -445,6 +474,7 @@ router.post(
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const authUser = requireAuth(req);
     const paletteId = String(req.params.id);
+    requireValidPaletteId(paletteId);
     const user = await paletteService.getOrCreateUser(
       authUser.uid,
       authUser.email

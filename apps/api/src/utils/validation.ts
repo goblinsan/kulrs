@@ -1,5 +1,16 @@
 import { z } from 'zod';
 
+/**
+ * Returns true when the given string is a well-formed UUID
+ * (any version, case-insensitive).
+ * Use this to reject obviously-invalid palette IDs before hitting the DB.
+ */
+export function isValidUUID(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+    value
+  );
+}
+
 // OKLCH color schema
 const oklchColorSchema = z.object({
   l: z.number().min(0).max(1),
