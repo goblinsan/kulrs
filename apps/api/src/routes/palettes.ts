@@ -73,6 +73,22 @@ router.get(
     const userId = rawQuery.userId;
     const deviceId = rawQuery.deviceId;
 
+    // Tag filter: ?tags=warm,vibrant  (comma-separated slugs)
+    // Normalise to lowercase so clients can pass mixed-case slugs (e.g. "Warm")
+    // and still match the slug values stored in the database.
+    const tags = rawQuery.tags
+      ? rawQuery.tags
+          .split(',')
+          .map(t => t.trim().toLowerCase())
+          .filter(Boolean)
+      : undefined;
+
+    // Text search: ?q=keyword  (max 100 chars)
+    const q =
+      rawQuery.q && rawQuery.q.trim().length > 0
+        ? rawQuery.q.trim().slice(0, 100)
+        : undefined;
+
     if (deviceId) validateDeviceId(deviceId);
 
     // Resolve viewer identity for per-palette like status
@@ -99,6 +115,8 @@ router.get(
       limit,
       offset,
       viewerUserId,
+      tags,
+      q,
     });
 
     res.setHeader(
@@ -106,6 +124,23 @@ router.get(
       'public, max-age=15, stale-while-revalidate=30'
     );
     res.status(200).json({ success: true, data: palettes });
+  })
+);
+
+/**
+ * GET /palettes/tags
+ * List all available tags (for browse-by-mood/style UI).
+ * Must be registered before /:id to prevent Express treating "tags" as an id.
+ */
+router.get(
+  '/tags',
+  asyncHandler(async (_req: AuthenticatedRequest, res: Response) => {
+    const allTags = await paletteService.getAllTags();
+    res.setHeader(
+      'Cache-Control',
+      'public, max-age=300, stale-while-revalidate=600'
+    );
+    res.status(200).json({ success: true, data: allTags });
   })
 );
 
@@ -365,6 +400,38 @@ router.get(
 
     const result = await paletteService.getLikeInfo(paletteId, userId);
     res.status(200).json({ success: true, data: result });
+  })
+);
+
+/**
+ * GET /palettes/:id/related
+ * Find public palettes related to the given palette via shared tags.
+ */
+router.get(
+  '/:id/related',
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const paletteId = String(req.params.id);
+    const limit = clampInt(req.query.limit as string | undefined, 6, 1, 20);
+
+    let viewerUserId: string | null = null;
+    if (req.user) {
+      const viewer = await paletteService.getOrCreateUser(
+        req.user.uid,
+        req.user.email
+      );
+      viewerUserId = viewer.id;
+    }
+
+    const related = await paletteService.getRelatedPalettes(paletteId, {
+      limit,
+      viewerUserId,
+    });
+
+    res.setHeader(
+      'Cache-Control',
+      'public, max-age=30, stale-while-revalidate=60'
+    );
+    res.status(200).json({ success: true, data: related });
   })
 );
 

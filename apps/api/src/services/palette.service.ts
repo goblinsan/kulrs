@@ -1,6 +1,14 @@
-import { eq, and, sql, asc, desc, inArray } from 'drizzle-orm';
+import { eq, and, or, sql, asc, desc, inArray, ilike, ne } from 'drizzle-orm';
 import { db } from '../config/database.js';
-import { users, palettes, colors, paletteTags, likes, saves } from '@kulrs/db';
+import {
+  users,
+  palettes,
+  colors,
+  paletteTags,
+  tags as tagsTable,
+  likes,
+  saves,
+} from '@kulrs/db';
 import { CreatePaletteInput } from '../utils/validation.js';
 import { oklchToRgb } from '@kulrs/shared';
 import { NotFoundError } from '../utils/errors.js';
@@ -402,6 +410,10 @@ export class PaletteService {
     limit: number;
     offset: number;
     viewerUserId?: string | null;
+    /** Filter by tag slugs — palettes matching ANY of the given slugs are returned. */
+    tags?: string[];
+    /** Case-insensitive substring search across palette name and description. */
+    q?: string;
   }) {
     const { sort, userId, limit, offset, viewerUserId } = options;
 
@@ -413,6 +425,33 @@ export class PaletteService {
     // For popular sort, only show palettes that have at least one like
     if (sort === 'popular') {
       conditions.push(sql`${palettes.likesCount} > 0`);
+    }
+
+    // Tag filtering: keep only palettes that have at least one of the requested tags
+    if (options.tags && options.tags.length > 0) {
+      const taggedRows = await db
+        .selectDistinct({ paletteId: paletteTags.paletteId })
+        .from(paletteTags)
+        .innerJoin(tagsTable, eq(paletteTags.tagId, tagsTable.id))
+        .where(inArray(tagsTable.slug, options.tags));
+
+      if (taggedRows.length === 0) return [];
+      conditions.push(
+        inArray(
+          palettes.id,
+          taggedRows.map(r => r.paletteId)
+        )
+      );
+    }
+
+    // Text search across name and description
+    if (options.q) {
+      const pattern = `%${options.q}%`;
+      const searchCond = or(
+        ilike(palettes.name, pattern),
+        ilike(palettes.description, pattern)
+      );
+      if (searchCond) conditions.push(searchCond);
     }
 
     // Build order by
@@ -646,6 +685,151 @@ export class PaletteService {
       ...palette,
       colors: paletteColors,
     };
+  }
+  /**
+   * Get all available tags, ordered alphabetically.
+   */
+  async getAllTags() {
+    return db
+      .select({
+        id: tagsTable.id,
+        name: tagsTable.name,
+        slug: tagsTable.slug,
+        description: tagsTable.description,
+      })
+      .from(tagsTable)
+      .orderBy(asc(tagsTable.name));
+  }
+
+  /**
+   * Find public palettes related to the given palette via shared tags.
+   * Palettes are ranked by the number of tags they share with the source palette.
+   * Falls back to most-popular public palettes when the source has no tags.
+   */
+  async getRelatedPalettes(
+    paletteId: string,
+    options: { limit: number; viewerUserId?: string | null }
+  ) {
+    const { limit, viewerUserId } = options;
+    const safeLimit = Math.min(Math.max(1, limit), 20);
+    // Over-fetch factor: private palettes are filtered out after the tag query,
+    // so we fetch more candidates to ensure we can fill the requested limit.
+    const OVERFETCH_FACTOR = 3;
+
+    // Collect tags for this palette
+    const ptRows = await db
+      .select({ tagId: paletteTags.tagId })
+      .from(paletteTags)
+      .where(eq(paletteTags.paletteId, paletteId));
+
+    const tagIds = ptRows.map(r => r.tagId);
+
+    let relatedIds: string[];
+
+    if (tagIds.length === 0) {
+      // No tags — fall back to most-popular public palettes
+      const popular = await db
+        .select({ id: palettes.id })
+        .from(palettes)
+        .where(and(eq(palettes.isPublic, true), ne(palettes.id, paletteId)))
+        .orderBy(desc(palettes.likesCount), desc(palettes.createdAt))
+        .limit(safeLimit);
+      relatedIds = popular.map(p => p.id);
+    } else {
+      // Find palettes sharing the most tags
+      const scored = await db
+        .select({
+          paletteId: paletteTags.paletteId,
+          sharedCount: sql<number>`count(*)`.as('shared_count'),
+        })
+        .from(paletteTags)
+        .where(
+          and(
+            inArray(paletteTags.tagId, tagIds),
+            ne(paletteTags.paletteId, paletteId)
+          )
+        )
+        .groupBy(paletteTags.paletteId)
+        .orderBy(desc(sql`count(*)`))
+        .limit(safeLimit * OVERFETCH_FACTOR);
+
+      relatedIds = scored.map(r => r.paletteId);
+    }
+
+    if (relatedIds.length === 0) return [];
+
+    // Fetch the palette rows and restrict to public only
+    const paletteResults = await db
+      .select({
+        id: palettes.id,
+        name: palettes.name,
+        description: palettes.description,
+        userId: palettes.userId,
+        isPublic: palettes.isPublic,
+        likesCount: palettes.likesCount,
+        savesCount: palettes.savesCount,
+        createdAt: palettes.createdAt,
+      })
+      .from(palettes)
+      .where(
+        and(inArray(palettes.id, relatedIds), eq(palettes.isPublic, true))
+      );
+
+    if (paletteResults.length === 0) return [];
+
+    // Preserve the tag-overlap ordering
+    const paletteMap = new Map(paletteResults.map(p => [p.id, p]));
+    const ordered = relatedIds
+      .map(id => paletteMap.get(id))
+      .filter((p): p is NonNullable<typeof p> => p !== undefined)
+      .slice(0, safeLimit);
+
+    // Batch-fetch colors
+    const orderedIds = ordered.map(p => p.id);
+    const allColors = await db
+      .select({
+        id: colors.id,
+        paletteId: colors.paletteId,
+        hexValue: colors.hexValue,
+        position: colors.position,
+        name: colors.name,
+      })
+      .from(colors)
+      .where(inArray(colors.paletteId, orderedIds))
+      .orderBy(asc(colors.position));
+
+    const colorsByPalette = new Map<string, typeof allColors>();
+    for (const c of allColors) {
+      const arr = colorsByPalette.get(c.paletteId) ?? [];
+      arr.push(c);
+      colorsByPalette.set(c.paletteId, arr);
+    }
+
+    // Batch-fetch viewer likes
+    let likedPaletteIds = new Set<string>();
+    if (viewerUserId) {
+      const userLikes = await db
+        .select({ paletteId: likes.paletteId })
+        .from(likes)
+        .where(
+          and(
+            eq(likes.userId, viewerUserId),
+            inArray(likes.paletteId, orderedIds)
+          )
+        );
+      likedPaletteIds = new Set(userLikes.map(l => l.paletteId));
+    }
+
+    return ordered.map(palette => ({
+      ...palette,
+      colors: (colorsByPalette.get(palette.id) ?? []).map(c => ({
+        id: c.id,
+        hexValue: c.hexValue,
+        position: c.position,
+        name: c.name,
+      })),
+      userLiked: likedPaletteIds.has(palette.id),
+    }));
   }
 }
 
