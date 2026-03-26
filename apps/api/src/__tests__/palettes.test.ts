@@ -61,8 +61,12 @@ const SAMPLE_TAGS = [
   { id: 'tag-4', name: 'Serene', slug: 'serene', description: 'Calm palettes' },
 ];
 
+const PAL_ID_1 = '11111111-1111-4111-8111-111111111111';
+const PAL_ID_2 = '22222222-2222-4222-8222-222222222222';
+const PAL_ID_3 = '33333333-3333-4333-8333-333333333333';
+
 const SAMPLE_PALETTE = {
-  id: 'pal-1',
+  id: PAL_ID_1,
   name: 'Ocean Breeze',
   description: 'Cool ocean colors',
   userId: 'user-1',
@@ -185,12 +189,12 @@ describe('GET /palettes/:id/related', () => {
 
   it('returns related palettes for a valid id', async () => {
     const related = [
-      { ...SAMPLE_PALETTE, id: 'pal-2', name: 'Nordic Frost' },
-      { ...SAMPLE_PALETTE, id: 'pal-3', name: 'Forest Canopy' },
+      { ...SAMPLE_PALETTE, id: PAL_ID_2, name: 'Nordic Frost' },
+      { ...SAMPLE_PALETTE, id: PAL_ID_3, name: 'Forest Canopy' },
     ];
     mockGetRelatedPalettes.mockResolvedValue(related);
 
-    const res = await request(app).get('/palettes/pal-1/related');
+    const res = await request(app).get(`/palettes/${PAL_ID_1}/related`);
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
@@ -201,11 +205,11 @@ describe('GET /palettes/:id/related', () => {
   it('forwards limit query param', async () => {
     mockGetRelatedPalettes.mockResolvedValue([]);
 
-    const res = await request(app).get('/palettes/pal-1/related?limit=3');
+    const res = await request(app).get(`/palettes/${PAL_ID_1}/related?limit=3`);
 
     expect(res.status).toBe(200);
     expect(mockGetRelatedPalettes).toHaveBeenCalledWith(
-      'pal-1',
+      PAL_ID_1,
       expect.objectContaining({ limit: 3 })
     );
   });
@@ -213,7 +217,9 @@ describe('GET /palettes/:id/related', () => {
   it('clamps limit to max 20', async () => {
     mockGetRelatedPalettes.mockResolvedValue([]);
 
-    const res = await request(app).get('/palettes/pal-1/related?limit=99');
+    const res = await request(app).get(
+      `/palettes/${PAL_ID_1}/related?limit=99`
+    );
 
     expect(res.status).toBe(200);
     const callArg = (
@@ -228,7 +234,7 @@ describe('GET /palettes/:id/related', () => {
   it('returns an empty array when no related palettes exist', async () => {
     mockGetRelatedPalettes.mockResolvedValue([]);
 
-    const res = await request(app).get('/palettes/pal-1/related');
+    const res = await request(app).get(`/palettes/${PAL_ID_1}/related`);
 
     expect(res.status).toBe(200);
     expect(res.body.data).toEqual([]);
@@ -237,8 +243,79 @@ describe('GET /palettes/:id/related', () => {
   it('sets a Cache-Control header', async () => {
     mockGetRelatedPalettes.mockResolvedValue([SAMPLE_PALETTE]);
 
-    const res = await request(app).get('/palettes/pal-1/related');
+    const res = await request(app).get(`/palettes/${PAL_ID_1}/related`);
 
     expect(res.headers['cache-control']).toContain('max-age=30');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Issue #113 – trending sort
+// ---------------------------------------------------------------------------
+
+describe('GET /palettes (sort=trending)', () => {
+  beforeEach(() => {
+    mockBrowsePalettes.mockReset();
+  });
+
+  it('passes sort=trending to browsePalettes', async () => {
+    mockBrowsePalettes.mockResolvedValue([SAMPLE_PALETTE]);
+
+    const res = await request(app).get('/palettes?sort=trending');
+
+    expect(res.status).toBe(200);
+    expect(mockBrowsePalettes).toHaveBeenCalledWith(
+      expect.objectContaining({ sort: 'trending' })
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Issue #114 – UUID validation
+// ---------------------------------------------------------------------------
+
+describe('UUID validation on /:id routes', () => {
+  beforeEach(() => {
+    mockGetRelatedPalettes.mockReset();
+    mockGetPaletteById.mockReset();
+  });
+
+  it('rejects a non-UUID palette id on GET /palettes/:id/related', async () => {
+    const res = await request(app).get('/palettes/not-a-uuid/related');
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/invalid palette id/i);
+  });
+
+  it('rejects a non-UUID palette id on GET /palettes/:id', async () => {
+    const res = await request(app).get('/palettes/bad-id');
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/invalid palette id/i);
+  });
+
+  it('accepts a well-formed UUID on GET /palettes/:id/related', async () => {
+    mockGetRelatedPalettes.mockResolvedValue([]);
+    const res = await request(app).get(`/palettes/${PAL_ID_1}/related`);
+    expect(res.status).toBe(200);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Issue #114 – browse safe fallback
+// ---------------------------------------------------------------------------
+
+describe('GET /palettes (safe fallback on DB error)', () => {
+  beforeEach(() => {
+    mockBrowsePalettes.mockReset();
+  });
+
+  it('returns empty data and X-Degraded header when service throws', async () => {
+    mockBrowsePalettes.mockRejectedValue(new Error('DB unavailable'));
+
+    const res = await request(app).get('/palettes');
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toEqual([]);
+    expect(res.headers['x-degraded']).toBe('true');
   });
 });
