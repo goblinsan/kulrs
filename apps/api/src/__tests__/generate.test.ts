@@ -601,4 +601,3 @@ describe('POST /generate/image/suggestions', () => {
     }
   });
 });
-

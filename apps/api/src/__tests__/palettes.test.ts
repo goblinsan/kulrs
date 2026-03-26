@@ -403,4 +403,3 @@ describe('GET /palettes (theme filter)', () => {
     expect(res.body.error).toMatch(/unknown theme/i);
   });
 });
-
