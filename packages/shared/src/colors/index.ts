@@ -7,3 +7,4 @@ export * from './contrast.js';
 export * from './palette-generator.js';
 export * from './related-colors.js';
 export * from './palette-suggestions.js';
+export * from './themes.js';

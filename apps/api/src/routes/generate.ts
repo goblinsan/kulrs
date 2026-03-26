@@ -6,6 +6,7 @@ import {
   generateFromImage,
   generateRelatedColors,
   generatePaletteSuggestions,
+  generateImagePaletteSuggestions,
   OKLCHColor,
 } from '@kulrs/shared';
 import {
@@ -14,6 +15,7 @@ import {
   generateFromImageSchema,
   relatedColorsSchema,
   paletteSuggestionsSchema,
+  imageSuggestionsSchema,
 } from '../utils/validation.js';
 import {
   BadRequestError,
@@ -129,6 +131,32 @@ router.post(
     const palette = generateFromImage(pixels, colorCount);
 
     res.status(200).json({ success: true, data: palette });
+  })
+);
+
+/**
+ * POST /generate/image/suggestions
+ * Generate ranked palette suggestions from multiple extracted image colors.
+ * Accepts up to 5 OKLCH colors (typically the dominant colors extracted from
+ * an image) and returns scored/ranked suggestions across several harmony
+ * strategies (Issue #118).
+ */
+router.post(
+  '/image/suggestions',
+  asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const validation = imageSuggestionsSchema.safeParse(req.body);
+    if (!validation.success) {
+      throw new ValidationError('Validation failed', validation.error.errors);
+    }
+
+    const { colors, colorCount, count } = validation.data;
+    const suggestions = generateImagePaletteSuggestions(
+      colors as OKLCHColor[],
+      colorCount,
+      count
+    );
+
+    res.status(200).json({ success: true, data: suggestions });
   })
 );
 

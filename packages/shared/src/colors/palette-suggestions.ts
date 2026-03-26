@@ -346,6 +346,134 @@ function buildRankingExplanation(
 // ---------------------------------------------------------------------------
 
 /**
+ * Generate multiple ranked palette suggestions from a set of extracted image
+ * colors.
+ *
+ * Applies four harmony strategies on top of the provided base colors (which
+ * are typically the dominant colors extracted from an image) and ranks the
+ * resulting palettes using the same accessibility-aware composite score as
+ * `generatePaletteSuggestions`.
+ *
+ * Each suggestion includes:
+ *   - `usabilityScore` / `uiViable` — UI viability based on key contrast pairs
+ *   - `semanticRoles`              — per-role interface usage guidance
+ *   - `rankingExplanation`         — human-readable reason for the rank
+ *
+ * @param baseColors  - Colors extracted from the image (1–5 OKLCH values)
+ * @param colorCount  - Number of main colors per palette (2–5, default 5)
+ * @param count       - Number of suggestions to return (1–4, default 4)
+ * @returns Array of palette suggestions sorted by accessibility-aware score descending
+ */
+export function generateImagePaletteSuggestions(
+  baseColors: OKLCHColor[],
+  colorCount: number = 5,
+  count: number = 4
+): PaletteSuggestion[] {
+  if (baseColors.length === 0) {
+    throw new Error('At least one color is required');
+  }
+
+  const clampedCount = Math.max(1, Math.min(4, count));
+
+  // The first extracted color acts as the "source" for harmony extensions and
+  // tag derivation — it is typically the most dominant color in the image.
+  const source = baseColors[0];
+
+  // Cap the input to 5 colours (the maximum accepted by generateFromBaseColors).
+  const capped = baseColors.slice(0, 5);
+
+  /**
+   * Merge `capped` with extra harmony colors, deduplicate, and cap at 5.
+   * The user's extracted colors are always preserved in their original order.
+   */
+  function buildColors(extra: OKLCHColor[]): OKLCHColor[] {
+    const all = [...capped, ...extra];
+    const seen = new Set<string>();
+    const unique: OKLCHColor[] = [];
+    for (const c of all) {
+      const key = `${c.l.toFixed(3)}_${c.c.toFixed(3)}_${c.h.toFixed(1)}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(c);
+      }
+    }
+    return unique.slice(0, 5);
+  }
+
+  const strategies: Array<{
+    harmony: string;
+    getColors: () => OKLCHColor[];
+    tags: string[];
+  }> = [
+    {
+      harmony: 'image-direct',
+      getColors: () => capped,
+      tags: ['image', 'direct'],
+    },
+    {
+      harmony: 'image-complementary',
+      getColors: () => buildColors([generateComplementary(source)]),
+      tags: ['image', 'complementary', 'high-contrast'],
+    },
+    {
+      harmony: 'image-analogous',
+      getColors: () => buildColors(generateAnalogous(source, 30, 2)),
+      tags: ['image', 'analogous', 'cohesive'],
+    },
+    {
+      harmony: 'image-triadic',
+      getColors: () => buildColors(generateTriadic(source)),
+      tags: ['image', 'triadic', 'balanced'],
+    },
+  ];
+
+  const suggestions: PaletteSuggestion[] = strategies
+    .slice(0, clampedCount)
+    .map((strategy, index) => {
+      const colors = strategy.getColors();
+      const palette =
+        colors.length === 1
+          ? generateFromBaseColor(colors[0], colorCount)
+          : generateFromBaseColors(colors, colorCount);
+
+      const score = scorePalette(palette);
+      const contextTags = deriveColorTags(source, palette);
+      const usabilityScore = computeUsabilityScore(palette);
+      const uiViable = usabilityScore >= UI_VIABLE_THRESHOLD;
+      const semanticRoles = suggestSemanticRoles(palette);
+      const rankingExplanation = buildRankingExplanation(
+        palette,
+        usabilityScore,
+        strategy.harmony
+      );
+
+      return {
+        harmony: strategy.harmony,
+        rank: index + 1, // re-assigned after sorting
+        score,
+        tags: [...strategy.tags, ...contextTags],
+        palette,
+        usabilityScore,
+        uiViable,
+        semanticRoles,
+        rankingExplanation,
+      };
+    });
+
+  // Sort best-first using the same accessibility-aware composite score.
+  const composite = (s: PaletteSuggestion): number =>
+    s.score * (1 - RANKING_USABILITY_WEIGHT) +
+    s.usabilityScore * RANKING_USABILITY_WEIGHT;
+
+  suggestions.sort((a, b) => composite(b) - composite(a));
+  suggestions.forEach((s, i) => {
+    s.rank = i + 1;
+  });
+
+  return suggestions;
+}
+
+/**
  * Generate multiple ranked palette suggestions from a single source color.
  *
  * Each suggestion applies a different harmony strategy and is scored by

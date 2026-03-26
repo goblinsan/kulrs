@@ -1,4 +1,4 @@
-import { generatePaletteSuggestions, RANKING_USABILITY_WEIGHT } from '../palette-suggestions';
+import { generatePaletteSuggestions, generateImagePaletteSuggestions, RANKING_USABILITY_WEIGHT } from '../palette-suggestions';
 import { OKLCHColor } from '../types';
 
 const BLUE_SOURCE: OKLCHColor = { l: 0.55, c: 0.2, h: 220 };
@@ -184,3 +184,120 @@ describe('generatePaletteSuggestions', () => {
     });
   });
 });
+
+// =============================================================================
+// Issue #118 – Image-derived palette suggestions
+// =============================================================================
+
+const IMAGE_COLORS: OKLCHColor[] = [
+  { l: 0.55, c: 0.2, h: 220 },
+  { l: 0.6, c: 0.25, h: 35 },
+  { l: 0.4, c: 0.15, h: 120 },
+];
+
+describe('generateImagePaletteSuggestions (Issue #118)', () => {
+  it('returns the requested number of suggestions', () => {
+    expect(generateImagePaletteSuggestions(IMAGE_COLORS, 5, 3)).toHaveLength(3);
+    expect(generateImagePaletteSuggestions(IMAGE_COLORS, 5, 1)).toHaveLength(1);
+    expect(generateImagePaletteSuggestions(IMAGE_COLORS, 5, 4)).toHaveLength(4);
+  });
+
+  it('clamps count to [1, 4]', () => {
+    expect(generateImagePaletteSuggestions(IMAGE_COLORS, 5, 0)).toHaveLength(1);
+    expect(generateImagePaletteSuggestions(IMAGE_COLORS, 5, 99)).toHaveLength(4);
+  });
+
+  it('assigns sequential ranks starting at 1', () => {
+    const suggestions = generateImagePaletteSuggestions(IMAGE_COLORS);
+    suggestions.forEach((s, i) => {
+      expect(s.rank).toBe(i + 1);
+    });
+  });
+
+  it('returns unique harmony strategies', () => {
+    const suggestions = generateImagePaletteSuggestions(IMAGE_COLORS);
+    const harmonies = suggestions.map((s) => s.harmony);
+    const unique = new Set(harmonies);
+    expect(unique.size).toBe(harmonies.length);
+  });
+
+  it('each harmony name starts with "image-"', () => {
+    const suggestions = generateImagePaletteSuggestions(IMAGE_COLORS);
+    for (const s of suggestions) {
+      expect(s.harmony).toMatch(/^image-/);
+    }
+  });
+
+  it('each suggestion contains a palette with at least one color', () => {
+    const suggestions = generateImagePaletteSuggestions(IMAGE_COLORS);
+    suggestions.forEach((s) => {
+      expect(s.palette.colors.length).toBeGreaterThan(0);
+    });
+  });
+
+  it('tags include "image" for every suggestion', () => {
+    const suggestions = generateImagePaletteSuggestions(IMAGE_COLORS);
+    for (const s of suggestions) {
+      expect(s.tags).toContain('image');
+    }
+  });
+
+  it('each suggestion includes usabilityScore in [0, 1] and a uiViable boolean', () => {
+    const suggestions = generateImagePaletteSuggestions(IMAGE_COLORS);
+    for (const s of suggestions) {
+      expect(typeof s.usabilityScore).toBe('number');
+      expect(s.usabilityScore).toBeGreaterThanOrEqual(0);
+      expect(s.usabilityScore).toBeLessThanOrEqual(1);
+      expect(typeof s.uiViable).toBe('boolean');
+      expect(s.uiViable).toBe(s.usabilityScore >= 0.5);
+    }
+  });
+
+  it('each suggestion includes a non-empty semanticRoles object', () => {
+    const suggestions = generateImagePaletteSuggestions(IMAGE_COLORS);
+    for (const s of suggestions) {
+      expect(typeof s.semanticRoles).toBe('object');
+      expect(Object.keys(s.semanticRoles).length).toBeGreaterThan(0);
+    }
+  });
+
+  it('each suggestion includes a rankingExplanation referencing accessibility', () => {
+    const suggestions = generateImagePaletteSuggestions(IMAGE_COLORS);
+    for (const s of suggestions) {
+      expect(typeof s.rankingExplanation).toBe('string');
+      expect(s.rankingExplanation.toLowerCase()).toMatch(/wcag|contrast|accessibility/);
+    }
+  });
+
+  it('suggestions are sorted so the composite score is non-increasing', () => {
+    const suggestions = generateImagePaletteSuggestions(IMAGE_COLORS);
+    const composite = (s: (typeof suggestions)[0]) =>
+      s.score * (1 - RANKING_USABILITY_WEIGHT) + s.usabilityScore * RANKING_USABILITY_WEIGHT;
+    for (let i = 1; i < suggestions.length; i++) {
+      expect(composite(suggestions[i - 1])).toBeGreaterThanOrEqual(composite(suggestions[i]));
+    }
+  });
+
+  it('works with a single input color', () => {
+    const single: OKLCHColor[] = [{ l: 0.5, c: 0.2, h: 200 }];
+    const suggestions = generateImagePaletteSuggestions(single);
+    expect(suggestions.length).toBeGreaterThan(0);
+    suggestions.forEach((s) => {
+      expect(s.palette.colors.length).toBeGreaterThan(0);
+    });
+  });
+
+  it('throws when given an empty colors array', () => {
+    expect(() => generateImagePaletteSuggestions([])).toThrow();
+  });
+
+  it('caps input to 5 colors without throwing', () => {
+    const manyColors: OKLCHColor[] = Array.from({ length: 10 }, (_, i) => ({
+      l: 0.5,
+      c: 0.2,
+      h: (i * 36) % 360,
+    }));
+    expect(() => generateImagePaletteSuggestions(manyColors)).not.toThrow();
+  });
+});
+
