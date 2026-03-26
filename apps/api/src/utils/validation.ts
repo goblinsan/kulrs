@@ -18,6 +18,9 @@ const paletteMetadataSchema = z.object({
   generator: z.string(),
   explanation: z.string(),
   timestamp: z.string(),
+  tags: z.array(z.string()).optional(),
+  confidence: z.number().min(0).max(1).optional(),
+  roleHints: z.record(z.string()).optional(),
 });
 
 // Generated palette schema (from frontend generator)
@@ -75,8 +78,22 @@ export const generateFromImageSchema = z.object({
   colorCount: z.number().int().min(2).max(5).optional().default(5),
 });
 
+/** Schema for POST /generate/color/related (Issue #101) */
+export const relatedColorsSchema = z.object({
+  color: oklchColorSchema,
+});
+
+/** Schema for POST /generate/color/suggestions (Issue #102) */
+export const paletteSuggestionsSchema = z.object({
+  color: oklchColorSchema,
+  colorCount: z.number().int().min(2).max(5).optional().default(5),
+  count: z.number().int().min(1).max(4).optional().default(4),
+});
+
 export type GenerateFromBaseColorInput = z.infer<
   typeof generateFromBaseColorSchema
 >;
 export type GenerateFromMoodInput = z.infer<typeof generateFromMoodSchema>;
 export type GenerateFromImageInput = z.infer<typeof generateFromImageSchema>;
+export type RelatedColorsInput = z.infer<typeof relatedColorsSchema>;
+export type PaletteSuggestionsInput = z.infer<typeof paletteSuggestionsSchema>;

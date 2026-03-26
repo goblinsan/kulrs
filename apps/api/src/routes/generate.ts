@@ -4,12 +4,16 @@ import {
   generateFromBaseColors,
   generateFromMood,
   generateFromImage,
+  generateRelatedColors,
+  generatePaletteSuggestions,
   OKLCHColor,
 } from '@kulrs/shared';
 import {
   generateFromBaseColorSchema,
   generateFromMoodSchema,
   generateFromImageSchema,
+  relatedColorsSchema,
+  paletteSuggestionsSchema,
 } from '../utils/validation.js';
 import {
   BadRequestError,
@@ -43,6 +47,50 @@ router.post(
     }
 
     res.status(200).json({ success: true, data: palette });
+  })
+);
+
+/**
+ * POST /generate/color/related
+ * Return harmonic color relationships (complementary, analogous, triadic, etc.)
+ * for a given source color (Issue #101)
+ */
+router.post(
+  '/color/related',
+  asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const validation = relatedColorsSchema.safeParse(req.body);
+    if (!validation.success) {
+      throw new ValidationError('Validation failed', validation.error.errors);
+    }
+
+    const { color } = validation.data;
+    const related = generateRelatedColors(color as OKLCHColor);
+
+    res.status(200).json({ success: true, data: related });
+  })
+);
+
+/**
+ * POST /generate/color/suggestions
+ * Return ranked palette suggestions derived from a source color using
+ * multiple harmony strategies (Issue #102)
+ */
+router.post(
+  '/color/suggestions',
+  asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const validation = paletteSuggestionsSchema.safeParse(req.body);
+    if (!validation.success) {
+      throw new ValidationError('Validation failed', validation.error.errors);
+    }
+
+    const { color, colorCount, count } = validation.data;
+    const suggestions = generatePaletteSuggestions(
+      color as OKLCHColor,
+      colorCount,
+      count
+    );
+
+    res.status(200).json({ success: true, data: suggestions });
   })
 );
 
