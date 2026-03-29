@@ -1,3 +1,5 @@
+library components;
+
 /// Shared UI components for the mobile app
 ///
 /// This library exports all reusable UI components.
