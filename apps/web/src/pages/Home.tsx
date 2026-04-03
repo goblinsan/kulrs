@@ -10,7 +10,6 @@ import {
 import { PaletteDisplay } from '../components/palette/PaletteDisplay';
 import { HeroPalette } from '../components/palette/HeroPalette';
 import { StyleSelector } from '../components/palette/StyleSelector';
-import { initialPalette } from '../components/palette/paletteUtils';
 import { useAuth } from '../contexts/AuthContext';
 import { apiPost, likePalette, unlikePalette } from '../services/api';
 import {
@@ -21,7 +20,7 @@ import {
 import './Home.css';
 
 export function Home() {
-  const [palette, setPalette] = useState<GeneratedPalette>(initialPalette);
+  const [palette, setPalette] = useState<GeneratedPalette>(() => generateRandomWithStyle('random'));
   const [paletteId, setPaletteId] = useState<string | null>(null);
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);

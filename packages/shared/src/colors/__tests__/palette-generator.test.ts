@@ -436,4 +436,63 @@ describe('generateRandomWithStyle', () => {
     }
     expect(neonChroma / sample).toBeGreaterThan(pastelChroma / sample);
   });
+
+  it('bright palettes have higher average lightness than neon palettes', () => {
+    const sample = 5;
+    let brightL = 0;
+    let neonL = 0;
+    for (let i = 0; i < sample; i++) {
+      const bright = generateRandomWithStyle('bright');
+      const neon = generateRandomWithStyle('neon');
+      const mainBright = bright.colors.filter(
+        (c) => c.role !== 'background' && c.role !== 'text'
+      );
+      const mainNeon = neon.colors.filter(
+        (c) => c.role !== 'background' && c.role !== 'text'
+      );
+      brightL += mainBright.reduce((s, c) => s + c.color.l, 0) / mainBright.length;
+      neonL += mainNeon.reduce((s, c) => s + c.color.l, 0) / mainNeon.length;
+    }
+    expect(brightL / sample).toBeGreaterThan(neonL / sample);
+  });
+
+  it('neutral palettes have lower average chroma than bright palettes', () => {
+    const sample = 5;
+    let neutralChroma = 0;
+    let brightChroma = 0;
+    for (let i = 0; i < sample; i++) {
+      const neutral = generateRandomWithStyle('neutral');
+      const bright = generateRandomWithStyle('bright');
+      const mainNeutral = neutral.colors.filter(
+        (c) => c.role !== 'background' && c.role !== 'text'
+      );
+      const mainBright = bright.colors.filter(
+        (c) => c.role !== 'background' && c.role !== 'text'
+      );
+      neutralChroma +=
+        mainNeutral.reduce((s, c) => s + c.color.c, 0) / mainNeutral.length;
+      brightChroma +=
+        mainBright.reduce((s, c) => s + c.color.c, 0) / mainBright.length;
+    }
+    expect(neutralChroma / sample).toBeLessThan(brightChroma / sample);
+  });
+
+  it('each non-random style uses a strategy from its preferred set', () => {
+    const preferredStrategiesByStyle: Record<string, string[]> = {
+      neon: ['triadic', 'split-complementary', 'complementary'],
+      pastel: ['analogous', 'triadic'],
+      neutral: ['analogous', 'random-hues'],
+      bright: ['complementary', 'triadic', 'split-complementary'],
+    };
+    for (const [style, preferred] of Object.entries(preferredStrategiesByStyle)) {
+      // Run several times to avoid false negatives from the random pick
+      const explanations = Array.from({ length: 10 }, () =>
+        generateRandomWithStyle(style as PaletteStyle).metadata.explanation
+      );
+      const allFromPreferred = explanations.every((exp) =>
+        preferred.some((s) => exp.includes(s))
+      );
+      expect(allFromPreferred).toBe(true);
+    }
+  });
 });
