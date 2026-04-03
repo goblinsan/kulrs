@@ -1131,8 +1131,7 @@ interface StyleConstraints {
   chromaRange: [number, number];
 }
 
-const STYLE_CONSTRAINTS: Record<PaletteStyle, StyleConstraints> = {
-  random: { lightnessRange: [0.35, 0.80], chromaRange: [0.08, 0.36] },
+const STYLE_CONSTRAINTS: Record<Exclude<PaletteStyle, 'random'>, StyleConstraints> = {
   neon: { lightnessRange: [0.50, 0.75], chromaRange: [0.30, 0.40] },
   pastel: { lightnessRange: [0.80, 0.95], chromaRange: [0.06, 0.14] },
   neutral: { lightnessRange: [0.30, 0.85], chromaRange: [0.02, 0.08] },
@@ -1320,7 +1319,8 @@ export function generateRandomWithStyle(
       ? Math.max(3, Math.min(5, colorCount))
       : 3 + Math.floor(Math.random() * 3);
 
-  const { lightnessRange, chromaRange } = STYLE_CONSTRAINTS[style];
+  const { lightnessRange, chromaRange } =
+    STYLE_CONSTRAINTS[style as Exclude<PaletteStyle, 'random'>];
 
   const baseHue = Math.random() * 360;
   const baseLightness =
@@ -1385,7 +1385,7 @@ export function generateRandomWithStyle(
         Math.min(lightnessRange[1], colors[i].l)
       ),
       c: Math.max(chromaRange[0], Math.min(chromaRange[1], colors[i].c)),
-      h: (colors[i].h + 360) % 360,
+      h: colors[i].h % 360,
     };
   }
 
