@@ -1126,16 +1126,51 @@ export function getPaletteStyleBySlug(
 // Internal OKLCH constraints per style
 // ---------------------------------------------------------------------------
 
+type HarmonyStrategy =
+  | 'analogous'
+  | 'complementary'
+  | 'triadic'
+  | 'split-complementary'
+  | 'random-hues';
+
+/** Max absolute perturbation applied to lightness for intra-style variation. */
+const STYLE_LIGHTNESS_PERTURBATION = 0.10;
+/** Max absolute perturbation applied to chroma for intra-style variation. */
+const STYLE_CHROMA_PERTURBATION = 0.04;
+/** Max absolute perturbation applied to hue (degrees) for intra-style variation. */
+const STYLE_HUE_PERTURBATION = 15;
 interface StyleConstraints {
   lightnessRange: [number, number];
   chromaRange: [number, number];
+  /** Harmony strategies preferred for this style. One is chosen at random on each call. */
+  preferredStrategies: readonly HarmonyStrategy[];
 }
 
 const STYLE_CONSTRAINTS: Record<Exclude<PaletteStyle, 'random'>, StyleConstraints> = {
-  neon: { lightnessRange: [0.50, 0.75], chromaRange: [0.30, 0.40] },
-  pastel: { lightnessRange: [0.80, 0.95], chromaRange: [0.06, 0.14] },
-  neutral: { lightnessRange: [0.30, 0.85], chromaRange: [0.02, 0.08] },
-  bright: { lightnessRange: [0.75, 0.92], chromaRange: [0.18, 0.30] },
+  neon: {
+    lightnessRange: [0.50, 0.75],
+    chromaRange: [0.30, 0.40],
+    // High-contrast harmonies reinforce the electric, vivid quality of neon
+    preferredStrategies: ['triadic', 'split-complementary', 'complementary'],
+  },
+  pastel: {
+    lightnessRange: [0.80, 0.95],
+    chromaRange: [0.06, 0.14],
+    // Soft blending strategies suit delicate, low-chroma tones
+    preferredStrategies: ['analogous', 'triadic'],
+  },
+  neutral: {
+    lightnessRange: [0.30, 0.85],
+    chromaRange: [0.02, 0.08],
+    // Subtle hue variation keeps neutrals understated yet distinct
+    preferredStrategies: ['analogous', 'random-hues'],
+  },
+  bright: {
+    lightnessRange: [0.75, 0.92],
+    chromaRange: [0.18, 0.30],
+    // Structured contrasts highlight clean, airy brightness
+    preferredStrategies: ['complementary', 'triadic', 'split-complementary'],
+  },
 };
 
 /**
@@ -1298,9 +1333,10 @@ export function generateRandom(colorCount?: number): GeneratedPalette {
 /**
  * Generate a random palette constrained by a named style preset.
  *
- * Delegates to `generateRandom` when `style` is `'random'`; otherwise clamps
- * the base color's lightness and chroma into the preset's OKLCH ranges before
- * invoking the same generation pipeline.
+ * Delegates to `generateRandom` when `style` is `'random'`; otherwise routes
+ * generation through style-specific harmony strategies and OKLCH ranges so
+ * each preset produces visibly distinct, characteristic palettes while still
+ * feeling random across invocations.
  *
  * @param style      - One of the named `PaletteStyle` presets.
  * @param colorCount - Number of main colors (3-5). If omitted, randomly chosen.
@@ -1319,7 +1355,7 @@ export function generateRandomWithStyle(
       ? Math.max(3, Math.min(5, colorCount))
       : 3 + Math.floor(Math.random() * 3);
 
-  const { lightnessRange, chromaRange } =
+  const { lightnessRange, chromaRange, preferredStrategies } =
     STYLE_CONSTRAINTS[style as Exclude<PaletteStyle, 'random'>];
 
   const baseHue = Math.random() * 360;
@@ -1334,14 +1370,9 @@ export function generateRandomWithStyle(
     h: baseHue,
   };
 
-  const strategies = [
-    'analogous',
-    'complementary',
-    'triadic',
-    'split-complementary',
-    'random-hues',
-  ] as const;
-  const strategy = strategies[Math.floor(Math.random() * strategies.length)];
+  // Route through a harmony strategy preferred for this style
+  const strategy =
+    preferredStrategies[Math.floor(Math.random() * preferredStrategies.length)];
 
   const analogousAngle = 15 + Math.random() * 40;
   const splitAngle = 20 + Math.random() * 35;
@@ -1375,6 +1406,15 @@ export function generateRandomWithStyle(
       }
       break;
     }
+  }
+
+  // Perturb non-base colors for intra-style variation; clamping below keeps values in range
+  for (let i = 1; i < colors.length; i++) {
+    colors[i] = {
+      l: colors[i].l + (Math.random() - 0.5) * STYLE_LIGHTNESS_PERTURBATION,
+      c: colors[i].c + (Math.random() - 0.5) * STYLE_CHROMA_PERTURBATION,
+      h: (colors[i].h + (Math.random() - 0.5) * STYLE_HUE_PERTURBATION + 360) % 360,
+    };
   }
 
   // Clamp each generated color back into the style ranges
