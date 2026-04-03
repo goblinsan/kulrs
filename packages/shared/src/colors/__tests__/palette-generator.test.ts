@@ -438,7 +438,7 @@ describe('generateRandomWithStyle', () => {
   });
 
   it('bright palettes have higher average lightness than neon palettes', () => {
-    const sample = 5;
+    const sample = 10;
     let brightL = 0;
     let neonL = 0;
     for (let i = 0; i < sample; i++) {
@@ -457,7 +457,7 @@ describe('generateRandomWithStyle', () => {
   });
 
   it('neutral palettes have lower average chroma than bright palettes', () => {
-    const sample = 5;
+    const sample = 10;
     let neutralChroma = 0;
     let brightChroma = 0;
     for (let i = 0; i < sample; i++) {

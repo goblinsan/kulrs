@@ -1133,6 +1133,12 @@ type HarmonyStrategy =
   | 'split-complementary'
   | 'random-hues';
 
+/** Max absolute perturbation applied to lightness for intra-style variation. */
+const STYLE_LIGHTNESS_PERTURBATION = 0.10;
+/** Max absolute perturbation applied to chroma for intra-style variation. */
+const STYLE_CHROMA_PERTURBATION = 0.04;
+/** Max absolute perturbation applied to hue (degrees) for intra-style variation. */
+const STYLE_HUE_PERTURBATION = 15;
 interface StyleConstraints {
   lightnessRange: [number, number];
   chromaRange: [number, number];
@@ -1405,9 +1411,9 @@ export function generateRandomWithStyle(
   // Perturb non-base colors for intra-style variation; clamping below keeps values in range
   for (let i = 1; i < colors.length; i++) {
     colors[i] = {
-      l: colors[i].l + (Math.random() - 0.5) * 0.10,
-      c: colors[i].c + (Math.random() - 0.5) * 0.04,
-      h: (colors[i].h + (Math.random() - 0.5) * 15 + 360) % 360,
+      l: colors[i].l + (Math.random() - 0.5) * STYLE_LIGHTNESS_PERTURBATION,
+      c: colors[i].c + (Math.random() - 0.5) * STYLE_CHROMA_PERTURBATION,
+      h: (colors[i].h + (Math.random() - 0.5) * STYLE_HUE_PERTURBATION + 360) % 360,
     };
   }
 
