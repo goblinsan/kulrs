@@ -24,10 +24,10 @@ export function StyleSelector({ value, onChange }: StyleSelectorProps) {
         id="palette-style-select"
         className="style-selector__select"
         value={value}
-        onChange={(e) => onChange(e.target.value as PaletteStyle)}
+        onChange={e => onChange(e.target.value as PaletteStyle)}
         title="Choose a palette style preset"
       >
-        {PALETTE_STYLES.map((style) => (
+        {PALETTE_STYLES.map(style => (
           <option key={style.slug} value={style.slug} title={style.description}>
             {style.label}
           </option>

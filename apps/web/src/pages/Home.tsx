@@ -122,15 +122,18 @@ export function Home() {
     [palette]
   );
 
-  const handleRandomGenerate = useCallback((colorCount?: number) => {
-    const newPalette = generateRandomWithStyle(selectedStyle, colorCount);
-    setPalette(newPalette);
-    setPaletteId(null);
-    // Reset like/save state for new palette
-    setLiked(false);
-    setLikeCount(0);
-    setSaved(false);
-  }, [selectedStyle]);
+  const handleRandomGenerate = useCallback(
+    (colorCount?: number) => {
+      const newPalette = generateRandomWithStyle(selectedStyle, colorCount);
+      setPalette(newPalette);
+      setPaletteId(null);
+      // Reset like/save state for new palette
+      setLiked(false);
+      setLikeCount(0);
+      setSaved(false);
+    },
+    [selectedStyle]
+  );
 
   /** Strip derived background/text colors so only visible palette colors are saved. */
   const mainColorsOnly = useCallback(
