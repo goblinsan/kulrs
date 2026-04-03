@@ -20,7 +20,9 @@ import {
 import './Home.css';
 
 export function Home() {
-  const [palette, setPalette] = useState<GeneratedPalette>(() => generateRandomWithStyle('random'));
+  const [palette, setPalette] = useState<GeneratedPalette>(() =>
+    generateRandomWithStyle('random')
+  );
   const [paletteId, setPaletteId] = useState<string | null>(null);
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
