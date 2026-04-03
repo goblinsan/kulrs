@@ -477,6 +477,19 @@ describe('generateRandomWithStyle', () => {
     expect(neutralChroma / sample).toBeLessThan(brightChroma / sample);
   });
 
+  it('generates varied palettes across multiple invocations of the same style', () => {
+    const styles: PaletteStyle[] = ['neon', 'pastel', 'neutral', 'bright'];
+    for (const style of styles) {
+      const palettes = Array.from({ length: 5 }, () =>
+        generateRandomWithStyle(style)
+      );
+      const hues = palettes.map((p) => p.colors[0].color.h);
+      const uniqueHues = new Set(hues.map((h) => Math.round(h)));
+      // At least 2 distinct base hues across 5 runs confirms intra-style randomness
+      expect(uniqueHues.size).toBeGreaterThan(1);
+    }
+  });
+
   it('each non-random style uses a strategy from its preferred set', () => {
     const preferredStrategiesByStyle: Record<string, string[]> = {
       neon: ['triadic', 'split-complementary', 'complementary'],

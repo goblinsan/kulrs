@@ -43,3 +43,12 @@
   background: #1a1a1a;
   color: #f0f0f0;
 }
+
+/* ── Responsive: narrow screens ─────────────────────────────────────────── */
+@media (max-width: 380px) {
+  .style-selector__select {
+    font-size: 0.8rem;
+    padding-left: 0.5rem;
+    min-width: 5.5rem;
+  }
+}

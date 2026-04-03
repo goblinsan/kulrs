@@ -201,3 +201,33 @@
   color: #aaffdd;
   border-color: #aaffdd;
 }
+
+/* ── Responsive: small screens ───────────────────────────────────────────── */
+@media (max-width: 540px) {
+  .hero-title-button {
+    font-size: 2rem;
+  }
+
+  .home-header p {
+    font-size: 1rem;
+  }
+
+  .hero-actions {
+    gap: 0.4rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .hero-title-button {
+    font-size: 1.6rem;
+  }
+
+  .home-header p {
+    font-size: 0.875rem;
+  }
+
+  .hero-action-button {
+    font-size: 0.8rem;
+    padding: 0.35rem 0.75rem;
+  }
+}
