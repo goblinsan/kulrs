@@ -72,3 +72,11 @@
 .hero-hex-tooltip:active {
   transform: scale(0.95);
 }
+
+/* Show hex label on touch devices where hover is unavailable */
+@media (hover: none) {
+  .hero-hex-tooltip {
+    opacity: 0.8;
+    transform: translateY(0);
+  }
+}
