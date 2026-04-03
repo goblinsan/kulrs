@@ -1055,6 +1055,89 @@ export function generateFromImage(
   };
 }
 
+// ---------------------------------------------------------------------------
+// Preset palette styles (Issue #126 / #127)
+// ---------------------------------------------------------------------------
+
+/**
+ * Identifies a named visual style preset that constrains random palette
+ * generation without requiring manual color input.
+ *
+ * - `random`  — no constraints (classic behaviour)
+ * - `neon`    — high chroma, electric mid-tones
+ * - `pastel`  — low chroma, high lightness, soft tones
+ * - `neutral` — minimal chroma, broad lightness range, muted
+ * - `bright`  — high lightness, clean and airy mid-to-high saturation
+ */
+export type PaletteStyle = 'random' | 'neon' | 'pastel' | 'neutral' | 'bright';
+
+/** Display metadata for each palette style. */
+export interface PaletteStyleDefinition {
+  /** Machine-readable identifier matching `PaletteStyle` */
+  slug: PaletteStyle;
+  /** Human-readable display name */
+  label: string;
+  /** Short description for UI tooltips and assistive text */
+  description: string;
+}
+
+/**
+ * Ordered list of all supported palette style presets, including the default
+ * "Random" option.  Suitable for populating a dropdown selector.
+ */
+export const PALETTE_STYLES: PaletteStyleDefinition[] = [
+  {
+    slug: 'random',
+    label: 'Random',
+    description: 'Fully randomised palette — anything goes',
+  },
+  {
+    slug: 'neon',
+    label: 'Neon',
+    description: 'Electric, high-chroma colours with vivid mid-tones',
+  },
+  {
+    slug: 'pastel',
+    label: 'Pastel',
+    description: 'Soft, delicate tones with low chroma and high lightness',
+  },
+  {
+    slug: 'neutral',
+    label: 'Neutral',
+    description: 'Muted, understated tones with minimal chroma',
+  },
+  {
+    slug: 'bright',
+    label: 'Bright',
+    description: 'Clean, airy colours with high lightness and moderate chroma',
+  },
+];
+
+/**
+ * Return the style definition for a given slug, or `undefined` when not found.
+ */
+export function getPaletteStyleBySlug(
+  slug: string
+): PaletteStyleDefinition | undefined {
+  return PALETTE_STYLES.find((s) => s.slug === slug);
+}
+
+// ---------------------------------------------------------------------------
+// Internal OKLCH constraints per style
+// ---------------------------------------------------------------------------
+
+interface StyleConstraints {
+  lightnessRange: [number, number];
+  chromaRange: [number, number];
+}
+
+const STYLE_CONSTRAINTS: Record<Exclude<PaletteStyle, 'random'>, StyleConstraints> = {
+  neon: { lightnessRange: [0.50, 0.75], chromaRange: [0.30, 0.40] },
+  pastel: { lightnessRange: [0.80, 0.95], chromaRange: [0.06, 0.14] },
+  neutral: { lightnessRange: [0.30, 0.85], chromaRange: [0.02, 0.08] },
+  bright: { lightnessRange: [0.75, 0.92], chromaRange: [0.18, 0.30] },
+};
+
 /**
  * Generate a truly random palette with high visual diversity.
  * No mood mapping — picks random hue, chroma, lightness, harmony strategy,
@@ -1206,6 +1289,176 @@ export function generateRandom(colorCount?: number): GeneratedPalette {
       explanation: `Randomly generated ${strategy} palette with ${numColors} colors.`,
       timestamp: new Date().toISOString(),
       tags: deriveTags(baseColor, strategy),
+      confidence: computeConfidence(reorderedColors),
+      roleHints: buildRoleHints(reorderedColors),
+    },
+  };
+}
+
+/**
+ * Generate a random palette constrained by a named style preset.
+ *
+ * Delegates to `generateRandom` when `style` is `'random'`; otherwise clamps
+ * the base color's lightness and chroma into the preset's OKLCH ranges before
+ * invoking the same generation pipeline.
+ *
+ * @param style      - One of the named `PaletteStyle` presets.
+ * @param colorCount - Number of main colors (3-5). If omitted, randomly chosen.
+ * @returns Generated palette with colors and metadata
+ */
+export function generateRandomWithStyle(
+  style: PaletteStyle,
+  colorCount?: number
+): GeneratedPalette {
+  if (style === 'random') {
+    return generateRandom(colorCount);
+  }
+
+  const numColors =
+    colorCount != null
+      ? Math.max(3, Math.min(5, colorCount))
+      : 3 + Math.floor(Math.random() * 3);
+
+  const { lightnessRange, chromaRange } =
+    STYLE_CONSTRAINTS[style as Exclude<PaletteStyle, 'random'>];
+
+  const baseHue = Math.random() * 360;
+  const baseLightness =
+    lightnessRange[0] + Math.random() * (lightnessRange[1] - lightnessRange[0]);
+  const baseChroma =
+    chromaRange[0] + Math.random() * (chromaRange[1] - chromaRange[0]);
+
+  const baseColor: OKLCHColor = {
+    l: baseLightness,
+    c: baseChroma,
+    h: baseHue,
+  };
+
+  const strategies = [
+    'analogous',
+    'complementary',
+    'triadic',
+    'split-complementary',
+    'random-hues',
+  ] as const;
+  const strategy = strategies[Math.floor(Math.random() * strategies.length)];
+
+  const analogousAngle = 15 + Math.random() * 40;
+  const splitAngle = 20 + Math.random() * 35;
+
+  const colors: OKLCHColor[] = [baseColor];
+
+  switch (strategy) {
+    case 'analogous':
+      colors.push(...generateAnalogous(baseColor, analogousAngle, 4));
+      break;
+    case 'complementary':
+      colors.push(generateComplementary(baseColor));
+      colors.push(...generateAnalogous(baseColor, analogousAngle * 0.6, 2));
+      break;
+    case 'triadic':
+      colors.push(...generateTriadic(baseColor));
+      colors.push(...generateAnalogous(baseColor, analogousAngle * 0.4, 1));
+      break;
+    case 'split-complementary':
+      colors.push(...generateSplitComplementary(baseColor, splitAngle));
+      colors.push(...generateAnalogous(baseColor, analogousAngle * 0.6, 1));
+      break;
+    case 'random-hues': {
+      for (let i = 0; i < 4; i++) {
+        const l =
+          lightnessRange[0] +
+          Math.random() * (lightnessRange[1] - lightnessRange[0]);
+        const c =
+          chromaRange[0] + Math.random() * (chromaRange[1] - chromaRange[0]);
+        colors.push({ l, c, h: Math.random() * 360 });
+      }
+      break;
+    }
+  }
+
+  // Clamp each generated color back into the style ranges
+  for (let i = 0; i < colors.length; i++) {
+    colors[i] = {
+      l: Math.max(
+        lightnessRange[0],
+        Math.min(lightnessRange[1], colors[i].l)
+      ),
+      c: Math.max(chromaRange[0], Math.min(chromaRange[1], colors[i].c)),
+      h: colors[i].h % 360,
+    };
+  }
+
+  const neutrals = generateNeutrals(baseColor, 4);
+  colors.push(...neutrals);
+
+  const filtered = applyQualityGates(colors, {
+    maxChroma: chromaRange[1],
+    removeDuplicates: true,
+    duplicateThreshold: 0.02,
+  });
+
+  let finalColors = filtered;
+  if (filtered.length < 8) {
+    const extra = generateAnalogous(baseColor, 25, 4);
+    finalColors = applyQualityGates([...filtered, ...extra], {
+      maxChroma: chromaRange[1],
+      removeDuplicates: true,
+      duplicateThreshold: 0.02,
+    });
+  }
+  if (finalColors.length > 12) {
+    finalColors = finalColors.slice(0, 12);
+  }
+
+  const assignedColors = assignRoles(finalColors);
+
+  const mainColorRoles = [
+    ColorRole.PRIMARY,
+    ColorRole.SECONDARY,
+    ColorRole.ACCENT,
+    ColorRole.INFO,
+    ColorRole.SUCCESS,
+    ColorRole.WARNING,
+    ColorRole.ERROR,
+  ];
+
+  const mainColors = assignedColors.filter((c) =>
+    mainColorRoles.includes(c.role as ColorRole)
+  );
+  const derivedColors = assignedColors.filter(
+    (c) => c.role === ColorRole.BACKGROUND || c.role === ColorRole.TEXT
+  );
+
+  for (let i = mainColors.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [mainColors[i], mainColors[j]] = [mainColors[j], mainColors[i]];
+  }
+
+  const shuffledMain = mainColors.slice(0, numColors);
+  const roleOrder = [
+    ColorRole.PRIMARY,
+    ColorRole.SECONDARY,
+    ColorRole.ACCENT,
+    ColorRole.INFO,
+    ColorRole.SUCCESS,
+  ];
+  const reorderedColors: AssignedColor[] = shuffledMain.map((color, i) => ({
+    role: roleOrder[i] || ColorRole.ACCENT,
+    color: color.color,
+  }));
+  reorderedColors.push(...derivedColors);
+
+  const styleLabel =
+    PALETTE_STYLES.find((s) => s.slug === style)?.label ?? style;
+
+  return {
+    colors: reorderedColors,
+    metadata: {
+      generator: `random-${style}`,
+      explanation: `${styleLabel} ${strategy} palette with ${numColors} colors.`,
+      timestamp: new Date().toISOString(),
+      tags: [style, ...deriveTags(baseColor, strategy)],
       confidence: computeConfidence(reorderedColors),
       roleHints: buildRoleHints(reorderedColors),
     },

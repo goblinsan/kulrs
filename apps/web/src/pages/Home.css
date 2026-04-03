@@ -53,6 +53,12 @@
   transform: scale(0.98);
 }
 
+.hero-style-row {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.25rem;
+}
+
 .home-header p {
   font-size: 1.25rem;
   color: #f0f0f0;
