@@ -4,10 +4,12 @@ import { PaletteGenerator } from '../components/palette/PaletteGenerator';
 import {
   type GeneratedPalette,
   type AssignedColor,
-  generateRandom,
+  generateRandomWithStyle,
+  type PaletteStyle,
 } from '@kulrs/shared';
 import { PaletteDisplay } from '../components/palette/PaletteDisplay';
 import { HeroPalette } from '../components/palette/HeroPalette';
+import { StyleSelector } from '../components/palette/StyleSelector';
 import { initialPalette } from '../components/palette/paletteUtils';
 import { useAuth } from '../contexts/AuthContext';
 import { apiPost, likePalette, unlikePalette } from '../services/api';
@@ -25,6 +27,7 @@ export function Home() {
   const [likeCount, setLikeCount] = useState(0);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [selectedStyle, setSelectedStyle] = useState<PaletteStyle>('random');
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -120,14 +123,14 @@ export function Home() {
   );
 
   const handleRandomGenerate = useCallback((colorCount?: number) => {
-    const newPalette = generateRandom(colorCount);
+    const newPalette = generateRandomWithStyle(selectedStyle, colorCount);
     setPalette(newPalette);
     setPaletteId(null);
     // Reset like/save state for new palette
     setLiked(false);
     setLikeCount(0);
     setSaved(false);
-  }, []);
+  }, [selectedStyle]);
 
   /** Strip derived background/text colors so only visible palette colors are saved. */
   const mainColorsOnly = useCallback(
@@ -239,6 +242,9 @@ export function Home() {
           >
             Generate Palette
           </button>
+          <div className="hero-style-row">
+            <StyleSelector value={selectedStyle} onChange={setSelectedStyle} />
+          </div>
           <p>
             Create beautiful, accessible color palettes from colors or images
           </p>

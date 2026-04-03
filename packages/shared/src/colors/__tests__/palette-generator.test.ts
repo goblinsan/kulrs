@@ -3,6 +3,10 @@ import {
   generateFromMood,
   generateFromImage,
   extractDominantColors,
+  generateRandomWithStyle,
+  PALETTE_STYLES,
+  getPaletteStyleBySlug,
+  type PaletteStyle,
 } from '../palette-generator';
 import { OKLCHColor } from '../types';
 import { ColorRole } from '../contrast';
@@ -326,5 +330,110 @@ describe('Palette Generators', () => {
       
       expect(palette1.metadata.timestamp).not.toBe(palette2.metadata.timestamp);
     });
+  });
+});
+
+describe('PALETTE_STYLES and getPaletteStyleBySlug', () => {
+  it('exports a non-empty PALETTE_STYLES array', () => {
+    expect(Array.isArray(PALETTE_STYLES)).toBe(true);
+    expect(PALETTE_STYLES.length).toBeGreaterThan(0);
+  });
+
+  it('every style has a slug, label, and description', () => {
+    for (const style of PALETTE_STYLES) {
+      expect(typeof style.slug).toBe('string');
+      expect(style.slug.length).toBeGreaterThan(0);
+      expect(typeof style.label).toBe('string');
+      expect(style.label.length).toBeGreaterThan(0);
+      expect(typeof style.description).toBe('string');
+      expect(style.description.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('includes the expected preset slugs', () => {
+    const slugs = PALETTE_STYLES.map((s) => s.slug);
+    expect(slugs).toContain('random');
+    expect(slugs).toContain('neon');
+    expect(slugs).toContain('pastel');
+    expect(slugs).toContain('neutral');
+    expect(slugs).toContain('bright');
+  });
+
+  it('getPaletteStyleBySlug returns a definition for known slugs', () => {
+    for (const style of PALETTE_STYLES) {
+      const found = getPaletteStyleBySlug(style.slug);
+      expect(found).toBeDefined();
+      expect(found?.slug).toBe(style.slug);
+    }
+  });
+
+  it('getPaletteStyleBySlug returns undefined for unknown slugs', () => {
+    expect(getPaletteStyleBySlug('nonexistent-xyz')).toBeUndefined();
+  });
+});
+
+describe('generateRandomWithStyle', () => {
+  const styles: PaletteStyle[] = ['random', 'neon', 'pastel', 'neutral', 'bright'];
+
+  it.each(styles)('generates a valid palette for style "%s"', (style) => {
+    const palette = generateRandomWithStyle(style);
+    expect(palette.colors.length).toBeGreaterThanOrEqual(3);
+    for (const { color } of palette.colors) {
+      expect(color.l).toBeGreaterThanOrEqual(0);
+      expect(color.l).toBeLessThanOrEqual(1);
+      expect(color.c).toBeGreaterThanOrEqual(0);
+      expect(color.h).toBeGreaterThanOrEqual(0);
+      expect(color.h).toBeLessThan(360);
+    }
+  });
+
+  it('includes the style slug in the metadata tags (non-random styles)', () => {
+    for (const style of styles.filter((s) => s !== 'random')) {
+      const palette = generateRandomWithStyle(style);
+      expect(palette.metadata.tags).toContain(style);
+    }
+  });
+
+  it('delegates to generateRandom when style is "random"', () => {
+    const palette = generateRandomWithStyle('random');
+    expect(palette.metadata.generator).toBe('random');
+  });
+
+  it.each(['neon', 'pastel', 'neutral', 'bright'] as PaletteStyle[])(
+    'embeds the style name in the generator field for style "%s"',
+    (style) => {
+      const palette = generateRandomWithStyle(style);
+      expect(palette.metadata.generator).toContain(style);
+    }
+  );
+
+  it('respects the optional colorCount parameter', () => {
+    for (const style of styles) {
+      const palette = generateRandomWithStyle(style, 3);
+      const mainColors = palette.colors.filter(
+        (c) => c.role !== 'background' && c.role !== 'text'
+      );
+      expect(mainColors.length).toBe(3);
+    }
+  });
+
+  it('neon palettes have higher average chroma than pastel palettes', () => {
+    const sample = 5;
+    let neonChroma = 0;
+    let pastelChroma = 0;
+    for (let i = 0; i < sample; i++) {
+      const neon = generateRandomWithStyle('neon');
+      const pastel = generateRandomWithStyle('pastel');
+      const mainNeon = neon.colors.filter(
+        (c) => c.role !== 'background' && c.role !== 'text'
+      );
+      const mainPastel = pastel.colors.filter(
+        (c) => c.role !== 'background' && c.role !== 'text'
+      );
+      neonChroma += mainNeon.reduce((s, c) => s + c.color.c, 0) / mainNeon.length;
+      pastelChroma +=
+        mainPastel.reduce((s, c) => s + c.color.c, 0) / mainPastel.length;
+    }
+    expect(neonChroma / sample).toBeGreaterThan(pastelChroma / sample);
   });
 });
