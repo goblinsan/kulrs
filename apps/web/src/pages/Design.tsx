@@ -33,16 +33,21 @@ interface DesignDirection {
   id: string;
   name: string;
   summary: string;
-  colors: string[];  // preserved and mapped intelligently, not replaced
+  colors: string[]; // preserved and mapped intelligently, not replaced
   headingFont: string;
   bodyFont: string;
   template: TemplateId;
   themeMode: Exclude<ThemeMode, 'custom'>;
   // Typography guidance
-  typographyScale?: { label: string; sizeRem: number; weight: number; lineHeight: number }[];
+  typographyScale?: {
+    label: string;
+    sizeRem: number;
+    weight: number;
+    lineHeight: number;
+  }[];
   // Spacing & borders
-  spacingUnit?: number;  // base unit in px
-  borderRadiusScale?: { name: string; value: number }[];  // in px
+  spacingUnit?: number; // base unit in px
+  borderRadiusScale?: { name: string; value: number }[]; // in px
   // Elevation / depth
   elevationShadows?: { level: number; shadow: string }[];
 }
@@ -123,10 +128,21 @@ const DESIGN_DIRECTIONS: DesignDirection[] = [
     template: 'landing',
     themeMode: 'light',
     spacingUnit: 8,
-    borderRadiusScale: [{ name: 'sm', value: 4 }, { name: 'md', value: 6 }, { name: 'lg', value: 8 }],
+    borderRadiusScale: [
+      { name: 'sm', value: 4 },
+      { name: 'md', value: 6 },
+      { name: 'lg', value: 8 },
+    ],
     elevationShadows: [
-      { level: 1, shadow: 'rgba(50,50,93,0.15) 0px 2px 5px, rgba(0,0,0,0.1) 0px 1px 3px' },
-      { level: 2, shadow: 'rgba(50,50,93,0.25) 0px 13px 27px -5px, rgba(0,0,0,0.1) 0px 8px 16px -8px' },
+      {
+        level: 1,
+        shadow: 'rgba(50,50,93,0.15) 0px 2px 5px, rgba(0,0,0,0.1) 0px 1px 3px',
+      },
+      {
+        level: 2,
+        shadow:
+          'rgba(50,50,93,0.25) 0px 13px 27px -5px, rgba(0,0,0,0.1) 0px 8px 16px -8px',
+      },
     ],
   },
   {
@@ -139,7 +155,11 @@ const DESIGN_DIRECTIONS: DesignDirection[] = [
     template: 'top-nav',
     themeMode: 'light',
     spacingUnit: 8,
-    borderRadiusScale: [{ name: 'sm', value: 4 }, { name: 'md', value: 8 }, { name: 'lg', value: 12 }],
+    borderRadiusScale: [
+      { name: 'sm', value: 4 },
+      { name: 'md', value: 8 },
+      { name: 'lg', value: 12 },
+    ],
     elevationShadows: [
       { level: 1, shadow: 'rgba(0,0,0,0.04) 0px 1px 3px' },
       { level: 2, shadow: 'rgba(0,0,0,0.08) 0px 4px 18px' },
@@ -155,7 +175,11 @@ const DESIGN_DIRECTIONS: DesignDirection[] = [
     template: 'dashboard',
     themeMode: 'dark',
     spacingUnit: 8,
-    borderRadiusScale: [{ name: 'sm', value: 6 }, { name: 'md', value: 8 }, { name: 'lg', value: 12 }],
+    borderRadiusScale: [
+      { name: 'sm', value: 6 },
+      { name: 'md', value: 8 },
+      { name: 'lg', value: 12 },
+    ],
     elevationShadows: [
       { level: 1, shadow: 'rgba(0,0,0,0.3) 0px 8px 8px' },
       { level: 2, shadow: 'rgba(0,0,0,0.5) 0px 8px 24px' },
@@ -171,7 +195,11 @@ const DESIGN_DIRECTIONS: DesignDirection[] = [
     template: 'left-nav',
     themeMode: 'dark',
     spacingUnit: 4,
-    borderRadiusScale: [{ name: 'sm', value: 2 }, { name: 'md', value: 6 }, { name: 'lg', value: 8 }],
+    borderRadiusScale: [
+      { name: 'sm', value: 2 },
+      { name: 'md', value: 6 },
+      { name: 'lg', value: 8 },
+    ],
     elevationShadows: [
       { level: 1, shadow: 'rgba(0,0,0,0.2) 0px 0px 0px 1px' },
       { level: 2, shadow: 'rgba(0,0,0,0.3) 0px 4px 12px' },
@@ -187,7 +215,11 @@ const DESIGN_DIRECTIONS: DesignDirection[] = [
     template: 'landing',
     themeMode: 'light',
     spacingUnit: 8,
-    borderRadiusScale: [{ name: 'sm', value: 8 }, { name: 'md', value: 12 }, { name: 'lg', value: 16 }],
+    borderRadiusScale: [
+      { name: 'sm', value: 8 },
+      { name: 'md', value: 12 },
+      { name: 'lg', value: 16 },
+    ],
     elevationShadows: [
       { level: 1, shadow: 'rgba(0,0,0,0.08) 0px 4px 12px' },
       { level: 2, shadow: 'rgba(0,0,0,0.12) 0px 12px 32px' },
@@ -203,7 +235,11 @@ const DESIGN_DIRECTIONS: DesignDirection[] = [
     template: 'top-nav',
     themeMode: 'light',
     spacingUnit: 8,
-    borderRadiusScale: [{ name: 'sm', value: 2 }, { name: 'md', value: 4 }, { name: 'lg', value: 6 }],
+    borderRadiusScale: [
+      { name: 'sm', value: 2 },
+      { name: 'md', value: 4 },
+      { name: 'lg', value: 6 },
+    ],
     elevationShadows: [
       { level: 1, shadow: 'rgba(0,0,0,0.1) 0px 2px 4px' },
       { level: 2, shadow: 'rgba(0,0,0,0.15) 0px 8px 16px' },
@@ -219,7 +255,11 @@ const DESIGN_DIRECTIONS: DesignDirection[] = [
     template: 'dashboard',
     themeMode: 'dark',
     spacingUnit: 8,
-    borderRadiusScale: [{ name: 'sm', value: 4 }, { name: 'md', value: 8 }, { name: 'lg', value: 12 }],
+    borderRadiusScale: [
+      { name: 'sm', value: 4 },
+      { name: 'md', value: 8 },
+      { name: 'lg', value: 12 },
+    ],
     elevationShadows: [
       { level: 1, shadow: 'rgba(62,207,142,0.1) 0px 4px 12px' },
       { level: 2, shadow: 'rgba(0,0,0,0.3) 0px 12px 32px' },
@@ -235,7 +275,11 @@ const DESIGN_DIRECTIONS: DesignDirection[] = [
     template: 'mobile',
     themeMode: 'light',
     spacingUnit: 8,
-    borderRadiusScale: [{ name: 'sm', value: 6 }, { name: 'md', value: 10 }, { name: 'lg', value: 16 }],
+    borderRadiusScale: [
+      { name: 'sm', value: 6 },
+      { name: 'md', value: 10 },
+      { name: 'lg', value: 16 },
+    ],
     elevationShadows: [
       { level: 1, shadow: 'rgba(20,110,245,0.15) 0px 4px 12px' },
       { level: 2, shadow: 'rgba(20,110,245,0.2) 0px 12px 32px' },
@@ -582,7 +626,9 @@ export function Design() {
                 ))}
               </div>
               <div className="direction-meta">
-                <span>{direction.headingFont} + {direction.bodyFont}</span>
+                <span>
+                  {direction.headingFont} + {direction.bodyFont}
+                </span>
                 <span>{direction.themeMode}</span>
               </div>
             </button>
