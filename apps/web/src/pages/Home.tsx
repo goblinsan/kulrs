@@ -157,9 +157,7 @@ export function Home() {
       // Auto-save palette to DB first if it hasn't been saved yet
       let id = paletteId;
       if (!id) {
-        // Save palette to DB as system-owned so the like can be persisted.
-        // createPalette automatically includes the device ID so this works
-        // for both authenticated and anonymous users.
+        // Save the palette to the DB as system-owned so the like can be persisted.
         const result = await createPalette({ palette: mainColorsOnly(palette) });
         id = result.data.id;
         setPaletteId(id);

@@ -156,7 +156,10 @@ export interface LikeInfoResponse {
 }
 
 /**
- * Create a new palette
+ * Create a new palette.
+ * Automatically includes the device ID so the server can attribute the palette
+ * to the system user when no Firebase auth token is present (e.g. anonymous
+ * users liking a random palette for the first time).
  */
 export async function createPalette(
   data: CreatePaletteRequest

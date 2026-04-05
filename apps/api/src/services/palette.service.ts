@@ -298,7 +298,7 @@ export class PaletteService {
         .from(users)
         .where(eq(users.firebaseUid, 'system'))
         .limit(1);
-      if (!raced) throw new Error('Failed to resolve system user');
+      if (!raced) throw new Error('Failed to create or retrieve system user after race condition');
       systemUserId = raced.id;
       return raced;
     }
