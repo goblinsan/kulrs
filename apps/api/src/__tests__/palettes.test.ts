@@ -22,6 +22,8 @@ const mockDeletePalette = jest.fn<() => Promise<unknown>>();
 const mockRemixPalette = jest.fn<() => Promise<unknown>>();
 const mockUpdatePaletteColors = jest.fn<() => Promise<unknown>>();
 
+const mockGetOrCreateSystemUser = jest.fn<() => Promise<unknown>>();
+
 jest.unstable_mockModule('../services/palette.service.js', () => ({
   paletteService: {
     getAllTags: mockGetAllTags,
@@ -30,6 +32,7 @@ jest.unstable_mockModule('../services/palette.service.js', () => ({
     getPaletteById: mockGetPaletteById,
     getOrCreateUser: mockGetOrCreateUser,
     getOrCreateAnonymousUser: mockGetOrCreateAnonymousUser,
+    getOrCreateSystemUser: mockGetOrCreateSystemUser,
     getUserPalettes: mockGetUserPalettes,
     likePalette: mockLikePalette,
     unlikePalette: mockUnlikePalette,
@@ -401,5 +404,61 @@ describe('GET /palettes (theme filter)', () => {
 
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/unknown theme/i);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /palettes – system-owned palette on anonymous like
+// ---------------------------------------------------------------------------
+
+const SAMPLE_GENERATED_PALETTE = {
+  colors: [
+    { role: 'primary', color: { l: 0.5, c: 0.1, h: 200 } },
+    { role: 'secondary', color: { l: 0.7, c: 0.05, h: 180 } },
+  ],
+  metadata: {
+    generator: 'random',
+    explanation: 'A random palette',
+    timestamp: new Date().toISOString(),
+  },
+};
+
+const SYSTEM_USER = { id: 'system-user-uuid' };
+
+describe('POST /palettes – system ownership for unauthenticated requests', () => {
+  beforeEach(() => {
+    mockGetOrCreateSystemUser.mockReset();
+    mockGetOrCreateUser.mockReset();
+    mockCreatePalette.mockReset();
+  });
+
+  it('uses the system user and creates a public palette when only deviceId is provided', async () => {
+    mockGetOrCreateSystemUser.mockResolvedValue(SYSTEM_USER);
+    mockCreatePalette.mockResolvedValue({ ...SAMPLE_PALETTE, userId: SYSTEM_USER.id, isPublic: true });
+
+    const res = await request(app)
+      .post('/palettes')
+      .send({
+        palette: SAMPLE_GENERATED_PALETTE,
+        deviceId: 'test-device-id-123',
+      });
+
+    expect(res.status).toBe(201);
+    expect(res.body.success).toBe(true);
+    expect(mockGetOrCreateSystemUser).toHaveBeenCalledTimes(1);
+    expect(mockGetOrCreateUser).not.toHaveBeenCalled();
+    expect(mockCreatePalette).toHaveBeenCalledWith(
+      SYSTEM_USER.id,
+      expect.objectContaining({ isPublic: true })
+    );
+  });
+
+  it('returns 401 when neither auth nor deviceId is provided', async () => {
+    const res = await request(app)
+      .post('/palettes')
+      .send({ palette: SAMPLE_GENERATED_PALETTE });
+
+    expect(res.status).toBe(401);
+    expect(mockGetOrCreateSystemUser).not.toHaveBeenCalled();
   });
 });

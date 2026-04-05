@@ -45,6 +45,9 @@ interface CachedUser {
 }
 const userCache = new Map<string, CachedUser>();
 
+/** Cached system user ID (set once and never evicted — the system user never changes). */
+let systemUserId: string | null = null;
+
 /**
  * In-memory cache for the tags list.
  * Tags change very infrequently so a 5-minute TTL eliminates a DB round-trip
@@ -258,6 +261,45 @@ export class PaletteService {
           `Failed to resolve anonymous user for device ${deviceId}`
         );
       }
+      return raced;
+    }
+  }
+
+  /**
+   * Get or create the system user that owns auto-saved palettes.
+   * The system user has firebaseUid "system" and isBot = true.
+   * Its ID is cached in a module-level variable so we only hit the DB once.
+   */
+  async getOrCreateSystemUser() {
+    if (systemUserId) return { id: systemUserId };
+
+    const [existing] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.firebaseUid, 'system'))
+      .limit(1);
+
+    if (existing) {
+      systemUserId = existing.id;
+      return existing;
+    }
+
+    try {
+      const [created] = await db
+        .insert(users)
+        .values({ firebaseUid: 'system', email: '', isBot: true })
+        .returning({ id: users.id });
+      systemUserId = created.id;
+      return created;
+    } catch {
+      // Race condition: another request inserted the system user first.
+      const [raced] = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.firebaseUid, 'system'))
+        .limit(1);
+      if (!raced) throw new Error('Failed to resolve system user');
+      systemUserId = raced.id;
       return raced;
     }
   }

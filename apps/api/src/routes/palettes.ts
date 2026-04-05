@@ -316,13 +316,11 @@ router.post(
     const { deviceId } = req.body as { deviceId?: string };
 
     let user;
-    let isAnonymous = false;
     if (req.user) {
       user = await paletteService.getOrCreateUser(req.user.uid, req.user.email);
     } else if (deviceId) {
       validateDeviceId(deviceId);
-      user = await paletteService.getOrCreateAnonymousUser(deviceId);
-      isAnonymous = true;
+      user = await paletteService.getOrCreateSystemUser();
     } else {
       throw new UnauthorizedError();
     }
@@ -332,10 +330,12 @@ router.post(
       throw new ValidationError('Validation failed', validation.error.errors);
     }
 
-    // Anonymous palettes are always private — prevents feed pollution
-    const paletteInput = isAnonymous
-      ? { ...validation.data, isPublic: false }
-      : validation.data;
+    // System-owned palettes are always public so they appear in the browse feed.
+    // (User-owned palettes respect the isPublic flag from the request.)
+    const paletteInput =
+      !req.user && deviceId
+        ? { ...validation.data, isPublic: true }
+        : validation.data;
 
     const palette = await paletteService.createPalette(user.id, paletteInput);
     res.status(201).json({ success: true, data: palette });

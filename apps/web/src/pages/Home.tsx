@@ -11,7 +11,7 @@ import { PaletteDisplay } from '../components/palette/PaletteDisplay';
 import { HeroPalette } from '../components/palette/HeroPalette';
 import { StyleSelector } from '../components/palette/StyleSelector';
 import { useAuth } from '../contexts/AuthContext';
-import { apiPost, likePalette, unlikePalette } from '../services/api';
+import { createPalette, likePalette, unlikePalette } from '../services/api';
 import {
   oklchToHex,
   hexToOklch,
@@ -157,12 +157,10 @@ export function Home() {
       // Auto-save palette to DB first if it hasn't been saved yet
       let id = paletteId;
       if (!id) {
-        // Creating a palette requires auth — if not logged in, like is local-only
-        if (!user) return;
-        const result = await apiPost<{
-          success: boolean;
-          data: { id: string; likesCount: number };
-        }>('/palettes', { palette: mainColorsOnly(palette) });
+        // Save palette to DB as system-owned so the like can be persisted.
+        // createPalette automatically includes the device ID so this works
+        // for both authenticated and anonymous users.
+        const result = await createPalette({ palette: mainColorsOnly(palette) });
         id = result.data.id;
         setPaletteId(id);
       }
