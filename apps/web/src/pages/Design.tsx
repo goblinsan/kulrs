@@ -29,6 +29,17 @@ interface DesignTemplate {
   description: string;
 }
 
+interface DesignDirection {
+  id: string;
+  name: string;
+  summary: string;
+  colors: string[];
+  headingFont: string;
+  bodyFont: string;
+  template: TemplateId;
+  themeMode: Exclude<ThemeMode, 'custom'>;
+}
+
 // ── Constants ───────────────────────────────────────────────────────
 const TEMPLATES: DesignTemplate[] = [
   {
@@ -93,6 +104,89 @@ const DARK_BG: Record<TemplateId, string> = {
   dashboard: '#0f172a',
   landing: '#111827',
 };
+
+const DESIGN_DIRECTIONS: DesignDirection[] = [
+  {
+    id: 'premium-fintech',
+    name: 'Fintech Precision',
+    summary: 'Confident indigo with premium magenta highlights',
+    colors: ['#533AFD', '#061B31', '#EA2261', '#F96BEE', '#E5EDF5'],
+    headingFont: 'Space Grotesk',
+    bodyFont: 'Source Sans 3',
+    template: 'landing',
+    themeMode: 'light',
+  },
+  {
+    id: 'editorial-soft',
+    name: 'Editorial Minimal',
+    summary: 'Warm neutrals and quiet blue accents for docs-like clarity',
+    colors: ['#FFFFFF', '#F6F5F4', '#615D59', '#0075DE', '#31302E'],
+    headingFont: 'DM Sans',
+    bodyFont: 'Inter',
+    template: 'top-nav',
+    themeMode: 'light',
+  },
+  {
+    id: 'media-night',
+    name: 'Immersive Dark',
+    summary: 'Theater-dark surfaces with punchy action green',
+    colors: ['#121212', '#181818', '#1F1F1F', '#1ED760', '#B3B3B3'],
+    headingFont: 'Montserrat',
+    bodyFont: 'Nunito Sans',
+    template: 'dashboard',
+    themeMode: 'dark',
+  },
+  {
+    id: 'ops-control',
+    name: 'Ops Control',
+    summary: 'Dense dark UI with precise indigo signaling',
+    colors: ['#08090A', '#191A1B', '#5E6AD2', '#7170FF', '#D0D6E0'],
+    headingFont: 'Inter',
+    bodyFont: 'Inter',
+    template: 'left-nav',
+    themeMode: 'dark',
+  },
+  {
+    id: 'warm-hospitality',
+    name: 'Warm Hospitality',
+    summary: 'Friendly coral with soft neutrals and approachable contrast',
+    colors: ['#FF385C', '#FFB400', '#00A699', '#F7F7F7', '#484848'],
+    headingFont: 'Nunito Sans',
+    bodyFont: 'Source Sans 3',
+    template: 'landing',
+    themeMode: 'light',
+  },
+  {
+    id: 'mono-ink',
+    name: 'Monochrome Ink',
+    summary: 'Crisp black-and-white hierarchy with one vivid utility accent',
+    colors: ['#000000', '#171717', '#404040', '#FAFAFA', '#2563EB'],
+    headingFont: 'Plus Jakarta Sans',
+    bodyFont: 'Manrope',
+    template: 'top-nav',
+    themeMode: 'light',
+  },
+  {
+    id: 'neon-developer',
+    name: 'Neon Developer',
+    summary: 'Dark engineering base with bright green confidence',
+    colors: ['#0F172A', '#111827', '#3ECF8E', '#80ED99', '#E2FEEB'],
+    headingFont: 'Space Grotesk',
+    bodyFont: 'DM Sans',
+    template: 'dashboard',
+    themeMode: 'dark',
+  },
+  {
+    id: 'electric-builder',
+    name: 'Electric Builder',
+    summary: 'High-energy blues for product-led growth pages',
+    colors: ['#146EF5', '#2F66F3', '#9EC5FE', '#F8FBFF', '#0B1220'],
+    headingFont: 'Outfit',
+    bodyFont: 'Inter',
+    template: 'mobile',
+    themeMode: 'light',
+  },
+];
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
@@ -316,6 +410,16 @@ export function Design() {
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
 
+  const applyDirection = useCallback((direction: DesignDirection) => {
+    setColors(direction.colors);
+    setHeadingFont(direction.headingFont);
+    setBodyFont(direction.bodyFont);
+    setSelectedTemplate(direction.template);
+    setThemeMode(direction.themeMode);
+    setGeneratedLink(null);
+    setCopied(false);
+  }, []);
+
   /* Keep sessionStorage in sync so nav-bar links carry the palette */
   useEffect(() => {
     if (colors.length > 0) {
@@ -391,6 +495,42 @@ export function Design() {
         . Choose fonts, set a theme, pick a layout, and generate a link to see
         your colors in action.
       </p>
+
+      <div className="design-section">
+        <h2>Design Directions</h2>
+        <p className="section-hint">
+          Curated starting points inspired by awesome-design-md systems
+        </p>
+        <div className="direction-grid">
+          {DESIGN_DIRECTIONS.map(direction => (
+            <button
+              key={direction.id}
+              className="direction-card"
+              onClick={() => applyDirection(direction)}
+              title={`Apply ${direction.name}`}
+            >
+              <div className="direction-head">
+                <span className="direction-name">{direction.name}</span>
+                <span className="direction-source">Theme</span>
+              </div>
+              <p className="direction-summary">{direction.summary}</p>
+              <div className="direction-swatches">
+                {direction.colors.map(color => (
+                  <span
+                    key={`${direction.id}-${color}`}
+                    className="direction-swatch"
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
+              </div>
+              <div className="direction-meta">
+                <span>{direction.headingFont} + {direction.bodyFont}</span>
+                <span>{direction.themeMode}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* ── Palette Colors ─────────────────────────────────────── */}
       <div className="design-section">
