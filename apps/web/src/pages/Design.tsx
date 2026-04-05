@@ -33,11 +33,18 @@ interface DesignDirection {
   id: string;
   name: string;
   summary: string;
-  colors: string[];
+  colors: string[];  // preserved and mapped intelligently, not replaced
   headingFont: string;
   bodyFont: string;
   template: TemplateId;
   themeMode: Exclude<ThemeMode, 'custom'>;
+  // Typography guidance
+  typographyScale?: { label: string; sizeRem: number; weight: number; lineHeight: number }[];
+  // Spacing & borders
+  spacingUnit?: number;  // base unit in px
+  borderRadiusScale?: { name: string; value: number }[];  // in px
+  // Elevation / depth
+  elevationShadows?: { level: number; shadow: string }[];
 }
 
 // ── Constants ───────────────────────────────────────────────────────
@@ -115,6 +122,12 @@ const DESIGN_DIRECTIONS: DesignDirection[] = [
     bodyFont: 'Source Sans 3',
     template: 'landing',
     themeMode: 'light',
+    spacingUnit: 8,
+    borderRadiusScale: [{ name: 'sm', value: 4 }, { name: 'md', value: 6 }, { name: 'lg', value: 8 }],
+    elevationShadows: [
+      { level: 1, shadow: 'rgba(50,50,93,0.15) 0px 2px 5px, rgba(0,0,0,0.1) 0px 1px 3px' },
+      { level: 2, shadow: 'rgba(50,50,93,0.25) 0px 13px 27px -5px, rgba(0,0,0,0.1) 0px 8px 16px -8px' },
+    ],
   },
   {
     id: 'editorial-soft',
@@ -125,6 +138,12 @@ const DESIGN_DIRECTIONS: DesignDirection[] = [
     bodyFont: 'Inter',
     template: 'top-nav',
     themeMode: 'light',
+    spacingUnit: 8,
+    borderRadiusScale: [{ name: 'sm', value: 4 }, { name: 'md', value: 8 }, { name: 'lg', value: 12 }],
+    elevationShadows: [
+      { level: 1, shadow: 'rgba(0,0,0,0.04) 0px 1px 3px' },
+      { level: 2, shadow: 'rgba(0,0,0,0.08) 0px 4px 18px' },
+    ],
   },
   {
     id: 'media-night',
@@ -135,6 +154,12 @@ const DESIGN_DIRECTIONS: DesignDirection[] = [
     bodyFont: 'Nunito Sans',
     template: 'dashboard',
     themeMode: 'dark',
+    spacingUnit: 8,
+    borderRadiusScale: [{ name: 'sm', value: 6 }, { name: 'md', value: 8 }, { name: 'lg', value: 12 }],
+    elevationShadows: [
+      { level: 1, shadow: 'rgba(0,0,0,0.3) 0px 8px 8px' },
+      { level: 2, shadow: 'rgba(0,0,0,0.5) 0px 8px 24px' },
+    ],
   },
   {
     id: 'ops-control',
@@ -145,6 +170,12 @@ const DESIGN_DIRECTIONS: DesignDirection[] = [
     bodyFont: 'Inter',
     template: 'left-nav',
     themeMode: 'dark',
+    spacingUnit: 4,
+    borderRadiusScale: [{ name: 'sm', value: 2 }, { name: 'md', value: 6 }, { name: 'lg', value: 8 }],
+    elevationShadows: [
+      { level: 1, shadow: 'rgba(0,0,0,0.2) 0px 0px 0px 1px' },
+      { level: 2, shadow: 'rgba(0,0,0,0.3) 0px 4px 12px' },
+    ],
   },
   {
     id: 'warm-hospitality',
@@ -155,6 +186,12 @@ const DESIGN_DIRECTIONS: DesignDirection[] = [
     bodyFont: 'Source Sans 3',
     template: 'landing',
     themeMode: 'light',
+    spacingUnit: 8,
+    borderRadiusScale: [{ name: 'sm', value: 8 }, { name: 'md', value: 12 }, { name: 'lg', value: 16 }],
+    elevationShadows: [
+      { level: 1, shadow: 'rgba(0,0,0,0.08) 0px 4px 12px' },
+      { level: 2, shadow: 'rgba(0,0,0,0.12) 0px 12px 32px' },
+    ],
   },
   {
     id: 'mono-ink',
@@ -165,6 +202,12 @@ const DESIGN_DIRECTIONS: DesignDirection[] = [
     bodyFont: 'Manrope',
     template: 'top-nav',
     themeMode: 'light',
+    spacingUnit: 8,
+    borderRadiusScale: [{ name: 'sm', value: 2 }, { name: 'md', value: 4 }, { name: 'lg', value: 6 }],
+    elevationShadows: [
+      { level: 1, shadow: 'rgba(0,0,0,0.1) 0px 2px 4px' },
+      { level: 2, shadow: 'rgba(0,0,0,0.15) 0px 8px 16px' },
+    ],
   },
   {
     id: 'neon-developer',
@@ -175,6 +218,12 @@ const DESIGN_DIRECTIONS: DesignDirection[] = [
     bodyFont: 'DM Sans',
     template: 'dashboard',
     themeMode: 'dark',
+    spacingUnit: 8,
+    borderRadiusScale: [{ name: 'sm', value: 4 }, { name: 'md', value: 8 }, { name: 'lg', value: 12 }],
+    elevationShadows: [
+      { level: 1, shadow: 'rgba(62,207,142,0.1) 0px 4px 12px' },
+      { level: 2, shadow: 'rgba(0,0,0,0.3) 0px 12px 32px' },
+    ],
   },
   {
     id: 'electric-builder',
@@ -185,6 +234,12 @@ const DESIGN_DIRECTIONS: DesignDirection[] = [
     bodyFont: 'Inter',
     template: 'mobile',
     themeMode: 'light',
+    spacingUnit: 8,
+    borderRadiusScale: [{ name: 'sm', value: 6 }, { name: 'md', value: 10 }, { name: 'lg', value: 16 }],
+    elevationShadows: [
+      { level: 1, shadow: 'rgba(20,110,245,0.15) 0px 4px 12px' },
+      { level: 2, shadow: 'rgba(20,110,245,0.2) 0px 12px 32px' },
+    ],
   },
 ];
 
@@ -411,13 +466,16 @@ export function Design() {
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
 
   const applyDirection = useCallback((direction: DesignDirection) => {
-    setColors(direction.colors);
+    // Preserve working palette but apply theme structure intelligently
+    // For now, keep user's colors as-is; the theme name/template/fonts inform how they're used
     setHeadingFont(direction.headingFont);
     setBodyFont(direction.bodyFont);
     setSelectedTemplate(direction.template);
     setThemeMode(direction.themeMode);
     setGeneratedLink(null);
     setCopied(false);
+    // NOTE: colors are NOT replaced; instead, the Vizail link builder and preview
+    // will apply the theme's semantic mappings to the existing palette
   }, []);
 
   /* Keep sessionStorage in sync so nav-bar links carry the palette */
