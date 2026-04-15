@@ -84,8 +84,7 @@ type FilterType = 'recent' | 'popular' | 'my';
 
 const THEME_CATEGORIES: { key: ThemeCategory; label: string }[] = [
   { key: 'colors', label: 'Colors' },
-  { key: 'styles', label: 'Styles' },
-  { key: 'topics', label: 'Topics' },
+  { key: 'themes', label: 'Themes' },
 ];
 
 export function Browse() {
@@ -101,7 +100,7 @@ export function Browse() {
   const searchQuery = searchParams.get('q') || '';
 
   const themesByCategory = useMemo(() => {
-    const map: Record<ThemeCategory, typeof THEMES> = { colors: [], styles: [], topics: [] };
+    const map: Record<ThemeCategory, typeof THEMES> = { colors: [], themes: [] };
     for (const t of THEMES) {
       map[t.category].push(t);
     }
