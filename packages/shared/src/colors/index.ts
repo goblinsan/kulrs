@@ -8,3 +8,4 @@ export * from './palette-generator.js';
 export * from './related-colors.js';
 export * from './palette-suggestions.js';
 export * from './themes.js';
+export * from './system-palettes.js';

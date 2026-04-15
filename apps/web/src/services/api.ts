@@ -253,6 +253,9 @@ export interface BrowsePalettesOptions {
   userId?: string;
   limit?: number;
   offset?: number;
+  theme?: string;
+  tags?: string;
+  q?: string;
 }
 
 /**
@@ -266,6 +269,9 @@ export async function browsePalettes(
   if (options.userId) params.set('userId', options.userId);
   if (options.limit) params.set('limit', String(options.limit));
   if (options.offset) params.set('offset', String(options.offset));
+  if (options.theme) params.set('theme', options.theme);
+  if (options.tags) params.set('tags', options.tags);
+  if (options.q) params.set('q', options.q);
   params.set('deviceId', getDeviceId());
 
   const query = params.toString();

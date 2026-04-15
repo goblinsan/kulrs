@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   browsePalettes,
@@ -8,6 +8,7 @@ import {
   deletePalette,
   type BrowsePalette,
 } from '../services/api';
+import { THEMES, type ThemeCategory } from '@kulrs/shared';
 import { useAuth } from '../contexts/AuthContext';
 import './Browse.css';
 
@@ -81,6 +82,12 @@ function LikeButton({
 
 type FilterType = 'recent' | 'popular' | 'my';
 
+const THEME_CATEGORIES: { key: ThemeCategory; label: string }[] = [
+  { key: 'colors', label: 'Colors' },
+  { key: 'styles', label: 'Styles' },
+  { key: 'topics', label: 'Topics' },
+];
+
 export function Browse() {
   const [palettes, setPalettes] = useState<BrowsePalette[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,6 +97,16 @@ export function Browse() {
   const navigate = useNavigate();
 
   const filter = (searchParams.get('filter') as FilterType) || 'recent';
+  const activeTheme = searchParams.get('theme') || null;
+  const searchQuery = searchParams.get('q') || '';
+
+  const themesByCategory = useMemo(() => {
+    const map: Record<ThemeCategory, typeof THEMES> = { colors: [], styles: [], topics: [] };
+    for (const t of THEMES) {
+      map[t.category].push(t);
+    }
+    return map;
+  }, []);
 
   const loadPalettes = useCallback(async () => {
     setLoading(true);
@@ -108,6 +125,8 @@ export function Browse() {
         result = await browsePalettes({
           sort: filter === 'popular' ? 'popular' : 'recent',
           limit: 50,
+          theme: activeTheme ?? undefined,
+          q: searchQuery || undefined,
         });
       }
       setPalettes(result.data);
@@ -117,7 +136,7 @@ export function Browse() {
     } finally {
       setLoading(false);
     }
-  }, [filter, user]);
+  }, [filter, user, activeTheme, searchQuery]);
 
   useEffect(() => {
     loadPalettes();
@@ -125,7 +144,38 @@ export function Browse() {
 
   const handleFilterChange = (newFilter: FilterType) => {
     if (newFilter === filter) return;
-    setSearchParams({ filter: newFilter });
+    const params: Record<string, string> = { filter: newFilter };
+    if (activeTheme) params.theme = activeTheme;
+    if (searchQuery) params.q = searchQuery;
+    setSearchParams(params);
+  };
+
+  const handleThemeClick = (slug: string) => {
+    const params: Record<string, string> = { filter };
+    if (activeTheme === slug) {
+      // Deselect theme
+      if (searchQuery) params.q = searchQuery;
+    } else {
+      params.theme = slug;
+      if (searchQuery) params.q = searchQuery;
+    }
+    setSearchParams(params);
+  };
+
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const q = (formData.get('q') as string)?.trim() || '';
+    const params: Record<string, string> = { filter };
+    if (activeTheme) params.theme = activeTheme;
+    if (q) params.q = q;
+    setSearchParams(params);
+  };
+
+  const clearSearch = () => {
+    const params: Record<string, string> = { filter };
+    if (activeTheme) params.theme = activeTheme;
+    setSearchParams(params);
   };
 
   const handlePaletteClick = (palette: BrowsePalette) => {
@@ -153,6 +203,25 @@ export function Browse() {
     <div className="browse-page">
       <div className="browse-header">
         <h1>Browse Palettes</h1>
+
+        <form className="browse-search" onSubmit={handleSearch}>
+          <input
+            type="text"
+            name="q"
+            placeholder="Search palettes..."
+            defaultValue={searchQuery}
+            className="browse-search-input"
+          />
+          <button type="submit" className="browse-search-button">
+            <i className="fa-solid fa-magnifying-glass"></i>
+          </button>
+          {searchQuery && (
+            <button type="button" className="browse-search-clear" onClick={clearSearch}>
+              <i className="fa-solid fa-xmark"></i>
+            </button>
+          )}
+        </form>
+
         <div className="browse-filters">
           <button
             className={`filter-button ${filter === 'recent' ? 'active' : ''}`}
@@ -173,6 +242,51 @@ export function Browse() {
             My Palettes
           </button>
         </div>
+
+        {filter !== 'my' && (
+          <div className="browse-themes">
+            {THEME_CATEGORIES.map(cat => (
+              <div key={cat.key} className="theme-category">
+                <h3 className="theme-category-label">{cat.label}</h3>
+                <div className="theme-chips">
+                  {themesByCategory[cat.key].map(theme => (
+                    <button
+                      key={theme.slug}
+                      className={`theme-chip ${activeTheme === theme.slug ? 'active' : ''}`}
+                      onClick={() => handleThemeClick(theme.slug)}
+                      title={theme.description}
+                    >
+                      {theme.swatch && (
+                        <span
+                          className="theme-chip-swatch"
+                          style={{ backgroundColor: theme.swatch }}
+                        />
+                      )}
+                      {theme.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {(activeTheme || searchQuery) && (
+          <div className="browse-active-filters">
+            {activeTheme && (
+              <span className="active-filter-tag">
+                Theme: {THEMES.find(t => t.slug === activeTheme)?.label ?? activeTheme}
+                <button onClick={() => handleThemeClick(activeTheme)}>×</button>
+              </span>
+            )}
+            {searchQuery && (
+              <span className="active-filter-tag">
+                Search: {searchQuery}
+                <button onClick={clearSearch}>×</button>
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {loading && (

@@ -14,6 +14,140 @@
   color: #fff;
 }
 
+/* Search bar */
+.browse-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.browse-search-input {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  border: 1px solid #333;
+  border-radius: 6px;
+  background: #111;
+  color: #fff;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.browse-search-input:focus {
+  border-color: #555;
+}
+
+.browse-search-button,
+.browse-search-clear {
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #333;
+  border-radius: 6px;
+  background: transparent;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.browse-search-button:hover,
+.browse-search-clear:hover {
+  border-color: #555;
+  color: #fff;
+}
+
+/* Theme sections */
+.browse-themes {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.theme-category {
+  margin-bottom: 0.75rem;
+}
+
+.theme-category-label {
+  margin: 0 0 0.4rem 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.theme-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.theme-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid #333;
+  border-radius: 16px;
+  background: transparent;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.theme-chip:hover {
+  border-color: #555;
+  color: #fff;
+}
+
+.theme-chip.active {
+  background: #fff;
+  color: #000;
+  border-color: #fff;
+}
+
+.theme-chip-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Active filter tags */
+.browse-active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+}
+
+.active-filter-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  background: #222;
+  color: #ccc;
+  font-size: 0.8rem;
+}
+
+.active-filter-tag button {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0 0.15rem;
+  line-height: 1;
+}
+
+.active-filter-tag button:hover {
+  color: #fff;
+}
+
 .browse-filters {
   display: flex;
   gap: 0.5rem;
