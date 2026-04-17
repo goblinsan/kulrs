@@ -1,5 +1,10 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import {
+  THEME_GUIDANCES,
+  resolveThemeGuidance,
+  type ThemeGuidance,
+} from '@goblinsan/design-themes';
 import { FontPicker } from '../components/FontPicker';
 import {
   parseColorsFromParams,
@@ -27,29 +32,6 @@ interface DesignTemplate {
   id: TemplateId;
   label: string;
   description: string;
-}
-
-interface DesignDirection {
-  id: string;
-  name: string;
-  summary: string;
-  colors: string[]; // preserved and mapped intelligently, not replaced
-  headingFont: string;
-  bodyFont: string;
-  template: TemplateId;
-  themeMode: Exclude<ThemeMode, 'custom'>;
-  // Typography guidance
-  typographyScale?: {
-    label: string;
-    sizeRem: number;
-    weight: number;
-    lineHeight: number;
-  }[];
-  // Spacing & borders
-  spacingUnit?: number; // base unit in px
-  borderRadiusScale?: { name: string; value: number }[]; // in px
-  // Elevation / depth
-  elevationShadows?: { level: number; shadow: string }[];
 }
 
 // ── Constants ───────────────────────────────────────────────────────
@@ -117,175 +99,16 @@ const DARK_BG: Record<TemplateId, string> = {
   landing: '#111827',
 };
 
-const DESIGN_DIRECTIONS: DesignDirection[] = [
-  {
-    id: 'premium-fintech',
-    name: 'Fintech Precision',
-    summary: 'Confident indigo with premium magenta highlights',
-    colors: ['#533AFD', '#061B31', '#EA2261', '#F96BEE', '#E5EDF5'],
-    headingFont: 'Space Grotesk',
-    bodyFont: 'Source Sans 3',
-    template: 'landing',
-    themeMode: 'light',
-    spacingUnit: 8,
-    borderRadiusScale: [
-      { name: 'sm', value: 4 },
-      { name: 'md', value: 6 },
-      { name: 'lg', value: 8 },
-    ],
-    elevationShadows: [
-      {
-        level: 1,
-        shadow: 'rgba(50,50,93,0.15) 0px 2px 5px, rgba(0,0,0,0.1) 0px 1px 3px',
-      },
-      {
-        level: 2,
-        shadow:
-          'rgba(50,50,93,0.25) 0px 13px 27px -5px, rgba(0,0,0,0.1) 0px 8px 16px -8px',
-      },
-    ],
-  },
-  {
-    id: 'editorial-soft',
-    name: 'Editorial Minimal',
-    summary: 'Warm neutrals and quiet blue accents for docs-like clarity',
-    colors: ['#FFFFFF', '#F6F5F4', '#615D59', '#0075DE', '#31302E'],
-    headingFont: 'DM Sans',
-    bodyFont: 'Inter',
-    template: 'top-nav',
-    themeMode: 'light',
-    spacingUnit: 8,
-    borderRadiusScale: [
-      { name: 'sm', value: 4 },
-      { name: 'md', value: 8 },
-      { name: 'lg', value: 12 },
-    ],
-    elevationShadows: [
-      { level: 1, shadow: 'rgba(0,0,0,0.04) 0px 1px 3px' },
-      { level: 2, shadow: 'rgba(0,0,0,0.08) 0px 4px 18px' },
-    ],
-  },
-  {
-    id: 'media-night',
-    name: 'Immersive Dark',
-    summary: 'Theater-dark surfaces with punchy action green',
-    colors: ['#121212', '#181818', '#1F1F1F', '#1ED760', '#B3B3B3'],
-    headingFont: 'Montserrat',
-    bodyFont: 'Nunito Sans',
-    template: 'dashboard',
-    themeMode: 'dark',
-    spacingUnit: 8,
-    borderRadiusScale: [
-      { name: 'sm', value: 6 },
-      { name: 'md', value: 8 },
-      { name: 'lg', value: 12 },
-    ],
-    elevationShadows: [
-      { level: 1, shadow: 'rgba(0,0,0,0.3) 0px 8px 8px' },
-      { level: 2, shadow: 'rgba(0,0,0,0.5) 0px 8px 24px' },
-    ],
-  },
-  {
-    id: 'ops-control',
-    name: 'Ops Control',
-    summary: 'Dense dark UI with precise indigo signaling',
-    colors: ['#08090A', '#191A1B', '#5E6AD2', '#7170FF', '#D0D6E0'],
-    headingFont: 'Inter',
-    bodyFont: 'Inter',
-    template: 'left-nav',
-    themeMode: 'dark',
-    spacingUnit: 4,
-    borderRadiusScale: [
-      { name: 'sm', value: 2 },
-      { name: 'md', value: 6 },
-      { name: 'lg', value: 8 },
-    ],
-    elevationShadows: [
-      { level: 1, shadow: 'rgba(0,0,0,0.2) 0px 0px 0px 1px' },
-      { level: 2, shadow: 'rgba(0,0,0,0.3) 0px 4px 12px' },
-    ],
-  },
-  {
-    id: 'warm-hospitality',
-    name: 'Warm Hospitality',
-    summary: 'Friendly coral with soft neutrals and approachable contrast',
-    colors: ['#FF385C', '#FFB400', '#00A699', '#F7F7F7', '#484848'],
-    headingFont: 'Nunito Sans',
-    bodyFont: 'Source Sans 3',
-    template: 'landing',
-    themeMode: 'light',
-    spacingUnit: 8,
-    borderRadiusScale: [
-      { name: 'sm', value: 8 },
-      { name: 'md', value: 12 },
-      { name: 'lg', value: 16 },
-    ],
-    elevationShadows: [
-      { level: 1, shadow: 'rgba(0,0,0,0.08) 0px 4px 12px' },
-      { level: 2, shadow: 'rgba(0,0,0,0.12) 0px 12px 32px' },
-    ],
-  },
-  {
-    id: 'mono-ink',
-    name: 'Monochrome Ink',
-    summary: 'Crisp black-and-white hierarchy with one vivid utility accent',
-    colors: ['#000000', '#171717', '#404040', '#FAFAFA', '#2563EB'],
-    headingFont: 'Plus Jakarta Sans',
-    bodyFont: 'Manrope',
-    template: 'top-nav',
-    themeMode: 'light',
-    spacingUnit: 8,
-    borderRadiusScale: [
-      { name: 'sm', value: 2 },
-      { name: 'md', value: 4 },
-      { name: 'lg', value: 6 },
-    ],
-    elevationShadows: [
-      { level: 1, shadow: 'rgba(0,0,0,0.1) 0px 2px 4px' },
-      { level: 2, shadow: 'rgba(0,0,0,0.15) 0px 8px 16px' },
-    ],
-  },
-  {
-    id: 'neon-developer',
-    name: 'Neon Developer',
-    summary: 'Dark engineering base with bright green confidence',
-    colors: ['#0F172A', '#111827', '#3ECF8E', '#80ED99', '#E2FEEB'],
-    headingFont: 'Space Grotesk',
-    bodyFont: 'DM Sans',
-    template: 'dashboard',
-    themeMode: 'dark',
-    spacingUnit: 8,
-    borderRadiusScale: [
-      { name: 'sm', value: 4 },
-      { name: 'md', value: 8 },
-      { name: 'lg', value: 12 },
-    ],
-    elevationShadows: [
-      { level: 1, shadow: 'rgba(62,207,142,0.1) 0px 4px 12px' },
-      { level: 2, shadow: 'rgba(0,0,0,0.3) 0px 12px 32px' },
-    ],
-  },
-  {
-    id: 'electric-builder',
-    name: 'Electric Builder',
-    summary: 'High-energy blues for product-led growth pages',
-    colors: ['#146EF5', '#2F66F3', '#9EC5FE', '#F8FBFF', '#0B1220'],
-    headingFont: 'Outfit',
-    bodyFont: 'Inter',
-    template: 'mobile',
-    themeMode: 'light',
-    spacingUnit: 8,
-    borderRadiusScale: [
-      { name: 'sm', value: 6 },
-      { name: 'md', value: 10 },
-      { name: 'lg', value: 16 },
-    ],
-    elevationShadows: [
-      { level: 1, shadow: 'rgba(20,110,245,0.15) 0px 4px 12px' },
-      { level: 2, shadow: 'rgba(20,110,245,0.2) 0px 12px 32px' },
-    ],
-  },
-];
+const GUIDANCE_TEMPLATE_MAP: Record<string, TemplateId> = {
+  'fintech-precision': 'dashboard',
+  'editorial-minimal': 'top-nav',
+  'immersive-dark': 'landing',
+  'ops-control': 'left-nav',
+  'warm-hospitality': 'landing',
+  'builder-energized': 'mobile',
+  'monochrome-ink': 'top-nav',
+  'neon-developer': 'dashboard',
+};
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
@@ -308,13 +131,15 @@ function buildVizailUrl(
   bodyFont: string,
   template: TemplateId,
   theme: ThemeMode,
-  customBg: string
+  customBg: string,
+  guidanceId: string | null
 ): string {
   const params = new URLSearchParams();
   params.set('colors', colors.map(c => c.replace('#', '')).join(','));
   params.set('headingFont', headingFont);
   params.set('bodyFont', bodyFont);
   params.set('template', template);
+  if (guidanceId) params.set('guidance', guidanceId);
   if (theme !== 'light') params.set('theme', theme);
   if (theme === 'custom') params.set('bg', customBg.replace('#', ''));
   return `https://vizail.com/from-kulrs?${params.toString()}`;
@@ -498,6 +323,9 @@ export function Design() {
   const [colors, setColors] = useState<string[]>(initialColors);
   const [headingFont, setHeadingFont] = useState('Inter');
   const [bodyFont, setBodyFont] = useState('Roboto');
+  const [selectedGuidanceId, setSelectedGuidanceId] = useState<string | null>(
+    null
+  );
   const [selectedTemplate, setSelectedTemplate] =
     useState<TemplateId>('top-nav');
   const [themeMode, setThemeMode] = useState<ThemeMode>('light');
@@ -509,17 +337,21 @@ export function Design() {
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
 
-  const applyDirection = useCallback((direction: DesignDirection) => {
-    // Preserve working palette but apply theme structure intelligently
-    // For now, keep user's colors as-is; the theme name/template/fonts inform how they're used
-    setHeadingFont(direction.headingFont);
-    setBodyFont(direction.bodyFont);
-    setSelectedTemplate(direction.template);
-    setThemeMode(direction.themeMode);
+  const selectedGuidance = useMemo(
+    () =>
+      selectedGuidanceId ? resolveThemeGuidance(selectedGuidanceId) : null,
+    [selectedGuidanceId]
+  );
+
+  const applyGuidance = useCallback((guidance: ThemeGuidance) => {
+    const resolved = resolveThemeGuidance(guidance.id);
+    setSelectedGuidanceId(guidance.id);
+    setHeadingFont(resolved.typography.headingFont);
+    setBodyFont(resolved.typography.bodyFont);
+    setSelectedTemplate(GUIDANCE_TEMPLATE_MAP[guidance.id] ?? 'top-nav');
+    setThemeMode(guidance.defaultMode);
     setGeneratedLink(null);
     setCopied(false);
-    // NOTE: colors are NOT replaced; instead, the Vizail link builder and preview
-    // will apply the theme's semantic mappings to the existing palette
   }, []);
 
   /* Keep sessionStorage in sync so nav-bar links carry the palette */
@@ -568,7 +400,8 @@ export function Design() {
       bodyFont,
       selectedTemplate,
       themeMode,
-      customBg
+      customBg,
+      selectedGuidanceId
     );
     setGeneratedLink(url);
     setCopied(false);
@@ -594,46 +427,124 @@ export function Design() {
         <a href="https://vizail.com" target="_blank" rel="noopener noreferrer">
           vizail.com
         </a>
-        . Choose fonts, set a theme, pick a layout, and generate a link to see
-        your colors in action.
+        . Choose shared theme guidance, tune fonts, set a mode, pick a layout,
+        and generate a link to see your palette expressed with stronger
+        typography, spacing, radius, depth, buttons, cards, contrast, and
+        intensity.
       </p>
 
       <div className="design-section">
-        <h2>Design Directions</h2>
+        <h2>Theme Guidance</h2>
         <p className="section-hint">
-          Curated starting points inspired by awesome-design-md systems
+          Shared profiles leave your palette untouched and only change how the
+          system behaves.
         </p>
         <div className="direction-grid">
-          {DESIGN_DIRECTIONS.map(direction => (
-            <button
-              key={direction.id}
-              className="direction-card"
-              onClick={() => applyDirection(direction)}
-              title={`Apply ${direction.name}`}
-            >
-              <div className="direction-head">
-                <span className="direction-name">{direction.name}</span>
-                <span className="direction-source">Theme</span>
-              </div>
-              <p className="direction-summary">{direction.summary}</p>
-              <div className="direction-swatches">
-                {direction.colors.map(color => (
-                  <span
-                    key={`${direction.id}-${color}`}
-                    className="direction-swatch"
-                    style={{ backgroundColor: color }}
-                  />
-                ))}
-              </div>
-              <div className="direction-meta">
-                <span>
-                  {direction.headingFont} + {direction.bodyFont}
-                </span>
-                <span>{direction.themeMode}</span>
-              </div>
-            </button>
-          ))}
+          {THEME_GUIDANCES.map(guidance => {
+            const resolved = resolveThemeGuidance(guidance.id);
+            const isSelected = selectedGuidanceId === guidance.id;
+
+            return (
+              <button
+                key={guidance.id}
+                className={`direction-card${isSelected ? ' selected' : ''}`}
+                onClick={() => applyGuidance(guidance)}
+                title={`Apply ${guidance.name}`}
+              >
+                <div className="direction-head">
+                  <span className="direction-name">{guidance.name}</span>
+                  <span className="direction-source">
+                    {guidance.defaultMode}
+                  </span>
+                </div>
+                <p className="direction-summary">{guidance.summary}</p>
+                <div className="direction-pill-row">
+                  <span className="direction-pill">
+                    {resolved.typography.headingFont} +{' '}
+                    {resolved.typography.bodyFont}
+                  </span>
+                  <span className="direction-pill">
+                    {resolved.spacing.name} spacing
+                  </span>
+                </div>
+                <div className="direction-pill-row">
+                  <span className="direction-pill">
+                    {resolved.radius.name} radius
+                  </span>
+                  <span className="direction-pill">
+                    {resolved.depth.name} depth
+                  </span>
+                </div>
+                <div className="direction-meta direction-meta-grid">
+                  <span>Buttons: {resolved.button.name}</span>
+                  <span>Cards: {resolved.card.name}</span>
+                  <span>Contrast: {resolved.contrast.name}</span>
+                  <span>Intensity: {resolved.intensity.name}</span>
+                </div>
+                <div className="direction-footer">
+                  <span>Nav: {resolved.navigation.name}</span>
+                  <span>{isSelected ? 'Applied' : 'Apply guidance'}</span>
+                </div>
+              </button>
+            );
+          })}
         </div>
+        {selectedGuidance && (
+          <div className="guidance-summary-card">
+            <div className="guidance-summary-head">
+              <div>
+                <h3>{selectedGuidance.guidance.name}</h3>
+                <p>{selectedGuidance.guidance.summary}</p>
+              </div>
+              <span className="guidance-summary-badge">
+                {selectedGuidance.guidance.defaultMode}
+              </span>
+            </div>
+            <div className="guidance-summary-grid">
+              <div>
+                <span className="guidance-summary-label">Typography</span>
+                <strong>
+                  {selectedGuidance.typography.headingFont} /{' '}
+                  {selectedGuidance.typography.bodyFont}
+                </strong>
+              </div>
+              <div>
+                <span className="guidance-summary-label">Spacing</span>
+                <strong>
+                  {selectedGuidance.spacing.baseUnitPx}px base ·{' '}
+                  {selectedGuidance.spacing.density}
+                </strong>
+              </div>
+              <div>
+                <span className="guidance-summary-label">Radius + Depth</span>
+                <strong>
+                  {selectedGuidance.radius.values.md}px md ·{' '}
+                  {selectedGuidance.depth.emphasis}
+                </strong>
+              </div>
+              <div>
+                <span className="guidance-summary-label">Components</span>
+                <strong>
+                  {selectedGuidance.button.name} · {selectedGuidance.card.name}
+                </strong>
+              </div>
+              <div>
+                <span className="guidance-summary-label">Contrast</span>
+                <strong>
+                  {selectedGuidance.contrast.bodyTextContrast}:1 ·{' '}
+                  {selectedGuidance.contrast.uiContrast}
+                </strong>
+              </div>
+              <div>
+                <span className="guidance-summary-label">Intensity</span>
+                <strong>
+                  {selectedGuidance.intensity.chroma} ·{' '}
+                  {selectedGuidance.intensity.accentCoverage} accents
+                </strong>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Palette Colors ─────────────────────────────────────── */}
@@ -705,7 +616,7 @@ export function Design() {
 
       {/* ── Theme ──────────────────────────────────────────────── */}
       <div className="design-section">
-        <h2>Theme</h2>
+        <h2>Canvas Mode</h2>
         <div className="theme-controls">
           <div className="theme-toggle">
             {(['light', 'dark', 'custom'] as ThemeMode[]).map(mode => (

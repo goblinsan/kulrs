@@ -14,6 +14,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@goblinsan/design-themes": "^0.1.0",
     "@kulrs/shared": "file:../../packages/shared",
     "firebase": "^12.8.0",
     "react": "^19.2.0",
