@@ -54,6 +54,8 @@ export const THEMES: ThemeDefinition[] = [
   { slug: 'winter', label: 'Winter', description: 'Cool, icy palettes inspired by winter', category: 'themes', tagSlugs: ['winter'] },
 
   // Moods & Styles
+  { slug: 'warm', label: 'Warm', description: 'Palettes with warm hues — reds, oranges, and yellows', category: 'themes', tagSlugs: ['warm'] },
+  { slug: 'vibrant', label: 'Vibrant', description: 'Bold, highly-saturated palettes that pop', category: 'themes', tagSlugs: ['vibrant'] },
   { slug: 'sunset', label: 'Sunset', description: 'Warm gradients inspired by golden hour and dusk', category: 'themes', tagSlugs: ['sunset'] },
   { slug: 'ocean', label: 'Ocean', description: 'Deep blues and aqua tones from the sea', category: 'themes', tagSlugs: ['ocean'] },
   { slug: 'forest', label: 'Forest', description: 'Lush greens and earthy tones from the woods', category: 'themes', tagSlugs: ['forest'] },
