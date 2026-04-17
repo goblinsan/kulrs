@@ -55,13 +55,20 @@ export const createPaletteSchema = z.object({
 export type CreatePaletteInput = z.infer<typeof createPaletteSchema>;
 
 export const ensureTagsSchema = z.object({
-  tags: z.array(
-    z.object({
-      name: z.string().min(1).max(50),
-      slug: z.string().min(1).max(50).regex(/^[a-z0-9-]+$/),
-      description: z.string().max(1000).optional(),
-    })
-  ).min(1).max(20),
+  tags: z
+    .array(
+      z.object({
+        name: z.string().min(1).max(50),
+        slug: z
+          .string()
+          .min(1)
+          .max(50)
+          .regex(/^[a-z0-9-]+$/),
+        description: z.string().max(1000).optional(),
+      })
+    )
+    .min(1)
+    .max(20),
 });
 
 export type EnsureTagsInput = z.infer<typeof ensureTagsSchema>;

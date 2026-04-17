@@ -2,7 +2,11 @@ import { Router, Response } from 'express';
 import rateLimit from 'express-rate-limit';
 import { AuthenticatedRequest } from '../middleware/auth.js';
 import { paletteService } from '../services/palette.service.js';
-import { createPaletteSchema, ensureTagsSchema, isValidUUID } from '../utils/validation.js';
+import {
+  createPaletteSchema,
+  ensureTagsSchema,
+  isValidUUID,
+} from '../utils/validation.js';
 import {
   BadRequestError,
   UnauthorizedError,
