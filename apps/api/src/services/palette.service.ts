@@ -9,7 +9,7 @@ import {
   likes,
   saves,
 } from '@kulrs/db';
-import { CreatePaletteInput } from '../utils/validation.js';
+import { CreatePaletteInput, EnsureTagsInput } from '../utils/validation.js';
 import { oklchToRgb } from '@kulrs/shared';
 import { NotFoundError } from '../utils/errors.js';
 
@@ -722,6 +722,54 @@ export class PaletteService {
       colors: paletteColors,
     };
   }
+  async ensureTags(input: EnsureTagsInput) {
+    const normalized = Array.from(
+      new Map(
+        input.tags.map(tag => [
+          tag.slug.trim().toLowerCase().slice(0, 50),
+          {
+            name: tag.name.trim().slice(0, 50),
+            slug: tag.slug.trim().toLowerCase().slice(0, 50),
+            description: tag.description?.trim()?.slice(0, 1000) || null,
+          },
+        ])
+      ).values()
+    );
+
+    const slugs = normalized.map(tag => tag.slug);
+    const existing = await db
+      .select({
+        id: tagsTable.id,
+        name: tagsTable.name,
+        slug: tagsTable.slug,
+        description: tagsTable.description,
+      })
+      .from(tagsTable)
+      .where(inArray(tagsTable.slug, slugs));
+
+    const existingBySlug = new Map(existing.map(tag => [tag.slug, tag]));
+    const missing = normalized.filter(tag => !existingBySlug.has(tag.slug));
+
+    if (missing.length > 0) {
+      await db.insert(tagsTable).values(missing).onConflictDoNothing();
+      tagsCache = null;
+    }
+
+    const ensured = await db
+      .select({
+        id: tagsTable.id,
+        name: tagsTable.name,
+        slug: tagsTable.slug,
+        description: tagsTable.description,
+      })
+      .from(tagsTable)
+      .where(inArray(tagsTable.slug, slugs))
+      .orderBy(asc(tagsTable.name));
+
+    const ensuredBySlug = new Map(ensured.map(tag => [tag.slug, tag]));
+    return slugs.map(slug => ensuredBySlug.get(slug)).filter(Boolean);
+  }
+
   /**
    * Get all available tags, ordered alphabetically.
    * Results are cached for up to 5 minutes to reduce DB round-trips on

@@ -2,7 +2,7 @@ import { Router, Response } from 'express';
 import rateLimit from 'express-rate-limit';
 import { AuthenticatedRequest } from '../middleware/auth.js';
 import { paletteService } from '../services/palette.service.js';
-import { createPaletteSchema, isValidUUID } from '../utils/validation.js';
+import { createPaletteSchema, ensureTagsSchema, isValidUUID } from '../utils/validation.js';
 import {
   BadRequestError,
   UnauthorizedError,
@@ -182,6 +182,21 @@ router.get(
       'public, max-age=300, stale-while-revalidate=600'
     );
     res.status(200).json({ success: true, data: allTags });
+  })
+);
+
+router.post(
+  '/tags/ensure',
+  paletteWriteLimiter,
+  asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    requireAuth(req);
+    const validation = ensureTagsSchema.safeParse(req.body);
+    if (!validation.success) {
+      throw new ValidationError('Validation failed', validation.error.errors);
+    }
+
+    const tags = await paletteService.ensureTags(validation.data);
+    res.status(200).json({ success: true, data: tags });
   })
 );
 
