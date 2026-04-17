@@ -100,7 +100,10 @@ export function Browse() {
   const searchQuery = searchParams.get('q') || '';
 
   const themesByCategory = useMemo(() => {
-    const map: Record<ThemeCategory, typeof THEMES> = { colors: [], themes: [] };
+    const map: Record<ThemeCategory, typeof THEMES> = {
+      colors: [],
+      themes: [],
+    };
     for (const t of THEMES) {
       map[t.category].push(t);
     }
@@ -215,7 +218,11 @@ export function Browse() {
             <i className="fa-solid fa-magnifying-glass"></i>
           </button>
           {searchQuery && (
-            <button type="button" className="browse-search-clear" onClick={clearSearch}>
+            <button
+              type="button"
+              className="browse-search-clear"
+              onClick={clearSearch}
+            >
               <i className="fa-solid fa-xmark"></i>
             </button>
           )}
@@ -274,7 +281,8 @@ export function Browse() {
           <div className="browse-active-filters">
             {activeTheme && (
               <span className="active-filter-tag">
-                Theme: {THEMES.find(t => t.slug === activeTheme)?.label ?? activeTheme}
+                Theme:{' '}
+                {THEMES.find(t => t.slug === activeTheme)?.label ?? activeTheme}
                 <button onClick={() => handleThemeClick(activeTheme)}>×</button>
               </span>
             )}
