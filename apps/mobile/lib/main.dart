@@ -8,6 +8,7 @@ import 'screens/generate/generate_screen.dart';
 import 'screens/detail/detail_screen.dart';
 import 'screens/saved/saved_screen.dart';
 import 'screens/home_screen.dart';
+import 'models/palette.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,11 +39,25 @@ class MyApp extends StatelessWidget {
         },
         onGenerateRoute: (settings) {
           if (settings.name == '/detail') {
-            final args = settings.arguments as Map<String, dynamic>?;
+            // Support both Palette object and Map with paletteId
+            final args = settings.arguments;
+            if (args is Palette) {
+              return MaterialPageRoute(
+                builder: (context) => DetailScreen(palette: args),
+              );
+            } else if (args is Map<String, dynamic>) {
+              return MaterialPageRoute(
+                builder: (context) => DetailScreen(
+                  paletteId: args['paletteId'] as String?,
+                ),
+              );
+            } else if (args is String) {
+              return MaterialPageRoute(
+                builder: (context) => DetailScreen(paletteId: args),
+              );
+            }
             return MaterialPageRoute(
-              builder: (context) => DetailScreen(
-                paletteId: args?['paletteId'] as String?,
-              ),
+              builder: (context) => const DetailScreen(),
             );
           }
           return null;
